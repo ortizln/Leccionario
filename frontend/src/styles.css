@@ -19,6 +19,25 @@
   --app-accent-rgb: 233, 223, 201;
   --app-bg-rgb: 242, 239, 231;
   --app-text-rgb: 46, 38, 27;
+
+  --text-heading-large: var(--app-primary);
+  --text-heading-medium: var(--app-text);
+  --text-heading-small: var(--app-secondary);
+  --text-body: var(--app-text);
+  --text-muted: var(--app-text-soft);
+  --text-contrast: var(--app-contrast-text);
+
+  --card-bg: rgba(251, 248, 241, 0.92);
+  --card-bg-alt: rgba(247, 243, 235, 0.96);
+  --card-border: rgba(88, 107, 59, 0.12);
+  --card-text: var(--app-text);
+  --card-gradient: linear-gradient(180deg, var(--card-bg), var(--card-bg-alt));
+
+  --btn-primary-base: var(--app-primary);
+  --btn-primary-hover: var(--app-secondary);
+  --btn-outline-border: rgba(88, 107, 59, 0.48);
+  --btn-outline-text: var(--app-primary);
+  --btn-outline-bg: rgba(88, 107, 59, 0.04);
 }
 
 html,
@@ -34,7 +53,48 @@ body {
     radial-gradient(circle at top left, rgba(var(--app-primary-rgb), 0.16), transparent 24%),
     radial-gradient(circle at bottom right, rgba(var(--app-secondary-rgb), 0.12), transparent 22%),
     linear-gradient(180deg, var(--app-bg) 0%, #ece6d8 100%);
-  color: var(--app-text);
+  color: var(--text-body);
+}
+
+/* Global text categories for title and content colors */
+.heading-large,
+.text-heading-large,
+h1 {
+  color: var(--text-heading-large);
+}
+
+.heading-medium,
+.text-heading-medium,
+h2 {
+  color: var(--text-heading-medium);
+}
+
+.heading-small,
+.text-heading-small,
+h3,
+h4,
+h5,
+h6 {
+
+.text-body,
+p,
+span,
+label,
+button,
+input,
+textarea,
+select {
+  color: var(--text-body);
+}
+
+.text-muted,
+small,
+.text-secondary {
+  color: var(--text-muted) !important;
+}
+
+.text-contrast {
+  color: var(--text-contrast) !important;
 }
 
 app-root {
@@ -150,12 +210,12 @@ app-root {
 .list-group-item,
 .table,
 .table > :not(caption) > * > * {
-  color: var(--app-text);
+  color: var(--card-text);
 }
 
 .card {
-  background: linear-gradient(180deg, rgba(251, 248, 241, 0.92), rgba(247, 243, 235, 0.96));
-  border: 1px solid rgba(var(--app-primary-rgb), 0.12) !important;
+  background: var(--card-gradient);
+  border: 1px solid var(--card-border) !important;
 }
 
 .list-group-item {
@@ -202,8 +262,8 @@ app-root {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--app-primary), #6b5036 100%);
-  border-color: var(--app-primary);
+  background: linear-gradient(135deg, var(--btn-primary-base), var(--btn-primary-hover) 100%);
+  border-color: var(--btn-primary-base);
   color: #fff;
   font-weight: 700;
   box-shadow: 0 10px 26px rgba(var(--app-primary-rgb), 0.18);
@@ -211,21 +271,21 @@ app-root {
 
 .btn-primary:hover,
 .btn-primary:focus {
-  background: linear-gradient(135deg, #647a42, var(--app-secondary) 100%);
-  border-color: #647a42;
+  background: linear-gradient(135deg, var(--btn-primary-hover), var(--btn-primary-base) 100%);
+  border-color: var(--btn-primary-hover);
   color: #fff;
 }
 
 .btn-outline-primary {
-  border-color: rgba(var(--app-primary-rgb), 0.48);
-  color: var(--app-primary);
-  background: rgba(var(--app-primary-rgb), 0.04);
+  border-color: var(--btn-outline-border);
+  color: var(--btn-outline-text);
+  background: var(--btn-outline-bg);
 }
 
 .btn-outline-primary:hover,
 .btn-outline-primary:focus {
-  background: linear-gradient(135deg, var(--app-primary), var(--app-secondary));
-  border-color: var(--app-primary);
+  background: linear-gradient(135deg, var(--btn-primary-base), var(--btn-primary-hover));
+  border-color: var(--btn-primary-base);
   color: #fff;
 }
 
