@@ -1,0 +1,218 @@
+
+    <section class="d-grid gap-4">
+      <header>
+        <span class="badge rounded-pill text-bg-primary mb-2"><i class="bi bi-palette-fill me-1"></i>Personalizacion</span>
+        <h1 class="display-6 fw-bold mb-2">Apariencia institucional</h1>
+        <p class="text-muted mb-0">Administra colores, logos, carrusel, titulos y leyendas para cada unidad educativa desde un solo modulo.</p>
+      </header>
+
+      @if (message) {
+        <div class="alert" [class.alert-warning]="messageType === 'error'" [class.alert-success]="messageType === 'success'">
+          {{ message }}
+        </div>
+      }
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="row g-3 align-items-end">
+            <div class="col-12 col-lg-6">
+              <label class="form-label fw-semibold">Institucion</label>
+              <select class="form-select" [(ngModel)]="selectedInstitutionId" name="institutionId" (ngModelChange)="onInstitutionChange()">
+                @for (institution of institutions; track institution.id) {
+                  <option [ngValue]="institution.id">{{ institution.name }} · {{ institution.code }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12 col-lg-6">
+              <div class="preview-strip p-3">
+                <div class="small text-muted">Vista rapida</div>
+                <div class="fw-semibold">{{ model.displayName || 'Unidad educativa' }}</div>
+                <div class="small text-muted">{{ model.loginTitle || 'Bienvenido al Leccionario Digital' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 align-items-start">
+        <div class="col-12 col-xl-7 d-grid gap-4">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <h2 class="h4 mb-3">Textos institucionales</h2>
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold">Nombre visible</label>
+                  <input class="form-control" [(ngModel)]="model.displayName" name="displayName">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold">Badge del login</label>
+                  <input class="form-control" [(ngModel)]="model.loginBadgeText" name="loginBadgeText">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Titulo del login</label>
+                  <input class="form-control" [(ngModel)]="model.loginTitle" name="loginTitle">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Leyenda principal del login</label>
+                  <textarea class="form-control" rows="3" [(ngModel)]="model.loginSubtitle" name="loginSubtitle"></textarea>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Leyenda de apoyo del login</label>
+                  <input class="form-control" [(ngModel)]="model.loginHelperText" name="loginHelperText">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold">Titulo superior del sistema</label>
+                  <input class="form-control" [(ngModel)]="model.shellTitle" name="shellTitle">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold">Leyenda superior del sistema</label>
+                  <input class="form-control" [(ngModel)]="model.shellSubtitle" name="shellSubtitle">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold">Titulo mobile</label>
+                  <input class="form-control" [(ngModel)]="model.mobileTitle" name="mobileTitle">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold">Leyenda mobile</label>
+                  <input class="form-control" [(ngModel)]="model.mobileSubtitle" name="mobileSubtitle">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <h2 class="h4 mb-1">Carrusel del login</h2>
+                  <p class="text-muted mb-0">Puedes agregar, quitar o reemplazar fotos y leyendas por institucion.</p>
+                </div>
+                <button class="btn btn-outline-primary" type="button" (click)="addSlide()">
+                  <i class="bi bi-plus-lg me-2"></i>Agregar slide
+                </button>
+              </div>
+
+              <div class="d-grid gap-3">
+                @for (slide of slides; track $index) {
+                  <div class="slide-editor p-3">
+                    <div class="row g-3">
+                      <div class="col-12 col-lg-4">
+                        <div class="slide-image-preview mb-2" [style.background-image]="'linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.5)), url(' + slide.imageUrl + ')'"></div>
+                        <input class="form-control" type="file" accept="image/*" (change)="uploadSlideImage($event, $index)">
+                      </div>
+                      <div class="col-12 col-lg-8">
+                        <div class="row g-3">
+                          <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">Badge</label>
+                            <input class="form-control" [(ngModel)]="slide.badge" [name]="'slideBadge' + $index">
+                          </div>
+                          <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">Orden</label>
+                            <input class="form-control" type="number" min="1" [(ngModel)]="slide.slideOrder" [name]="'slideOrder' + $index">
+                          </div>
+                          <div class="col-12">
+                            <label class="form-label fw-semibold">Titulo</label>
+                            <input class="form-control" [(ngModel)]="slide.title" [name]="'slideTitle' + $index">
+                          </div>
+                          <div class="col-12">
+                            <label class="form-label fw-semibold">Descripcion</label>
+                            <textarea class="form-control" rows="2" [(ngModel)]="slide.description" [name]="'slideDescription' + $index"></textarea>
+                          </div>
+                          <div class="col-12">
+                            <label class="form-label fw-semibold">URL de imagen</label>
+                            <input class="form-control" [(ngModel)]="slide.imageUrl" [name]="'slideImage' + $index">
+                          </div>
+                          <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <label class="d-flex align-items-center gap-2 small">
+                              <input class="form-check-input" type="checkbox" [(ngModel)]="slide.active" [name]="'slideActive' + $index">
+                              <span>Slide activo</span>
+                            </label>
+                            <button class="btn btn-outline-primary" type="button" (click)="removeSlide($index)">
+                              <i class="bi bi-trash me-2"></i>Eliminar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-5 d-grid gap-4">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <h2 class="h4 mb-3">Colores</h2>
+              <div class="row g-3">
+                @for (field of colorFields; track field.key) {
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">{{ field.label }}</label>
+                    <div class="d-flex gap-2 align-items-center">
+                      <input
+                        class="form-control form-control-color color-picker"
+                        type="color"
+                        [ngModel]="getColorValue(field.key)"
+                        (ngModelChange)="setColorValue(field.key, $event)"
+                        [name]="field.key">
+                      <input
+                        class="form-control"
+                        [ngModel]="getColorValue(field.key)"
+                        (ngModelChange)="setColorValue(field.key, $event)"
+                        [name]="field.key + 'Text'">
+                    </div>
+                  </div>
+                }
+              </div>
+              <button class="btn btn-outline-primary mt-3" type="button" (click)="applyMilitaryPalette()">
+                <i class="bi bi-arrow-repeat me-2"></i>Aplicar verde militar + cafe + hueso
+              </button>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <h2 class="h4 mb-3">Logos</h2>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Logo general</label>
+                  <div class="logo-preview mb-2">
+                    @if (model.logoUrl) {
+                      <img [src]="model.logoUrl" alt="Logo general">
+                    } @else {
+                      <span>Sin logo cargado</span>
+                    }
+                  </div>
+                  <input class="form-control mb-2" [(ngModel)]="model.logoUrl" name="logoUrl" placeholder="URL o recurso subido">
+                  <input class="form-control" type="file" accept="image/*" (change)="uploadLogo($event, 'logoUrl')">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Logo del login</label>
+                  <div class="logo-preview mb-2">
+                    @if (model.loginLogoUrl) {
+                      <img [src]="model.loginLogoUrl" alt="Logo login">
+                    } @else {
+                      <span>Sin logo cargado</span>
+                    }
+                  </div>
+                  <input class="form-control mb-2" [(ngModel)]="model.loginLogoUrl" name="loginLogoUrl" placeholder="URL o recurso subido">
+                  <input class="form-control" type="file" accept="image/*" (change)="uploadLogo($event, 'loginLogoUrl')">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <h2 class="h4 mb-3">Guardar cambios</h2>
+              <p class="text-muted">Los cambios se reflejan en login web, panel principal y mobile usando la misma configuracion institucional.</p>
+              <button class="btn btn-primary w-100" type="button" (click)="save()">
+                <i class="bi bi-save me-2"></i>Guardar apariencia institucional
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  

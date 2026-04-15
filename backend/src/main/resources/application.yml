@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: leccionario-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/leccionario_db
+    username: postgres
+    password: 12345
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        "format_sql": true
+        jdbc:
+          "time_zone": UTC
+
+server:
+  address: 0.0.0.0
+  port: 1080
+
+security:
+  jwt:
+    secret: change-this-secret-key-with-at-least-32-chars
+    expiration: 86400000
+
+logging:
+  level:
+    root: INFO
+    "com.leccionario.backend": DEBUG
+
+branding:
+  storage:
+    path: ./storage/branding

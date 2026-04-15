@@ -1,0 +1,320 @@
+:root {
+  --app-primary: #586b3b;
+  --app-secondary: #7a5c3e;
+  --app-accent: #e9dfc9;
+  --app-bg: #f2efe7;
+  --app-surface: rgba(251, 248, 241, 0.92);
+  --app-surface-strong: rgba(251, 248, 241, 0.98);
+  --app-line: rgba(88, 107, 59, 0.24);
+  --app-text: #2e261b;
+  --app-text-soft: #8c7d6b;
+  --app-contrast-text: #ffffff;
+  --app-contrast-text-rgb: 255, 255, 255;
+  --app-muted-text: #8c7d6b;
+  --app-muted-text-rgb: 140, 125, 107;
+  --app-black: #e6dfd1;
+  --app-black-soft: #ede7db;
+  --app-primary-rgb: 88, 107, 59;
+  --app-secondary-rgb: 122, 92, 62;
+  --app-accent-rgb: 233, 223, 201;
+  --app-bg-rgb: 242, 239, 231;
+  --app-text-rgb: 46, 38, 27;
+}
+
+html,
+body {
+  min-height: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(var(--app-primary-rgb), 0.16), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(var(--app-secondary-rgb), 0.12), transparent 22%),
+    linear-gradient(180deg, var(--app-bg) 0%, #ece6d8 100%);
+  color: var(--app-text);
+}
+
+app-root {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(var(--app-primary-rgb), 0.08), transparent 20%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(122, 92, 62, 0.04));
+}
+
+.app-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top, rgba(var(--app-accent-rgb), 0.26), transparent 22%),
+    linear-gradient(180deg, rgba(var(--app-primary-rgb), 0.94) 0%, rgba(var(--app-secondary-rgb), 0.94) 100%);
+}
+
+.app-shell-main {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(var(--app-primary-rgb), 0.1), transparent 18%),
+    radial-gradient(circle at bottom right, rgba(var(--app-secondary-rgb), 0.08), transparent 18%);
+}
+
+.brand-badge {
+  width: 54px;
+  height: 54px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--app-bg);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, var(--app-accent), var(--app-primary) 58%, var(--app-secondary));
+  box-shadow: 0 10px 30px rgba(var(--app-primary-rgb), 0.22);
+}
+
+.sidebar-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
+  color: var(--app-contrast-text);
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+.sidebar-mini-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06));
+  color: var(--app-contrast-text);
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+.app-sidebar .text-white,
+.app-sidebar .fw-semibold.text-white,
+.app-sidebar .fs-5.text-white {
+  color: var(--app-contrast-text) !important;
+}
+
+.app-sidebar .text-warning-emphasis {
+  color: rgba(var(--app-contrast-text-rgb), 0.92) !important;
+}
+
+.app-nav-link {
+  border-radius: 8px;
+  color: rgba(var(--app-contrast-text-rgb), 0.92);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.app-nav-link:hover,
+.app-nav-link.active {
+  color: var(--app-black);
+  background: linear-gradient(135deg, var(--app-accent), #d9ccb0);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.topbar-card {
+  background: linear-gradient(180deg, rgba(251, 248, 241, 0.92), rgba(242, 239, 231, 0.96));
+  backdrop-filter: blur(8px);
+  color: var(--app-text);
+  border: 1px solid rgba(var(--app-primary-rgb), 0.14) !important;
+}
+
+.dashboard-hero {
+  background:
+    radial-gradient(circle at top right, rgba(var(--app-accent-rgb), 0.4), transparent 20%),
+    linear-gradient(135deg, rgba(251, 248, 241, 0.98), rgba(233, 223, 201, 0.9) 56%, rgba(122, 92, 62, 0.18));
+}
+
+.metric-card .metric-icon {
+  font-size: 1.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.quick-action {
+  background: linear-gradient(180deg, rgba(251, 248, 241, 0.92), rgba(245, 241, 232, 0.94));
+  border-color: var(--app-line) !important;
+}
+
+.login-panel {
+  background: linear-gradient(180deg, rgba(251, 248, 241, 0.96), rgba(248, 245, 237, 0.98));
+  backdrop-filter: blur(10px);
+  color: var(--app-text);
+  border: 1px solid rgba(var(--app-primary-rgb), 0.18) !important;
+}
+
+.recent-item {
+  border-color: var(--app-accent) !important;
+}
+
+.card,
+.list-group-item,
+.table,
+.table > :not(caption) > * > * {
+  color: var(--app-text);
+}
+
+.card {
+  background: linear-gradient(180deg, rgba(251, 248, 241, 0.92), rgba(247, 243, 235, 0.96));
+  border: 1px solid rgba(var(--app-primary-rgb), 0.12) !important;
+}
+
+.list-group-item {
+  background: transparent;
+  border-color: rgba(var(--app-primary-rgb), 0.08);
+}
+
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--app-text);
+  --bs-table-striped-bg: rgba(var(--app-primary-rgb), 0.04);
+  --bs-table-hover-bg: rgba(var(--app-primary-rgb), 0.06);
+  --bs-table-border-color: rgba(var(--app-primary-rgb), 0.08);
+}
+
+.form-control,
+.form-select {
+  border-color: var(--app-line);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--app-text);
+}
+
+.form-control::placeholder,
+.form-select::placeholder {
+  color: rgba(199, 183, 119, 0.7);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--app-text);
+  border-color: rgba(var(--app-primary-rgb), 0.64);
+  box-shadow: 0 0 0 0.25rem rgba(var(--app-primary-rgb), 0.14);
+}
+
+.input-group-text {
+  background: linear-gradient(180deg, rgba(var(--app-accent-rgb), 0.82), rgba(var(--app-accent-rgb), 0.58));
+  color: var(--app-primary);
+  border-color: rgba(var(--app-primary-rgb), 0.18);
+}
+
+.btn {
+  border-radius: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--app-primary), #6b5036 100%);
+  border-color: var(--app-primary);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 10px 26px rgba(var(--app-primary-rgb), 0.18);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: linear-gradient(135deg, #647a42, var(--app-secondary) 100%);
+  border-color: #647a42;
+  color: #fff;
+}
+
+.btn-outline-primary {
+  border-color: rgba(var(--app-primary-rgb), 0.48);
+  color: var(--app-primary);
+  background: rgba(var(--app-primary-rgb), 0.04);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  background: linear-gradient(135deg, var(--app-primary), var(--app-secondary));
+  border-color: var(--app-primary);
+  color: #fff;
+}
+
+.text-primary,
+.text-success,
+.text-warning,
+.text-info {
+  color: var(--app-primary) !important;
+}
+
+.text-muted,
+.small.text-muted {
+  color: var(--app-text-soft) !important;
+}
+
+.text-dark {
+  color: #111111 !important;
+}
+
+.text-white-50 {
+  color: rgba(var(--app-contrast-text-rgb), 0.68) !important;
+}
+
+.app-sidebar .btn-outline-light {
+  color: var(--app-contrast-text);
+  border-color: rgba(var(--app-contrast-text-rgb), 0.24);
+}
+
+.app-sidebar .btn-outline-light:hover,
+.app-sidebar .btn-outline-light:focus {
+  color: var(--app-black);
+  background: var(--app-accent);
+  border-color: var(--app-accent);
+}
+
+.text-bg-primary,
+.text-bg-secondary,
+.text-bg-success,
+.text-bg-info,
+.text-bg-warning,
+.text-bg-danger,
+.text-bg-dark,
+.text-bg-light,
+.badge:not(.bg-transparent) {
+  border: 1px solid rgba(var(--app-primary-rgb), 0.16);
+}
+
+.text-bg-primary,
+.text-bg-secondary,
+.text-bg-success,
+.text-bg-info,
+.text-bg-warning,
+.text-bg-danger,
+.text-bg-light {
+  background: linear-gradient(135deg, var(--app-accent), #d6c6a7 100%) !important;
+  color: var(--app-black) !important;
+}
+
+.text-bg-dark {
+  background: linear-gradient(135deg, var(--app-secondary), #5f4631) !important;
+  color: #fff !important;
+}
+
+.text-bg-success-subtle {
+  background: rgba(var(--app-primary-rgb), 0.14) !important;
+  color: var(--app-primary) !important;
+}
+
+.text-success-emphasis {
+  color: var(--app-primary) !important;
+}
+
+.bg-light-subtle,
+.bg-white,
+.bg-white.bg-opacity-10 {
+  background-color: transparent !important;
+}
+
+.bg-white.bg-opacity-10 {
+  background: linear-gradient(180deg, rgba(var(--app-primary-rgb), 0.08), rgba(255, 255, 255, 0.02)) !important;
+  border: 1px solid rgba(var(--app-primary-rgb), 0.12) !important;
+}
+
+a {
+  color: var(--app-primary);
+}
+
+@media (max-width: 991.98px) {
+  .app-shell-main {
+    min-height: auto;
+  }
+}

@@ -1,0 +1,59 @@
+
+    <section class="d-grid gap-4">
+      <header>
+        <span class="badge rounded-pill text-bg-dark mb-2"><i class="bi bi-shield-check me-1"></i>Control institucional</span>
+        <h1 class="display-6 fw-bold mb-2">Auditoria y bitacora</h1>
+        <p class="text-muted mb-0">Consulta eventos criticos del sistema y trazabilidad de acciones realizadas por usuarios.</p>
+      </header>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-md-4">
+              <input class="form-control" type="text" placeholder="Buscar por usuario" [(ngModel)]="usernameFilter">
+            </div>
+            <div class="col-12 col-md-4">
+              <select class="form-select" [(ngModel)]="moduleFilter">
+                <option value="">Todos los modulos</option>
+                <option value="USER">Usuarios</option>
+                <option value="LESSON_PLAN">Leccionario</option>
+                <option value="REPORT">Reportes</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-4">
+              <button class="btn btn-outline-primary w-100" type="button" (click)="applyFilters()"><i class="bi bi-funnel me-2"></i>Aplicar filtros</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Usuario</th>
+                  <th>Modulo</th>
+                  <th>Accion</th>
+                  <th>Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of logs$ | async; track item.id) {
+                  <tr>
+                    <td>{{ item.createdAt | date:'yyyy-MM-dd HH:mm' }}</td>
+                    <td>{{ item.username }}</td>
+                    <td><span class="badge text-bg-dark">{{ item.module }}</span></td>
+                    <td>{{ item.action }}</td>
+                    <td class="text-muted">{{ item.details }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="text-center text-muted py-4">No se encontraron eventos para los filtros seleccionados.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  

@@ -1,0 +1,67 @@
+
+    <section class="mobile-close-page">
+      <div class="mobile-close-card">
+        <span class="badge rounded-pill text-bg-warning text-dark mb-3">{{ badgeLabel() }}</span>
+        <h1 class="h3 fw-bold mb-2">{{ titleLabel() }}</h1>
+        <p class="text-muted mb-4">{{ descriptionLabel() }}</p>
+
+        @if (message) {
+          <div class="alert" [class.alert-success]="success" [class.alert-warning]="!success">{{ message }}</div>
+        }
+
+        @if (loading) {
+          <div class="text-center py-4 text-muted">Cargando informacion del cierre...</div>
+        } @else if (summary) {
+          <div class="summary-box mb-4">
+            <div class="fw-semibold mb-1">{{ summary.courseName }}</div>
+            <div class="small text-muted mb-1">{{ summary.logDate }}</div>
+            @if (mode === 'entry') {
+              <div class="small text-muted">{{ summary.scheduleLabel }} · {{ summary.subjectName }}</div>
+              <div class="small text-muted">{{ summary.teacherName }}</div>
+              <div class="small mt-2">
+                Estado: <span class="fw-semibold">{{ summary.teacherSignatureStatus === 'SIGNED' ? 'Clase cerrada' : 'Pendiente' }}</span>
+              </div>
+            } @else if (mode === 'signature') {
+              <div class="small mt-2">
+                Firma: <span class="fw-semibold">{{ signatureTypeLabel(summary.signatureType) }}</span>
+              </div>
+              <div class="small mt-2">
+                Estado: <span class="fw-semibold">{{ summary.signedAt ? 'Firmado' : 'Pendiente' }}</span>
+              </div>
+              @if (summary.signerName) {
+                <div class="small text-muted mt-1">{{ summary.signerName }} · {{ summary.signedAt }}</div>
+              }
+            } @else {
+              <div class="small mt-2">
+                Estado: <span class="fw-semibold">{{ summary.status === 'CLOSED' ? 'Leccionario cerrado' : 'Pendiente' }}</span>
+              </div>
+            }
+          </div>
+
+          @if (!isAlreadyClosed()) {
+            <div class="d-grid gap-3">
+              <div>
+                <label class="form-label fw-semibold">Usuario</label>
+                <input class="form-control form-control-lg" [(ngModel)]="form.username" placeholder="usuario institucional">
+              </div>
+              <div>
+                <label class="form-label fw-semibold">Codigo institucional</label>
+                <input class="form-control form-control-lg" [(ngModel)]="form.code" placeholder="identificacion o codigo">
+              </div>
+              <div>
+                <label class="form-label fw-semibold">{{ notesLabel() }}</label>
+                <textarea class="form-control" rows="3" [(ngModel)]="form.notes" placeholder="Comentario adicional"></textarea>
+              </div>
+              <button class="btn btn-warning btn-lg text-dark fw-semibold" type="button" (click)="submitClose()">
+                {{ actionLabel() }}
+              </button>
+            </div>
+          } @else {
+            <div class="alert alert-success mb-0">{{ alreadyClosedLabel() }}</div>
+          }
+        }
+
+        <a class="btn btn-link mt-4 px-0" routerLink="/login">Volver al sistema</a>
+      </div>
+    </section>
+  

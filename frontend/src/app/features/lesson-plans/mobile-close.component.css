@@ -1,0 +1,22 @@
+
+    .mobile-close-page {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
+    }
+    .mobile-close-card {
+      width: min(100%, 560px);
+      padding: 1.75rem;
+      border-radius: 1.75rem;
+      background: linear-gradient(180deg, rgba(18, 18, 18, 0.96), rgba(8, 8, 8, 0.98));
+      border: 1px solid rgba(242, 194, 48, 0.18);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
+    }
+    .summary-box {
+      padding: 1rem;
+      border-radius: 1rem;
+      background: rgba(242, 194, 48, 0.05);
+      border: 1px solid rgba(242, 194, 48, 0.1);
+    }
+  

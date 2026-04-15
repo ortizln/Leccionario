@@ -1,0 +1,14 @@
+# Flutter / Android
+build/
+*.apk
+*.aab
+*.so
+
+# Java
+target/
+
+# Node
+node_modules/
+
+# Logs
+*.log

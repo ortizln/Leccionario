@@ -1,0 +1,314 @@
+import { Component, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { catchError, of } from 'rxjs';
+import { API_URL } from '../../core/api.config';
+import { AuthService } from '../../core/auth.service';
+
+@Component({
+  selector: 'app-schedule-management',
+  standalone: true,
+  imports: [FormsModule, ReactiveFormsModule],
+  templateUrl: './schedule-management.component.html'
+})
+export class ScheduleManagementComponent {
+  private http = inject(HttpClient);
+  private fb = inject(FormBuilder);
+  private auth = inject(AuthService);
+
+  canManageSchedules = this.auth.hasPermission('ACADEMIC_MANAGE');
+  editingBlockId: number | null = null;
+  editingScheduleId: number | null = null;
+  scheduleCourseFilter = '';
+  errorMessage = '';
+
+  overview: ScheduleOverview = {
+    blocks: [],
+    schedules: [],
+    courses: [],
+    periods: [],
+    subjects: [],
+    teachers: []
+  };
+
+  readonly weekdays = [
+    { value: 1, label: 'Lunes' },
+    { value: 2, label: 'Martes' },
+    { value: 3, label: 'Miercoles' },
+    { value: 4, label: 'Jueves' },
+    { value: 5, label: 'Viernes' },
+    { value: 6, label: 'Sabado' },
+    { value: 7, label: 'Domingo' }
+  ];
+
+  blockForm = this.fb.nonNullable.group({
+    label: ['', Validators.required],
+    startTime: ['', Validators.required],
+    endTime: ['', Validators.required],
+    blockOrder: [1, Validators.required],
+    blockType: ['CLASS', Validators.required],
+    active: [true]
+  });
+
+  scheduleForm = this.fb.nonNullable.group({
+    courseId: [0, Validators.required],
+    periodId: [0, Validators.required],
+    scheduleBlockId: [0, Validators.required],
+    subjectId: [0, Validators.required],
+    teacherId: [0, Validators.required],
+    weekday: [1, Validators.required],
+    classroom: ['']
+  });
+
+  constructor() {
+    this.loadOverview();
+  }
+
+  get blocks(): ScheduleBlockItem[] {
+    return this.overview.blocks;
+  }
+
+  get classBlocks(): ScheduleBlockItem[] {
+    return this.blocks.filter(block => block.blockType === 'CLASS');
+  }
+
+  get filteredSchedules(): CourseScheduleItem[] {
+    if (!this.scheduleCourseFilter) {
+      return this.overview.schedules;
+    }
+    return this.overview.schedules.filter(schedule => String(schedule.courseId) === this.scheduleCourseFilter);
+  }
+
+  weekdayLabel(weekday: number): string {
+    return this.weekdays.find(day => day.value === weekday)?.label ?? `Dia ${weekday}`;
+  }
+
+  editBlock(block: ScheduleBlockItem): void {
+    this.editingBlockId = block.id;
+    this.blockForm.setValue({
+      label: block.label,
+      startTime: block.startTime,
+      endTime: block.endTime,
+      blockOrder: block.blockOrder,
+      blockType: block.blockType,
+      active: block.active
+    });
+  }
+
+  editSchedule(schedule: CourseScheduleItem): void {
+    this.editingScheduleId = schedule.id;
+    this.scheduleForm.setValue({
+      courseId: schedule.courseId,
+      periodId: schedule.periodId,
+      scheduleBlockId: schedule.scheduleBlockId,
+      subjectId: schedule.subjectId,
+      teacherId: schedule.teacherId,
+      weekday: schedule.weekday,
+      classroom: schedule.classroom ?? ''
+    });
+  }
+
+  resetBlockForm(): void {
+    this.editingBlockId = null;
+    this.blockForm.reset({
+      label: '',
+      startTime: '',
+      endTime: '',
+      blockOrder: 1,
+      blockType: 'CLASS',
+      active: true
+    });
+  }
+
+  resetScheduleForm(): void {
+    this.editingScheduleId = null;
+    this.scheduleForm.reset({
+      courseId: this.overview.courses[0]?.id ?? 0,
+      periodId: this.overview.periods[0]?.id ?? 0,
+      scheduleBlockId: this.classBlocks[0]?.id ?? 0,
+      subjectId: this.overview.subjects[0]?.id ?? 0,
+      teacherId: this.overview.teachers[0]?.id ?? 0,
+      weekday: 1,
+      classroom: ''
+    });
+  }
+
+  saveBlock(): void {
+    if (!this.canManageSchedules || this.blockForm.invalid) {
+      return;
+    }
+
+    const payload = this.blockForm.getRawValue();
+    const request$ = this.editingBlockId
+      ? this.http.put(`${API_URL}/schedules/blocks/${this.editingBlockId}`, payload)
+      : this.http.post(`${API_URL}/schedules/blocks`, payload);
+
+    request$.subscribe({
+      next: () => this.loadOverview(() => this.resetBlockForm()),
+      error: (error) => {
+        this.errorMessage = error?.error?.message ?? 'No se pudo guardar el bloque horario.';
+      }
+    });
+  }
+
+  saveSchedule(): void {
+    if (!this.canManageSchedules || this.scheduleForm.invalid) {
+      return;
+    }
+
+    const payload = this.scheduleForm.getRawValue();
+    const request$ = this.editingScheduleId
+      ? this.http.put(`${API_URL}/schedules/course-assignments/${this.editingScheduleId}`, payload)
+      : this.http.post(`${API_URL}/schedules/course-assignments`, payload);
+
+    request$.subscribe({
+      next: () => this.loadOverview(() => this.resetScheduleForm()),
+      error: (error) => {
+        this.errorMessage = error?.error?.message ?? 'No se pudo guardar la asignacion del horario.';
+      }
+    });
+  }
+
+  downloadBlockTemplate(): void {
+    this.http.get(`${API_URL}/schedules/import-template/blocks`, { responseType: 'blob' }).subscribe({
+      next: (file) => this.downloadBlob(file, 'bloques-plantilla.xlsx'),
+      error: () => this.errorMessage = 'No se pudo descargar la plantilla de bloques.'
+    });
+  }
+
+  downloadAssignmentTemplate(): void {
+    this.http.get(`${API_URL}/schedules/import-template/assignments`, { responseType: 'blob' }).subscribe({
+      next: (file) => this.downloadBlob(file, 'horarios-plantilla.xlsx'),
+      error: () => this.errorMessage = 'No se pudo descargar la plantilla de horarios.'
+    });
+  }
+
+  triggerBlockImport(): void {
+    document.getElementById('blocks-import-input')?.click();
+  }
+
+  triggerAssignmentImport(): void {
+    document.getElementById('assignments-import-input')?.click();
+  }
+
+  handleBlockImport(event: Event): void {
+    this.handleImport(event, `${API_URL}/schedules/import/blocks`, 'bloques');
+  }
+
+  handleAssignmentImport(event: Event): void {
+    this.handleImport(event, `${API_URL}/schedules/import/assignments`, 'asignaciones');
+  }
+
+  private loadOverview(afterLoad?: () => void): void {
+    this.http.get<ScheduleOverview>(`${API_URL}/schedules/overview`).pipe(
+      catchError(() => {
+        this.errorMessage = 'No se pudo cargar la configuracion de horarios.';
+        return of({
+          blocks: [],
+          schedules: [],
+          courses: [],
+          periods: [],
+          subjects: [],
+          teachers: []
+        });
+      })
+    ).subscribe((overview) => {
+      this.overview = overview;
+      if (!this.editingBlockId) {
+        this.resetBlockForm();
+      }
+      if (!this.editingScheduleId) {
+        this.resetScheduleForm();
+      }
+      afterLoad?.();
+    });
+  }
+
+  private handleImport(event: Event, endpoint: string, entity: string): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    this.http.post<ImportSummaryResult>(endpoint, formData).subscribe({
+      next: (response) => {
+        this.errorMessage = this.formatImportSummary(response, entity);
+        this.loadOverview();
+        input.value = '';
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message ?? `No se pudo importar el archivo de ${entity}.`;
+        input.value = '';
+      }
+    });
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private formatImportSummary(summary: ImportSummaryResult, entity: string): string {
+    const lines = [
+      `${summary.message} Procesadas: ${summary.total}. Importadas: ${summary.imported}. Fallidas: ${summary.failed}.`
+    ];
+    if (summary.errors.length > 0) {
+      lines.push(`Detalle ${entity}: ${summary.errors.slice(0, 5).join(' | ')}`);
+      if (summary.errors.length > 5) {
+        lines.push(`Se omitieron ${summary.errors.length - 5} errores adicionales.`);
+      }
+    }
+    return lines.join(' ');
+  }
+}
+
+type ScheduleOverview = {
+  blocks: ScheduleBlockItem[];
+  schedules: CourseScheduleItem[];
+  courses: Array<{ id: number; name: string; parallel: string; level: string }>;
+  periods: Array<{ id: number; name: string; startDate: string; endDate: string; active: boolean }>;
+  subjects: Array<{ id: number; name: string; code: string; curriculumArea: string }>;
+  teachers: Array<{ id: number; name: string; specialization: string }>;
+};
+
+type ScheduleBlockItem = {
+  id: number;
+  label: string;
+  startTime: string;
+  endTime: string;
+  blockOrder: number;
+  blockType: 'CLASS' | 'RECESS';
+  active: boolean;
+};
+
+type CourseScheduleItem = {
+  id: number;
+  courseId: number;
+  courseName: string;
+  periodId: number;
+  periodName: string;
+  scheduleBlockId: number;
+  scheduleLabel: string;
+  subjectId: number;
+  subjectName: string;
+  teacherId: number;
+  teacherName: string;
+  weekday: number;
+  classroom: string | null;
+};
+
+type ImportSummaryResult = {
+  module: string;
+  total: number;
+  imported: number;
+  failed: number;
+  message: string;
+  errors: string[];
+};

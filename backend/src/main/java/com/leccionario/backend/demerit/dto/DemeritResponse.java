@@ -1,0 +1,10 @@
+package com.leccionario.backend.demerit.dto;
+
+public record DemeritResponse(
+        Long id,
+        String code,
+        String category,
+        String description,
+        short score,
+        boolean active) {
+}

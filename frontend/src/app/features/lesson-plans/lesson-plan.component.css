@@ -1,0 +1,54 @@
+
+    .daily-log-table textarea {
+      min-width: 180px;
+    }
+    .signature-box {
+      background: rgba(242, 194, 48, 0.04);
+      border-color: rgba(242, 194, 48, 0.12) !important;
+    }
+    .modal-shell {
+      position: fixed;
+      inset: 0;
+      z-index: 1050;
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.62);
+      backdrop-filter: blur(6px);
+    }
+    .modal-card {
+      width: min(100%, 680px);
+      padding: 1.5rem;
+      border-radius: 1.5rem;
+      background: linear-gradient(180deg, rgba(20, 20, 20, 0.98), rgba(8, 8, 8, 0.98));
+      border: 1px solid rgba(242, 194, 48, 0.18);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+    }
+    .absence-option {
+      background: rgba(242, 194, 48, 0.04);
+      border-color: rgba(242, 194, 48, 0.12) !important;
+      cursor: pointer;
+    }
+    .qr-preview {
+      width: min(100%, 280px);
+      padding: 0.75rem;
+      border-radius: 1rem;
+      background: #fff;
+    }
+    .qr-link-box {
+      padding: 0.9rem;
+      border-radius: 1rem;
+      background: rgba(242, 194, 48, 0.04);
+      border: 1px solid rgba(242, 194, 48, 0.12);
+    }
+    .signature-summary-card {
+      height: 100%;
+      padding: 1rem;
+      border-radius: 1rem;
+      background: rgba(242, 194, 48, 0.04);
+      border: 1px solid rgba(242, 194, 48, 0.12);
+    }
+    .final-signature-card {
+      background: rgba(255, 255, 255, 0.03);
+    }
+  
