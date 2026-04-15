@@ -38,6 +38,11 @@ export type InstitutionBranding = {
   textColor: string;
   contrastTextColor: string;
   mutedTextColor: string;
+  headingLargeColor: string;
+  headingMediumColor: string;
+  bodyTextColor: string;
+  buttonColor: string;
+  buttonTextColor: string;
   slides: BrandingSlide[];
 };
 
@@ -161,6 +166,11 @@ export class BrandingService {
       textColor: '#2E261B',
       contrastTextColor: '#FFFFFF',
       mutedTextColor: '#8C7D6B',
+      headingLargeColor: '#586B3B',
+      headingMediumColor: '#7A5C3E',
+      bodyTextColor: '#2E261B',
+      buttonColor: '#586B3B',
+      buttonTextColor: '#FFFFFF',
       slides: []
     };
   }

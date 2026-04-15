@@ -34,6 +34,7 @@
   --card-gradient: linear-gradient(180deg, var(--card-bg), var(--card-bg-alt));
 
   --btn-primary-base: var(--app-primary);
+  --btn-primary-text: #ffffff;
   --btn-primary-hover: var(--app-secondary);
   --btn-outline-border: rgba(88, 107, 59, 0.48);
   --btn-outline-text: var(--app-primary);
@@ -75,6 +76,7 @@ h3,
 h4,
 h5,
 h6 {
+}
 
 .text-body,
 p,

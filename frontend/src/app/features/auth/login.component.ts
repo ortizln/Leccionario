@@ -20,6 +20,8 @@ export class LoginComponent implements OnDestroy {
   institutions = this.brandingService.publicInstitutions();
   selectedInstitutionCode = this.brandingService.selectedInstitutionCode();
   currentSlideIndex = 0;
+  loginError = '';
+  isLoading = false;
 
   form = this.fb.nonNullable.group({
     username: ['', Validators.required],
@@ -75,9 +77,18 @@ export class LoginComponent implements OnDestroy {
     if (this.form.invalid) {
       return;
     }
-    this.authService.login(this.form.getRawValue()).subscribe(() => {
-      this.brandingService.syncAuthenticatedBranding();
-      void this.router.navigateByUrl(this.authService.defaultRoute());
+    this.isLoading = true;
+    this.loginError = '';
+    this.authService.login(this.form.getRawValue()).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.brandingService.syncAuthenticatedBranding();
+        void this.router.navigateByUrl(this.authService.defaultRoute());
+      },
+      error: () => {
+        this.isLoading = false;
+        this.loginError = 'Usuario o contraseña incorrectos';
+      }
     });
   }
 

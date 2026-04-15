@@ -77,4 +77,19 @@ public class InstitutionBranding extends BaseEntity {
 
     @Column(nullable = false, length = 7)
     private String mutedTextColor;
+
+    @Column(nullable = false, length = 7)
+    private String headingLargeColor;
+
+    @Column(nullable = false, length = 7)
+    private String headingMediumColor;
+
+    @Column(nullable = false, length = 7)
+    private String bodyTextColor;
+
+    @Column(nullable = false, length = 7)
+    private String buttonColor;
+
+    @Column(nullable = false, length = 7)
+    private String buttonTextColor;
 }

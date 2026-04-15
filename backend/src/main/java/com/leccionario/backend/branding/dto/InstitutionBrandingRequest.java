@@ -27,5 +27,10 @@ public record InstitutionBrandingRequest(
         @Pattern(regexp = "^$|^#[0-9A-Fa-f]{6}$") String textColor,
         @Pattern(regexp = "^$|^#[0-9A-Fa-f]{6}$") String contrastTextColor,
         @Pattern(regexp = "^$|^#[0-9A-Fa-f]{6}$") String mutedTextColor,
+        @Pattern(regexp = "^$|^#[0-9A-Fa-f]{6}$") String headingLargeColor,
+        @Pattern(regexp = "^$|^#[0-9A-Fa-f]{6}$") String headingMediumColor,
+        @Pattern(regexp = "^$|^#[0-9A-Fa-f]{6}$") String bodyTextColor,
+        @Pattern(regexp = "^$|^#[0-9A-Fa-f]{6}$") String buttonColor,
+        @Pattern(regexp = "^$|^#[0-9A-Fa-f]{6}$") String buttonTextColor,
         @Valid List<BrandingSlideRequest> slides) {
 }

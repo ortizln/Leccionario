@@ -52,12 +52,20 @@
                 </div>
               }
 
+              @if (loginError) {
+                <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                  <span>{{ loginError }}</span>
+                  <button type="button" class="btn-close" (click)="loginError = ''" aria-label="Close"></button>
+                </div>
+              }
+
               <form [formGroup]="form" (ngSubmit)="submit()" class="d-grid gap-2">
                 <div>
                   <label class="form-label fw-semibold">Usuario</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
-                    <input class="form-control" type="text" placeholder="admin" formControlName="username">
+                    <input class="form-control" type="text" placeholder="admin" formControlName="username" [attr.disabled]="isLoading ? true : null">
                   </div>
                 </div>
 
@@ -65,12 +73,17 @@
                   <label class="form-label fw-semibold">Contrasena</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-shield-lock-fill"></i></span>
-                    <input class="form-control" type="password" placeholder="Admin123*" formControlName="password">
+                    <input class="form-control" type="password" placeholder="Admin123*" formControlName="password" [attr.disabled]="isLoading ? true : null">
                   </div>
                 </div>
 
-                <button class="btn btn-primary mt-2" type="submit">
-                  <i class="bi bi-box-arrow-in-right me-2"></i>Ingresar
+                <button class="btn btn-primary mt-2" type="submit" [attr.disabled]="isLoading ? true : null">
+                  @if (isLoading) {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Ingresando...
+                  } @else {
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Ingresar
+                  }
                 </button>
               </form>
 

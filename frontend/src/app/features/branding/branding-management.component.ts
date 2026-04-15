@@ -27,16 +27,36 @@ export class BrandingManagementComponent {
   message = '';
   messageType: 'success' | 'error' = 'success';
 
-  readonly colorFields: Array<{ key: keyof InstitutionBrandingPayload; label: string }> = [
-    { key: 'primaryColor', label: 'Primario' },
-    { key: 'secondaryColor', label: 'Secundario' },
-    { key: 'accentColor', label: 'Acento' },
-    { key: 'backgroundColor', label: 'Fondo' },
-    { key: 'surfaceColor', label: 'Superficie' },
-    { key: 'textColor', label: 'Texto principal' },
-    { key: 'contrastTextColor', label: 'Texto en contraste' },
-    { key: 'mutedTextColor', label: 'Texto suave' }
+  readonly colorFields: Array<{ key: keyof InstitutionBrandingPayload; label: string; category: string }> = [
+    // Colores base
+    { key: 'primaryColor', label: 'Primario', category: 'base' },
+    { key: 'secondaryColor', label: 'Secundario', category: 'base' },
+    { key: 'accentColor', label: 'Acento', category: 'base' },
+    { key: 'backgroundColor', label: 'Fondo', category: 'base' },
+    { key: 'surfaceColor', label: 'Superficie', category: 'base' },
+    // Colores de texto
+    { key: 'headingLargeColor', label: 'Títulos grandes', category: 'text' },
+    { key: 'headingMediumColor', label: 'Títulos medianos', category: 'text' },
+    { key: 'bodyTextColor', label: 'Texto general', category: 'text' },
+    { key: 'textColor', label: 'Texto principal', category: 'text' },
+    { key: 'contrastTextColor', label: 'Texto en contraste', category: 'text' },
+    { key: 'mutedTextColor', label: 'Texto suave', category: 'text' },
+    // Colores de botones
+    { key: 'buttonColor', label: 'Color botón', category: 'button' },
+    { key: 'buttonTextColor', label: 'Color texto botón', category: 'button' }
   ];
+
+  get baseColorFields() {
+    return this.colorFields.filter(f => f.category === 'base');
+  }
+
+  get textColorFields() {
+    return this.colorFields.filter(f => f.category === 'text');
+  }
+
+  get buttonColorFields() {
+    return this.colorFields.filter(f => f.category === 'button');
+  }
 
   getColorValue(key: keyof InstitutionBrandingPayload): string {
     const value = this.model[key];
@@ -87,10 +107,15 @@ export class BrandingManagementComponent {
       surfaceColor: '#FBF8F1',
       textColor: '#2E261B',
       contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#8C7D6B'
+      mutedTextColor: '#8C7D6B',
+      headingLargeColor: '#586B3B',
+      headingMediumColor: '#7A5C3E',
+      bodyTextColor: '#2E261B',
+      buttonColor: '#586B3B',
+      buttonTextColor: '#FFFFFF'
     };
     this.updateCSSVariables(this.model);
-  }
+    this.applyButtonColors(this.model);
   }
 
   applyOceanPalette(): void {
@@ -103,9 +128,15 @@ export class BrandingManagementComponent {
       surfaceColor: '#F5F9FB',
       textColor: '#0F3460',
       contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#5C7A8F'
+      mutedTextColor: '#5C7A8F',
+      headingLargeColor: '#1B4965',
+      headingMediumColor: '#2A7E8E',
+      bodyTextColor: '#0F3460',
+      buttonColor: '#1B4965',
+      buttonTextColor: '#FFFFFF'
     };
     this.updateCSSVariables(this.model);
+    this.applyButtonColors(this.model);
   }
 
   applySunsetPalette(): void {
@@ -118,9 +149,15 @@ export class BrandingManagementComponent {
       surfaceColor: '#FFFBF5',
       textColor: '#2C1810',
       contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#8B6F47'
+      mutedTextColor: '#8B6F47',
+      headingLargeColor: '#D62828',
+      headingMediumColor: '#F77F00',
+      bodyTextColor: '#2C1810',
+      buttonColor: '#D62828',
+      buttonTextColor: '#FFFFFF'
     };
     this.updateCSSVariables(this.model);
+    this.applyButtonColors(this.model);
   }
 
   applyForestPalette(): void {
@@ -133,9 +170,15 @@ export class BrandingManagementComponent {
       surfaceColor: '#F1F8F5',
       textColor: '#1B3A2C',
       contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#52796F'
+      mutedTextColor: '#52796F',
+      headingLargeColor: '#2D6A4F',
+      headingMediumColor: '#40916C',
+      bodyTextColor: '#1B3A2C',
+      buttonColor: '#2D6A4F',
+      buttonTextColor: '#FFFFFF'
     };
     this.updateCSSVariables(this.model);
+    this.applyButtonColors(this.model);
   }
 
   applyMinimalPalette(): void {
@@ -148,9 +191,15 @@ export class BrandingManagementComponent {
       surfaceColor: '#FFFFFF',
       textColor: '#1C1C1C',
       contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#999999'
+      mutedTextColor: '#999999',
+      headingLargeColor: '#333333',
+      headingMediumColor: '#666666',
+      bodyTextColor: '#1C1C1C',
+      buttonColor: '#333333',
+      buttonTextColor: '#FFFFFF'
     };
     this.updateCSSVariables(this.model);
+    this.applyButtonColors(this.model);
   }
 
   addSlide(): void {
@@ -272,6 +321,11 @@ export class BrandingManagementComponent {
       textColor: branding.textColor || '#2E261B',
       contrastTextColor: branding.contrastTextColor || '#FFFFFF',
       mutedTextColor: branding.mutedTextColor || '#8C7D6B',
+      headingLargeColor: branding.headingLargeColor || branding.primaryColor,
+      headingMediumColor: branding.headingMediumColor || branding.secondaryColor,
+      bodyTextColor: branding.bodyTextColor || branding.textColor || '#2E261B',
+      buttonColor: branding.buttonColor || branding.primaryColor,
+      buttonTextColor: branding.buttonTextColor || '#FFFFFF',
       slides: []
     };
     this.slides = branding.slides.map((slide) => ({ ...slide }));
@@ -281,11 +335,11 @@ export class BrandingManagementComponent {
 
   private updateCSSVariables(brandingConfig: InstitutionBrandingPayload): void {
     const root = document.documentElement;
-    // Text color variables
-    root.style.setProperty('--text-heading-large', brandingConfig.primaryColor);
-    root.style.setProperty('--text-heading-medium', brandingConfig.textColor);
-    root.style.setProperty('--text-heading-small', brandingConfig.secondaryColor);
-    root.style.setProperty('--text-body', brandingConfig.textColor);
+    // Text color variables using new dedicated fields
+    root.style.setProperty('--text-heading-large', brandingConfig.headingLargeColor);
+    root.style.setProperty('--text-heading-medium', brandingConfig.headingMediumColor);
+    root.style.setProperty('--text-heading-small', brandingConfig.headingMediumColor);
+    root.style.setProperty('--text-body', brandingConfig.bodyTextColor);
     root.style.setProperty('--text-muted', brandingConfig.mutedTextColor);
     root.style.setProperty('--text-contrast', brandingConfig.contrastTextColor);
 
@@ -296,7 +350,7 @@ export class BrandingManagementComponent {
     
     root.style.setProperty('--card-bg', `rgba(${surfaceRgb}, 0.92)`);
     root.style.setProperty('--card-bg-alt', `rgba(${bgRgb}, 0.96)`);
-    root.style.setProperty('--card-text', brandingConfig.textColor);
+    root.style.setProperty('--card-text', brandingConfig.bodyTextColor);
     root.style.setProperty('--card-border', `rgba(${this.hexToRgb(brandingConfig.primaryColor).join(', ')}, 0.12)`);
     root.style.setProperty('--card-gradient', cardGradient);
   }
@@ -308,12 +362,19 @@ export class BrandingManagementComponent {
 
   private applyButtonColors(brandingConfig: InstitutionBrandingPayload): void {
     const root = document.documentElement;
-    const primaryRgb = this.hexToRgb(brandingConfig.primaryColor).join(', ');
-    root.style.setProperty('--btn-primary-base', brandingConfig.primaryColor);
-    root.style.setProperty('--btn-primary-hover', brandingConfig.secondaryColor);
-    root.style.setProperty('--btn-outline-border', `rgba(${primaryRgb}, 0.48)`);
-    root.style.setProperty('--btn-outline-text', brandingConfig.primaryColor);
-    root.style.setProperty('--btn-outline-bg', `rgba(${primaryRgb}, 0.04)`);
+    const buttonRgb = this.hexToRgb(brandingConfig.buttonColor).join(', ');
+    root.style.setProperty('--btn-primary-base', brandingConfig.buttonColor);
+    root.style.setProperty('--btn-primary-text', brandingConfig.buttonTextColor);
+    root.style.setProperty('--btn-primary-hover', this.darkenColor(brandingConfig.buttonColor));
+    root.style.setProperty('--btn-outline-border', `rgba(${buttonRgb}, 0.48)`);
+    root.style.setProperty('--btn-outline-text', brandingConfig.buttonColor);
+    root.style.setProperty('--btn-outline-bg', `rgba(${buttonRgb}, 0.04)`);
+  }
+
+  private darkenColor(hex: string): string {
+    const rgb = this.hexToRgb(hex);
+    const darkened = rgb.map(val => Math.max(0, Math.floor(val * 0.8)));
+    return '#' + darkened.map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
   }
 
   private emptyModel(): InstitutionBrandingPayload {
@@ -337,6 +398,11 @@ export class BrandingManagementComponent {
       textColor: '#2E261B',
       contrastTextColor: '#FFFFFF',
       mutedTextColor: '#8C7D6B',
+      headingLargeColor: '#586B3B',
+      headingMediumColor: '#7A5C3E',
+      bodyTextColor: '#2E261B',
+      buttonColor: '#586B3B',
+      buttonTextColor: '#FFFFFF',
       slides: []
     };
   }

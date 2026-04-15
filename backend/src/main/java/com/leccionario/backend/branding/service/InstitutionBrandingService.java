@@ -189,6 +189,11 @@ public class InstitutionBrandingService {
         branding.setTextColor("#2E261B");
         branding.setContrastTextColor("#FFFFFF");
         branding.setMutedTextColor("#8C7D6B");
+        branding.setHeadingLargeColor("#586B3B");
+        branding.setHeadingMediumColor("#7A5C3E");
+        branding.setBodyTextColor("#2E261B");
+        branding.setButtonColor("#586B3B");
+        branding.setButtonTextColor("#FFFFFF");
         return branding;
     }
 
@@ -212,6 +217,11 @@ public class InstitutionBrandingService {
         branding.setTextColor(orDefaultColor(request.textColor(), "#2E261B"));
         branding.setContrastTextColor(orDefaultColor(request.contrastTextColor(), "#FFFFFF"));
         branding.setMutedTextColor(orDefaultColor(request.mutedTextColor(), "#8C7D6B"));
+        branding.setHeadingLargeColor(orDefaultColor(request.headingLargeColor(), "#586B3B"));
+        branding.setHeadingMediumColor(orDefaultColor(request.headingMediumColor(), "#7A5C3E"));
+        branding.setBodyTextColor(orDefaultColor(request.bodyTextColor(), "#2E261B"));
+        branding.setButtonColor(orDefaultColor(request.buttonColor(), "#586B3B"));
+        branding.setButtonTextColor(orDefaultColor(request.buttonTextColor(), "#FFFFFF"));
     }
 
     private void syncSlides(Institution institution, List<BrandingSlideRequest> requests) {
@@ -322,6 +332,11 @@ public class InstitutionBrandingService {
                 branding.getTextColor(),
                 branding.getContrastTextColor(),
                 branding.getMutedTextColor(),
+                branding.getHeadingLargeColor(),
+                branding.getHeadingMediumColor(),
+                branding.getBodyTextColor(),
+                branding.getButtonColor(),
+                branding.getButtonTextColor(),
                 slides.stream()
                         .map(slide -> new BrandingSlideResponse(
                                 slide.getId(),

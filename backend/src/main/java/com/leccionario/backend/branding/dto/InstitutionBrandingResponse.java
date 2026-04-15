@@ -25,5 +25,10 @@ public record InstitutionBrandingResponse(
         String textColor,
         String contrastTextColor,
         String mutedTextColor,
+        String headingLargeColor,
+        String headingMediumColor,
+        String bodyTextColor,
+        String buttonColor,
+        String buttonTextColor,
         List<BrandingSlideResponse> slides) {
 }
