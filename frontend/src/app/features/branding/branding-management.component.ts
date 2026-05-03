@@ -69,8 +69,7 @@ export class BrandingManagementComponent {
         ...this.model,
         [key]: value
       };
-      this.updateCSSVariables(this.model);
-      this.applyButtonColors(this.model);
+      this.applyPreviewTheme();
     }
   }
 
@@ -114,8 +113,7 @@ export class BrandingManagementComponent {
       buttonColor: '#586B3B',
       buttonTextColor: '#FFFFFF'
     };
-    this.updateCSSVariables(this.model);
-    this.applyButtonColors(this.model);
+    this.applyPreviewTheme();
   }
 
   applyOceanPalette(): void {
@@ -135,8 +133,7 @@ export class BrandingManagementComponent {
       buttonColor: '#1B4965',
       buttonTextColor: '#FFFFFF'
     };
-    this.updateCSSVariables(this.model);
-    this.applyButtonColors(this.model);
+    this.applyPreviewTheme();
   }
 
   applySunsetPalette(): void {
@@ -156,8 +153,7 @@ export class BrandingManagementComponent {
       buttonColor: '#D62828',
       buttonTextColor: '#FFFFFF'
     };
-    this.updateCSSVariables(this.model);
-    this.applyButtonColors(this.model);
+    this.applyPreviewTheme();
   }
 
   applyForestPalette(): void {
@@ -177,8 +173,7 @@ export class BrandingManagementComponent {
       buttonColor: '#2D6A4F',
       buttonTextColor: '#FFFFFF'
     };
-    this.updateCSSVariables(this.model);
-    this.applyButtonColors(this.model);
+    this.applyPreviewTheme();
   }
 
   applyMinimalPalette(): void {
@@ -198,8 +193,7 @@ export class BrandingManagementComponent {
       buttonColor: '#333333',
       buttonTextColor: '#FFFFFF'
     };
-    this.updateCSSVariables(this.model);
-    this.applyButtonColors(this.model);
+    this.applyPreviewTheme();
   }
 
   addSlide(): void {
@@ -329,52 +323,21 @@ export class BrandingManagementComponent {
       slides: []
     };
     this.slides = branding.slides.map((slide) => ({ ...slide }));
-    this.updateCSSVariables(this.model);
-    this.applyButtonColors(this.model);
+    this.brandingService.applyTheme(this.toFullBranding(this.model));
   }
 
-  private updateCSSVariables(brandingConfig: InstitutionBrandingPayload): void {
-    const root = document.documentElement;
-    // Text color variables using new dedicated fields
-    root.style.setProperty('--text-heading-large', brandingConfig.headingLargeColor);
-    root.style.setProperty('--text-heading-medium', brandingConfig.headingMediumColor);
-    root.style.setProperty('--text-heading-small', brandingConfig.headingMediumColor);
-    root.style.setProperty('--text-body', brandingConfig.bodyTextColor);
-    root.style.setProperty('--text-muted', brandingConfig.mutedTextColor);
-    root.style.setProperty('--text-contrast', brandingConfig.contrastTextColor);
-
-    // Card background variables with transparency - create gradient from surfaceColor to backgroundColor
-    const surfaceRgb = this.hexToRgb(brandingConfig.surfaceColor).join(', ');
-    const bgRgb = this.hexToRgb(brandingConfig.backgroundColor).join(', ');
-    const cardGradient = `linear-gradient(180deg, rgba(${surfaceRgb}, 0.95), rgba(${bgRgb}, 0.98))`;
-    
-    root.style.setProperty('--card-bg', `rgba(${surfaceRgb}, 0.92)`);
-    root.style.setProperty('--card-bg-alt', `rgba(${bgRgb}, 0.96)`);
-    root.style.setProperty('--card-text', brandingConfig.bodyTextColor);
-    root.style.setProperty('--card-border', `rgba(${this.hexToRgb(brandingConfig.primaryColor).join(', ')}, 0.12)`);
-    root.style.setProperty('--card-gradient', cardGradient);
+  private applyPreviewTheme(): void {
+    this.brandingService.applyTheme(this.toFullBranding(this.model));
   }
 
-  private hexToRgb(hex: string): number[] {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : [0, 0, 0];
-  }
-
-  private applyButtonColors(brandingConfig: InstitutionBrandingPayload): void {
-    const root = document.documentElement;
-    const buttonRgb = this.hexToRgb(brandingConfig.buttonColor).join(', ');
-    root.style.setProperty('--btn-primary-base', brandingConfig.buttonColor);
-    root.style.setProperty('--btn-primary-text', brandingConfig.buttonTextColor);
-    root.style.setProperty('--btn-primary-hover', this.darkenColor(brandingConfig.buttonColor));
-    root.style.setProperty('--btn-outline-border', `rgba(${buttonRgb}, 0.48)`);
-    root.style.setProperty('--btn-outline-text', brandingConfig.buttonColor);
-    root.style.setProperty('--btn-outline-bg', `rgba(${buttonRgb}, 0.04)`);
-  }
-
-  private darkenColor(hex: string): string {
-    const rgb = this.hexToRgb(hex);
-    const darkened = rgb.map(val => Math.max(0, Math.floor(val * 0.8)));
-    return '#' + darkened.map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+  private toFullBranding(model: InstitutionBrandingPayload): InstitutionBranding {
+    return {
+      institutionId: this.selectedInstitutionId ?? 0,
+      institutionCode: '',
+      institutionName: '',
+      ...model,
+      slides: this.slides
+    };
   }
 
   private emptyModel(): InstitutionBrandingPayload {

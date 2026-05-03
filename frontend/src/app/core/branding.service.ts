@@ -175,7 +175,7 @@ export class BrandingService {
     };
   }
 
-  private applyTheme(branding: InstitutionBranding): void {
+  applyTheme(branding: InstitutionBranding): void {
     const root = this.document.documentElement;
     const primary = branding.primaryColor;
     const secondary = branding.secondaryColor;
@@ -185,6 +185,11 @@ export class BrandingService {
     const text = branding.textColor;
     const contrastText = branding.contrastTextColor;
     const mutedText = branding.mutedTextColor;
+    const headingLarge = branding.headingLargeColor || primary;
+    const headingMedium = branding.headingMediumColor || text;
+    const bodyText = branding.bodyTextColor || text;
+    const button = branding.buttonColor || primary;
+    const buttonText = branding.buttonTextColor || contrastText;
 
     root.style.setProperty('--app-primary', primary);
     root.style.setProperty('--app-secondary', secondary);
@@ -206,6 +211,12 @@ export class BrandingService {
     root.style.setProperty('--app-bg-rgb', this.hexToRgb(background));
     root.style.setProperty('--app-text-rgb', this.hexToRgb(text));
     root.style.setProperty('--app-muted-text', mutedText);
+    root.style.setProperty('--text-heading-large', headingLarge);
+    root.style.setProperty('--text-heading-medium', headingMedium);
+    root.style.setProperty('--text-heading-small', headingMedium);
+    root.style.setProperty('--text-body', bodyText);
+    root.style.setProperty('--btn-primary-base', button);
+    root.style.setProperty('--btn-primary-text', buttonText);
   }
 
   private readSelectedInstitutionCode(): string {
