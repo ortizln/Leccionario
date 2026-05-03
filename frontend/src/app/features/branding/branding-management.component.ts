@@ -269,8 +269,7 @@ export class BrandingManagementComponent {
     };
 
     this.brandingService.saveInstitutionBranding(this.selectedInstitutionId, payload).subscribe({
-      next: (branding) => {
-        this.applyBranding(branding);
+      next: () => {
         this.messageType = 'success';
         this.message = 'La apariencia institucional se guardo correctamente.';
       },
