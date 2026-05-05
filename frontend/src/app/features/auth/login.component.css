@@ -13,7 +13,7 @@
       overflow: hidden;
       min-height: 100dvh;
       background: linear-gradient(145deg, rgba(var(--app-text-rgb), 0.18) 0%, rgba(var(--app-secondary-rgb), 0.3) 100%);
-      color: white;
+      color: var(--app-contrast-text);
     }
     .login-panel-column {
       min-height: 100dvh;
@@ -54,10 +54,11 @@
       font-size: clamp(1.7rem, 2.5vw, 2.7rem);
       line-height: 1;
       font-weight: 800;
+      color: var(--app-contrast-text);
     }
     .slide-copy p {
       margin: 0;
-      color: rgba(255,255,255,0.82);
+      color: rgba(var(--app-contrast-text-rgb), 0.82);
       font-size: 0.98rem;
     }
     .showcase-footer {
@@ -69,7 +70,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      color: rgba(255,255,255,0.75);
+      color: rgba(var(--app-contrast-text-rgb), 0.75);
     }
     .showcase-dots {
       display: flex;
@@ -84,29 +85,28 @@
     }
     .login-panel {
       max-width: 520px;
-      background:
-        linear-gradient(155deg, rgba(var(--app-bg-rgb), 0.86) 0%, rgba(var(--app-secondary-rgb), 0.14) 100%);
+      background: var(--card-gradient);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(var(--app-primary-rgb), 0.22);
+      border: 1px solid var(--app-border);
       box-shadow: 0 28px 70px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(var(--app-accent-rgb), 0.08) inset;
-      border-radius: 8px;
+      border-radius: var(--radius-lg);
     }
     .login-panel h1 {
       color: var(--app-text);
     }
     .login-panel .text-muted {
-      color: rgba(var(--app-text-rgb), 0.72) !important;
+      color: var(--text-muted) !important;
     }
     .login-panel .form-label {
       color: var(--app-text);
     }
     .login-panel .small {
-      color: rgba(var(--app-text-rgb), 0.72);
+      color: var(--text-muted);
     }
     .login-icon {
       width: 72px;
       height: 72px;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       display: grid;
       place-items: center;
       font-size: 1.6rem;
@@ -125,11 +125,12 @@
       background: rgba(var(--app-accent-rgb), 0.82);
       border-color: rgba(var(--app-accent-rgb), 0.44);
       color: var(--app-secondary);
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
     }
     .form-control {
-      border-color: rgba(var(--app-primary-rgb), 0.18);
+      border-color: var(--app-line);
       background: rgba(255, 255, 255, 0.94);
-      color: var(--app-black);
+      color: var(--app-text);
     }
     .form-control:focus {
       border-color: var(--app-primary);

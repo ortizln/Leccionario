@@ -191,6 +191,7 @@ export class BrandingService {
     const button = branding.buttonColor || primary;
     const buttonText = branding.buttonTextColor || contrastText;
 
+    // Core colors
     root.style.setProperty('--app-primary', primary);
     root.style.setProperty('--app-secondary', secondary);
     root.style.setProperty('--app-accent', accent);
@@ -200,23 +201,57 @@ export class BrandingService {
     root.style.setProperty('--app-line', this.hexToRgba(primary, 0.26));
     root.style.setProperty('--app-text', text);
     root.style.setProperty('--app-text-soft', mutedText);
+    root.style.setProperty('--app-text-muted', this.mixColors(mutedText, '#000000', 0.15));
     root.style.setProperty('--app-contrast-text', contrastText);
     root.style.setProperty('--app-contrast-text-rgb', this.hexToRgb(contrastText));
     root.style.setProperty('--app-muted-text-rgb', this.hexToRgb(mutedText));
-    root.style.setProperty('--app-black', this.mixColors(background, '#000000', 0.2));
-    root.style.setProperty('--app-black-soft', this.mixColors(background, '#000000', 0.1));
+
+    // RGB values for rgba() usage
     root.style.setProperty('--app-primary-rgb', this.hexToRgb(primary));
     root.style.setProperty('--app-secondary-rgb', this.hexToRgb(secondary));
     root.style.setProperty('--app-accent-rgb', this.hexToRgb(accent));
     root.style.setProperty('--app-bg-rgb', this.hexToRgb(background));
     root.style.setProperty('--app-text-rgb', this.hexToRgb(text));
-    root.style.setProperty('--app-muted-text', mutedText);
+
+    // Derived colors
+    root.style.setProperty('--app-black', this.mixColors(background, '#000000', 0.2));
+    root.style.setProperty('--app-black-soft', this.mixColors(background, '#000000', 0.1));
+    root.style.setProperty('--app-border', this.hexToRgba(primary, 0.16));
+
+    // Text hierarchy
     root.style.setProperty('--text-heading-large', headingLarge);
     root.style.setProperty('--text-heading-medium', headingMedium);
     root.style.setProperty('--text-heading-small', headingMedium);
     root.style.setProperty('--text-body', bodyText);
+    root.style.setProperty('--text-body-soft', mutedText);
+    root.style.setProperty('--text-muted', this.mixColors(mutedText, '#000000', 0.15));
+    root.style.setProperty('--text-contrast', contrastText);
+
+    // Cards
+    root.style.setProperty('--card-bg', this.hexToRgba(surface, 0.92));
+    root.style.setProperty('--card-bg-alt', this.hexToRgba(background, 0.96));
+    root.style.setProperty('--card-border', this.hexToRgba(primary, 0.12));
+    root.style.setProperty('--card-text', bodyText);
+
+    // Buttons
     root.style.setProperty('--btn-primary-base', button);
     root.style.setProperty('--btn-primary-text', buttonText);
+    root.style.setProperty('--btn-primary-hover', this.darkenColor(button, 0.2));
+
+    // Sidebar
+    root.style.setProperty('--sidebar-bg-gradient',
+      `linear-gradient(180deg, ${this.hexToRgba(primary, 0.94)} 0%, ${this.hexToRgba(secondary, 0.94)} 100%)`);
+    root.style.setProperty('--sidebar-text', contrastText);
+    root.style.setProperty('--sidebar-text-muted', this.hexToRgba(contrastText, 0.7));
+    root.style.setProperty('--sidebar-card-bg', this.hexToRgba(contrastText, 0.12));
+    root.style.setProperty('--sidebar-card-border', this.hexToRgba(contrastText, 0.16));
+    root.style.setProperty('--sidebar-nav-hover', this.hexToRgba(accent, 0.9));
+  }
+
+  private darkenColor(hex: string, factor: number = 0.2): string {
+    const rgb = this.hexToRgb(hex).split(', ').map(Number);
+    const darkened = rgb.map(val => Math.max(0, Math.floor(val * (1 - factor))));
+    return `#${darkened.map(x => x.toString(16).padStart(2, '0')).join('')}`;
   }
 
   private readSelectedInstitutionCode(): string {

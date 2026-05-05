@@ -24,10 +24,10 @@
               </select>
             </div>
             <div class="col-12 col-lg-6">
-              <div class="preview-strip p-3">
+              <div class="p-3 rounded-3" style="background: var(--card-gradient); border: 1px solid var(--card-border)">
                 <div class="small text-muted">Vista rapida</div>
-                <div class="fw-semibold">{{ model.displayName || 'Unidad educativa' }}</div>
-                <div class="small text-muted">{{ model.loginTitle || 'Bienvenido al Leccionario Digital' }}</div>
+                <div class="fw-semibold" style="color: var(--text-heading-large)">{{ model.displayName || 'Unidad educativa' }}</div>
+                <div class="small" style="color: var(--text-body-soft)">{{ model.loginTitle || 'Bienvenido al Leccionario Digital' }}</div>
               </div>
             </div>
           </div>
@@ -164,6 +164,7 @@
                         [ngModel]="getColorValue(field.key)"
                         (ngModelChange)="setColorValue(field.key, $event)"
                         [name]="field.key + 'Text'">
+                      <div class="color-preview" [style.background]="getColorValue(field.key)"></div>
                     </div>
                   </div>
                 }
@@ -187,6 +188,7 @@
                         [ngModel]="getColorValue(field.key)"
                         (ngModelChange)="setColorValue(field.key, $event)"
                         [name]="field.key + 'Text'">
+                      <div class="color-preview" [style.background]="getColorValue(field.key)"></div>
                     </div>
                   </div>
                 }
@@ -210,6 +212,7 @@
                         [ngModel]="getColorValue(field.key)"
                         (ngModelChange)="setColorValue(field.key, $event)"
                         [name]="field.key + 'Text'">
+                      <div class="color-preview" [style.background]="getColorValue(field.key)"></div>
                     </div>
                   </div>
                 }

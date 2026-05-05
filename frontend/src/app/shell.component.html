@@ -2,20 +2,12 @@
     <div class="container-fluid min-vh-100">
       <div class="row min-vh-100">
         <aside class="col-12 col-lg-3 col-xxl-2 app-sidebar p-4">
-<!--           <div class="d-flex align-items-center gap-3 mb-4">
-            <div class="brand-badge">LD</div>
-            <div>
-              <h1 class="h4 mb-1 text-white">Leccionario</h1>
-              <p class="mb-0 text-white-50">Sistema institucional</p>
-            </div>
-          </div> -->
-
           <div class="card border-0 shadow-sm sidebar-mini-card mb-4">
             <div class="card-body">
               <div class="d-flex align-items-start gap-3 mb-3">
-                <div class="brand-badge user-badge">U</div>
+                <div class="brand-badge user-badge">{{ displayName().charAt(0) }}</div>
                 <div class="flex-grow-1">
-                  <div class="fw-semibold text-white fs-5 lh-sm user-name">{{ displayName() }}</div>
+                  <div class="fw-semibold user-name">{{ displayName() }}</div>
                   <div class="small text-warning-emphasis fw-semibold">{{ roleLine() }}</div>
                   <div class="small text-white-50">{{ subjectLine() }}</div>
                 </div>
@@ -80,7 +72,7 @@
             }
           </nav>
 
-          <div class="card border-0 shadow-sm sidebar-mini-card mt-4">
+          <div class="card border-0 shadow-sm sidebar-mini-card mt-auto">
             <div class="card-body small text-white-50">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <span><i class="bi bi-shield-check me-2"></i>Seguridad</span>
