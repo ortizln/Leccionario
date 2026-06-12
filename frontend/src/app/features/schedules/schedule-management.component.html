@@ -56,9 +56,9 @@
                 </div>
                 @if (canManageSchedules) {
                   <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-outline-primary" type="button" (click)="downloadBlockTemplate()">Plantilla Excel</button>
-                    <button class="btn btn-outline-primary" type="button" (click)="triggerBlockImport()">Importar Excel</button>
-                    <button class="btn btn-outline-primary" type="button" (click)="resetBlockForm()">Limpiar</button>
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="downloadBlockTemplate()">Plantilla Excel</button>
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="triggerBlockImport()">Importar Excel</button>
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="resetBlockForm()">Limpiar</button>
                   </div>
                 }
               </div>
@@ -66,23 +66,23 @@
               <form [formGroup]="blockForm" class="row g-3">
                 <div class="col-12">
                   <label class="form-label fw-semibold">Etiqueta</label>
-                  <input class="form-control" type="text" formControlName="label" placeholder="07H00-07H40" [readonly]="!canManageSchedules">
+                  <input class="form-control form-control-sm" type="text" formControlName="label" placeholder="07H00-07H40" [readonly]="!canManageSchedules">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Hora inicio</label>
-                  <input class="form-control" type="time" formControlName="startTime" [readonly]="!canManageSchedules">
+                  <input class="form-control form-control-sm" type="time" formControlName="startTime" [readonly]="!canManageSchedules">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Hora fin</label>
-                  <input class="form-control" type="time" formControlName="endTime" [readonly]="!canManageSchedules">
+                  <input class="form-control form-control-sm" type="time" formControlName="endTime" [readonly]="!canManageSchedules">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Orden</label>
-                  <input class="form-control" type="number" formControlName="blockOrder" [readonly]="!canManageSchedules">
+                  <input class="form-control form-control-sm" type="number" formControlName="blockOrder" [readonly]="!canManageSchedules">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Tipo</label>
-                  <select class="form-select" formControlName="blockType" [disabled]="!canManageSchedules">
+                  <select class="form-select form-select-sm" formControlName="blockType" [disabled]="!canManageSchedules">
                     <option value="CLASS">Clase</option>
                     <option value="RECESS">Receso</option>
                   </select>
@@ -95,7 +95,7 @@
                 </div>
                 @if (canManageSchedules) {
                   <div class="col-12">
-                    <button class="btn btn-primary w-100" type="button" (click)="saveBlock()">
+                    <button class="btn btn-sm btn-primary w-100" type="button" (click)="saveBlock()">
                       {{ editingBlockId ? 'Guardar bloque' : 'Crear bloque' }}
                     </button>
                   </div>
@@ -112,7 +112,7 @@
               </div>
               <div class="d-grid gap-2">
                 @for (block of blocks; track block.id) {
-                  <button class="btn btn-outline-primary text-start"
+                  <button class="btn btn-sm btn-outline-primary text-start"
                           type="button"
                           (click)="editBlock(block)">
                     <div class="fw-semibold">{{ block.label }}</div>
@@ -134,9 +134,9 @@
                 </div>
                 @if (canManageSchedules) {
                   <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-outline-primary" type="button" (click)="downloadAssignmentTemplate()">Plantilla Excel</button>
-                    <button class="btn btn-outline-primary" type="button" (click)="triggerAssignmentImport()">Importar Excel</button>
-                    <button class="btn btn-outline-primary" type="button" (click)="resetScheduleForm()">Limpiar</button>
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="downloadAssignmentTemplate()">Plantilla Excel</button>
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="triggerAssignmentImport()">Importar Excel</button>
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="resetScheduleForm()">Limpiar</button>
                   </div>
                 }
               </div>
@@ -144,7 +144,7 @@
               <form [formGroup]="scheduleForm" class="row g-3">
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Curso</label>
-                  <select class="form-select" formControlName="courseId" [disabled]="!canManageSchedules">
+                  <select class="form-select form-select-sm" formControlName="courseId" [disabled]="!canManageSchedules">
                     @for (course of overview.courses; track course.id) {
                       <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
                     }
@@ -152,7 +152,7 @@
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Periodo</label>
-                  <select class="form-select" formControlName="periodId" [disabled]="!canManageSchedules">
+                  <select class="form-select form-select-sm" formControlName="periodId" [disabled]="!canManageSchedules">
                     @for (period of overview.periods; track period.id) {
                       <option [value]="period.id">{{ period.name }}</option>
                     }
@@ -160,7 +160,7 @@
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Bloque</label>
-                  <select class="form-select" formControlName="scheduleBlockId" [disabled]="!canManageSchedules">
+                  <select class="form-select form-select-sm" formControlName="scheduleBlockId" [disabled]="!canManageSchedules">
                     @for (block of classBlocks; track block.id) {
                       <option [value]="block.id">{{ block.label }}</option>
                     }
@@ -168,7 +168,7 @@
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Dia</label>
-                  <select class="form-select" formControlName="weekday" [disabled]="!canManageSchedules">
+                  <select class="form-select form-select-sm" formControlName="weekday" [disabled]="!canManageSchedules">
                     @for (day of weekdays; track day.value) {
                       <option [value]="day.value">{{ day.label }}</option>
                     }
@@ -176,7 +176,7 @@
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Materia</label>
-                  <select class="form-select" formControlName="subjectId" [disabled]="!canManageSchedules">
+                  <select class="form-select form-select-sm" formControlName="subjectId" [disabled]="!canManageSchedules">
                     @for (subject of overview.subjects; track subject.id) {
                       <option [value]="subject.id">{{ subject.name }}</option>
                     }
@@ -184,7 +184,7 @@
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Docente</label>
-                  <select class="form-select" formControlName="teacherId" [disabled]="!canManageSchedules">
+                  <select class="form-select form-select-sm" formControlName="teacherId" [disabled]="!canManageSchedules">
                     @for (teacher of overview.teachers; track teacher.id) {
                       <option [value]="teacher.id">{{ teacher.name }} · {{ teacher.specialization }}</option>
                     }
@@ -192,11 +192,11 @@
                 </div>
                 <div class="col-12">
                   <label class="form-label fw-semibold">Aula</label>
-                  <input class="form-control" type="text" formControlName="classroom" placeholder="Aula 1" [readonly]="!canManageSchedules">
+                  <input class="form-control form-control-sm" type="text" formControlName="classroom" placeholder="Aula 1" [readonly]="!canManageSchedules">
                 </div>
                 @if (canManageSchedules) {
                   <div class="col-12">
-                    <button class="btn btn-primary w-100" type="button" (click)="saveSchedule()">
+                    <button class="btn btn-sm btn-primary w-100" type="button" (click)="saveSchedule()">
                       {{ editingScheduleId ? 'Guardar asignacion' : 'Crear asignacion' }}
                     </button>
                   </div>
@@ -213,7 +213,7 @@
                   <p class="text-muted mb-0">Filtra por curso y revisa las asignaciones activas por dia y bloque.</p>
                 </div>
                 <div class="d-flex gap-2">
-                  <select class="form-select" [(ngModel)]="scheduleCourseFilter">
+                  <select class="form-select form-select-sm" [(ngModel)]="scheduleCourseFilter">
                     <option value="">Todos los cursos</option>
                     @for (course of overview.courses; track course.id) {
                       <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>

@@ -16,7 +16,7 @@
                 <span><i class="bi bi-calendar3 me-2"></i>Periodo 2026</span>
                 <span>Operacion activa</span>
               </div>
-              <button class="btn btn-outline-light w-100" type="button" (click)="logout()">
+              <button class="btn btn-sm btn-outline-light w-100" type="button" (click)="logout()">
                 <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesion
               </button>
             </div>
@@ -40,9 +40,29 @@
               </a>
             }
             @if (auth.hasPermission('ACADEMIC_VIEW')) {
-              <a class="nav-link app-nav-link" routerLink="/app/academic" routerLinkActive="active">
-                <i class="bi bi-diagram-3 me-2"></i>Gestion academica
-              </a>
+              <div class="nav-link app-nav-link d-flex  justify-content-between align-items-center" role="button" (click)="toggleAcademicMenu()">
+                <span><i class="bi bi-diagram-3 me-2"></i>Gestión academica</span>
+                <i class="bi" [class.bi-chevron-down]="academicMenuOpen" [class.bi-chevron-right]="!academicMenuOpen"></i>
+              </div>
+              @if (academicMenuOpen) {
+                <div class="nav flex-column ms-3 gap-1">
+                  <a class="nav-link app-nav-link" routerLink="/app/academic/courses" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                    <i class="bi bi-grid-1x2-fill me-2"></i>Cursos
+                  </a>
+                  <a class="nav-link app-nav-link" routerLink="/app/academic/students" routerLinkActive="active">
+                    <i class="bi bi-people-fill me-2"></i>Estudiantes
+                  </a>
+                  <a class="nav-link app-nav-link" routerLink="/app/academic/teachers" routerLinkActive="active">
+                    <i class="bi bi-person-badge-fill me-2"></i>Docentes
+                  </a>
+                  <a class="nav-link app-nav-link" routerLink="/app/academic/subjects" routerLinkActive="active">
+                    <i class="bi bi-book me-2"></i>Materias
+                  </a>
+                  <a class="nav-link app-nav-link" routerLink="/app/academic/representatives" routerLinkActive="active">
+                    <i class="bi bi-people me-2"></i>Representantes
+                  </a>
+                </div>
+              }
               <a class="nav-link app-nav-link" routerLink="/app/schedules" routerLinkActive="active">
                 <i class="bi bi-calendar-week me-2"></i>Horarios
               </a>
@@ -67,7 +87,7 @@
             }
             @if (auth.hasPermission('SETTINGS_VIEW')) {
               <a class="nav-link app-nav-link" routerLink="/app/branding" routerLinkActive="active">
-                <i class="bi bi-palette me-2"></i>Apariencia
+                <i class="bi bi-building-gear me-2"></i>Institucion
               </a>
             }
           </nav>
@@ -75,7 +95,7 @@
           <div class="card border-0 shadow-sm sidebar-mini-card mt-auto">
             <div class="card-body small text-white-50">
               <div class="d-flex align-items-center justify-content-between mb-2">
-                <span><i class="bi bi-shield-check me-2"></i>Seguridad</span>
+                <span><i class="bi bi-shield-check text-white me-2"></i>Seguridad</span>
                 <span class="badge rounded-pill text-bg-success">Activa</span>
               </div>
               <div>JWT, auditoria y control por roles habilitados.</div>

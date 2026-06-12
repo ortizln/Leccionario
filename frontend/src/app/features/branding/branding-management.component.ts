@@ -27,52 +27,6 @@ export class BrandingManagementComponent {
   message = '';
   messageType: 'success' | 'error' = 'success';
 
-  readonly colorFields: Array<{ key: keyof InstitutionBrandingPayload; label: string; category: string }> = [
-    // Colores base
-    { key: 'primaryColor', label: 'Primario', category: 'base' },
-    { key: 'secondaryColor', label: 'Secundario', category: 'base' },
-    { key: 'accentColor', label: 'Acento', category: 'base' },
-    { key: 'backgroundColor', label: 'Fondo', category: 'base' },
-    { key: 'surfaceColor', label: 'Superficie', category: 'base' },
-    // Colores de texto
-    { key: 'headingLargeColor', label: 'Títulos grandes', category: 'text' },
-    { key: 'headingMediumColor', label: 'Títulos medianos', category: 'text' },
-    { key: 'bodyTextColor', label: 'Texto general', category: 'text' },
-    { key: 'textColor', label: 'Texto principal', category: 'text' },
-    { key: 'contrastTextColor', label: 'Texto en contraste', category: 'text' },
-    { key: 'mutedTextColor', label: 'Texto suave', category: 'text' },
-    // Colores de botones
-    { key: 'buttonColor', label: 'Color botón', category: 'button' },
-    { key: 'buttonTextColor', label: 'Color texto botón', category: 'button' }
-  ];
-
-  get baseColorFields() {
-    return this.colorFields.filter(f => f.category === 'base');
-  }
-
-  get textColorFields() {
-    return this.colorFields.filter(f => f.category === 'text');
-  }
-
-  get buttonColorFields() {
-    return this.colorFields.filter(f => f.category === 'button');
-  }
-
-  getColorValue(key: keyof InstitutionBrandingPayload): string {
-    const value = this.model[key];
-    return typeof value === 'string' ? value : '';
-  }
-
-  setColorValue(key: keyof InstitutionBrandingPayload, value: string): void {
-    if (typeof this.model[key] === 'string') {
-      this.model = {
-        ...this.model,
-        [key]: value
-      };
-      this.applyPreviewTheme();
-    }
-  }
-
   constructor() {
     this.brandingService.loadPublicInstitutions().subscribe({
       next: (institutions) => {
@@ -94,106 +48,6 @@ export class BrandingManagementComponent {
     if (this.selectedInstitutionId) {
       this.loadInstitution(this.selectedInstitutionId);
     }
-  }
-
-  applyMilitaryPalette(): void {
-    this.model = {
-      ...this.model,
-      primaryColor: '#586B3B',
-      secondaryColor: '#7A5C3E',
-      accentColor: '#E9DFC9',
-      backgroundColor: '#F2EFE7',
-      surfaceColor: '#FBF8F1',
-      textColor: '#2E261B',
-      contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#8C7D6B',
-      headingLargeColor: '#586B3B',
-      headingMediumColor: '#7A5C3E',
-      bodyTextColor: '#2E261B',
-      buttonColor: '#586B3B',
-      buttonTextColor: '#FFFFFF'
-    };
-    this.applyPreviewTheme();
-  }
-
-  applyOceanPalette(): void {
-    this.model = {
-      ...this.model,
-      primaryColor: '#1B4965',
-      secondaryColor: '#2A7E8E',
-      accentColor: '#90E0EF',
-      backgroundColor: '#E8F4F8',
-      surfaceColor: '#F5F9FB',
-      textColor: '#0F3460',
-      contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#5C7A8F',
-      headingLargeColor: '#1B4965',
-      headingMediumColor: '#2A7E8E',
-      bodyTextColor: '#0F3460',
-      buttonColor: '#1B4965',
-      buttonTextColor: '#FFFFFF'
-    };
-    this.applyPreviewTheme();
-  }
-
-  applySunsetPalette(): void {
-    this.model = {
-      ...this.model,
-      primaryColor: '#D62828',
-      secondaryColor: '#F77F00',
-      accentColor: '#FCBF49',
-      backgroundColor: '#FFF8F3',
-      surfaceColor: '#FFFBF5',
-      textColor: '#2C1810',
-      contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#8B6F47',
-      headingLargeColor: '#D62828',
-      headingMediumColor: '#F77F00',
-      bodyTextColor: '#2C1810',
-      buttonColor: '#D62828',
-      buttonTextColor: '#FFFFFF'
-    };
-    this.applyPreviewTheme();
-  }
-
-  applyForestPalette(): void {
-    this.model = {
-      ...this.model,
-      primaryColor: '#2D6A4F',
-      secondaryColor: '#40916C',
-      accentColor: '#95D5B2',
-      backgroundColor: '#E8F5E9',
-      surfaceColor: '#F1F8F5',
-      textColor: '#1B3A2C',
-      contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#52796F',
-      headingLargeColor: '#2D6A4F',
-      headingMediumColor: '#40916C',
-      bodyTextColor: '#1B3A2C',
-      buttonColor: '#2D6A4F',
-      buttonTextColor: '#FFFFFF'
-    };
-    this.applyPreviewTheme();
-  }
-
-  applyMinimalPalette(): void {
-    this.model = {
-      ...this.model,
-      primaryColor: '#333333',
-      secondaryColor: '#666666',
-      accentColor: '#E5E5E5',
-      backgroundColor: '#F9F9F9',
-      surfaceColor: '#FFFFFF',
-      textColor: '#1C1C1C',
-      contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#999999',
-      headingLargeColor: '#333333',
-      headingMediumColor: '#666666',
-      bodyTextColor: '#1C1C1C',
-      buttonColor: '#333333',
-      buttonTextColor: '#FFFFFF'
-    };
-    this.applyPreviewTheme();
   }
 
   addSlide(): void {
@@ -271,7 +125,7 @@ export class BrandingManagementComponent {
     this.brandingService.saveInstitutionBranding(this.selectedInstitutionId, payload).subscribe({
       next: () => {
         this.messageType = 'success';
-        this.message = 'La apariencia institucional se guardo correctamente.';
+        this.message = 'La configuracion institucional se guardo correctamente.';
       },
       error: (error) => {
         this.messageType = 'error';
@@ -311,32 +165,17 @@ export class BrandingManagementComponent {
       accentColor: branding.accentColor,
       backgroundColor: branding.backgroundColor,
       surfaceColor: branding.surfaceColor,
-      textColor: branding.textColor || '#2E261B',
+      textColor: branding.textColor || '#2E2E2E',
       contrastTextColor: branding.contrastTextColor || '#FFFFFF',
-      mutedTextColor: branding.mutedTextColor || '#8C7D6B',
+      mutedTextColor: branding.mutedTextColor || '#9E9E9E',
       headingLargeColor: branding.headingLargeColor || branding.primaryColor,
       headingMediumColor: branding.headingMediumColor || branding.secondaryColor,
-      bodyTextColor: branding.bodyTextColor || branding.textColor || '#2E261B',
+      bodyTextColor: branding.bodyTextColor || branding.textColor || '#2E2E2E',
       buttonColor: branding.buttonColor || branding.primaryColor,
       buttonTextColor: branding.buttonTextColor || '#FFFFFF',
       slides: []
     };
     this.slides = branding.slides.map((slide) => ({ ...slide }));
-    this.brandingService.applyTheme(this.toFullBranding(this.model));
-  }
-
-  private applyPreviewTheme(): void {
-    this.brandingService.applyTheme(this.toFullBranding(this.model));
-  }
-
-  private toFullBranding(model: InstitutionBrandingPayload): InstitutionBranding {
-    return {
-      institutionId: this.selectedInstitutionId ?? 0,
-      institutionCode: '',
-      institutionName: '',
-      ...model,
-      slides: this.slides
-    };
   }
 
   private emptyModel(): InstitutionBrandingPayload {
@@ -352,18 +191,18 @@ export class BrandingManagementComponent {
       mobileSubtitle: '',
       logoUrl: '',
       loginLogoUrl: '',
-      primaryColor: '#586B3B',
-      secondaryColor: '#7A5C3E',
-      accentColor: '#E9DFC9',
-      backgroundColor: '#F2EFE7',
-      surfaceColor: '#FBF8F1',
-      textColor: '#2E261B',
+      primaryColor: '#556B2F',
+      secondaryColor: '#8D6E63',
+      accentColor: '#6B8E23',
+      backgroundColor: '#F8F6F0',
+      surfaceColor: '#FFFFFF',
+      textColor: '#2E2E2E',
       contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#8C7D6B',
-      headingLargeColor: '#586B3B',
-      headingMediumColor: '#7A5C3E',
-      bodyTextColor: '#2E261B',
-      buttonColor: '#586B3B',
+      mutedTextColor: '#9E9E9E',
+      headingLargeColor: '#556B2F',
+      headingMediumColor: '#8D6E63',
+      bodyTextColor: '#2E2E2E',
+      buttonColor: '#556B2F',
       buttonTextColor: '#FFFFFF',
       slides: []
     };

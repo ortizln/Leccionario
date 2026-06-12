@@ -1,8 +1,7 @@
 
-    .preview-strip,
     .slide-editor {
-      background: rgba(var(--app-primary-rgb), 0.05);
-      border: 1px solid rgba(var(--app-primary-rgb), 0.12);
+      background: rgba(85, 107, 47, 0.04);
+      border: 1px solid rgba(85, 107, 47, 0.10);
       border-radius: var(--radius-md);
     }
     .slide-image-preview {
@@ -11,32 +10,20 @@
       border-radius: var(--radius-md);
       background-position: center;
       background-size: cover;
-      background-color: rgba(var(--app-secondary-rgb), 0.16);
+      background-color: rgba(141, 110, 99, 0.12);
     }
     .logo-preview {
       min-height: 128px;
       display: grid;
       place-items: center;
       border-radius: var(--radius-md);
-      border: 1px dashed rgba(var(--app-primary-rgb), 0.28);
-      background: rgba(var(--app-primary-rgb), 0.04);
+      border: 1px dashed rgba(85, 107, 47, 0.24);
+      background: rgba(85, 107, 47, 0.03);
       overflow: hidden;
     }
     .logo-preview img {
       max-width: 100%;
       max-height: 128px;
       object-fit: contain;
-    }
-    .color-picker {
-      width: 58px;
-      min-width: 58px;
-      padding: 0.25rem;
-    }
-    .color-preview {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(0, 0, 0, 0.12);
-      flex-shrink: 0;
     }
   

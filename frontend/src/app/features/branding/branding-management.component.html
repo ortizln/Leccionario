@@ -1,9 +1,9 @@
 
     <section class="d-grid gap-4">
       <header>
-        <span class="badge rounded-pill text-bg-primary mb-2"><i class="bi bi-palette-fill me-1"></i>Personalizacion</span>
-        <h1 class="display-6 fw-bold mb-2">Apariencia institucional</h1>
-        <p class="text-muted mb-0">Administra colores, logos, carrusel, titulos y leyendas para cada unidad educativa desde un solo modulo.</p>
+        <span class="badge rounded-pill text-bg-primary mb-2"><i class="bi bi-building-gear me-1"></i>Institucion</span>
+        <h1 class="display-6 fw-bold mb-2">Configuracion institucional</h1>
+        <p class="text-muted mb-0">Administra la informacion institucional, logos, textos del login y carrusel de bienvenida.</p>
       </header>
 
       @if (message) {
@@ -17,18 +17,11 @@
           <div class="row g-3 align-items-end">
             <div class="col-12 col-lg-6">
               <label class="form-label fw-semibold">Institucion</label>
-              <select class="form-select" [(ngModel)]="selectedInstitutionId" name="institutionId" (ngModelChange)="onInstitutionChange()">
+              <select class="form-select form-select-sm" [(ngModel)]="selectedInstitutionId" name="institutionId" (ngModelChange)="onInstitutionChange()">
                 @for (institution of institutions; track institution.id) {
                   <option [ngValue]="institution.id">{{ institution.name }} · {{ institution.code }}</option>
                 }
               </select>
-            </div>
-            <div class="col-12 col-lg-6">
-              <div class="p-3 rounded-3" style="background: var(--card-gradient); border: 1px solid var(--card-border)">
-                <div class="small text-muted">Vista rapida</div>
-                <div class="fw-semibold" style="color: var(--text-heading-large)">{{ model.displayName || 'Unidad educativa' }}</div>
-                <div class="small" style="color: var(--text-body-soft)">{{ model.loginTitle || 'Bienvenido al Leccionario Digital' }}</div>
-              </div>
             </div>
           </div>
         </div>
@@ -42,39 +35,39 @@
               <div class="row g-3">
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Nombre visible</label>
-                  <input class="form-control" [(ngModel)]="model.displayName" name="displayName">
+                  <input class="form-control form-control-sm" [(ngModel)]="model.displayName" name="displayName">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Badge del login</label>
-                  <input class="form-control" [(ngModel)]="model.loginBadgeText" name="loginBadgeText">
+                  <input class="form-control form-control-sm" [(ngModel)]="model.loginBadgeText" name="loginBadgeText">
                 </div>
                 <div class="col-12">
                   <label class="form-label fw-semibold">Titulo del login</label>
-                  <input class="form-control" [(ngModel)]="model.loginTitle" name="loginTitle">
+                  <input class="form-control form-control-sm" [(ngModel)]="model.loginTitle" name="loginTitle">
                 </div>
                 <div class="col-12">
                   <label class="form-label fw-semibold">Leyenda principal del login</label>
-                  <textarea class="form-control" rows="3" [(ngModel)]="model.loginSubtitle" name="loginSubtitle"></textarea>
+                  <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="model.loginSubtitle" name="loginSubtitle"></textarea>
                 </div>
                 <div class="col-12">
                   <label class="form-label fw-semibold">Leyenda de apoyo del login</label>
-                  <input class="form-control" [(ngModel)]="model.loginHelperText" name="loginHelperText">
+                  <input class="form-control form-control-sm" [(ngModel)]="model.loginHelperText" name="loginHelperText">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Titulo superior del sistema</label>
-                  <input class="form-control" [(ngModel)]="model.shellTitle" name="shellTitle">
+                  <input class="form-control form-control-sm" [(ngModel)]="model.shellTitle" name="shellTitle">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Leyenda superior del sistema</label>
-                  <input class="form-control" [(ngModel)]="model.shellSubtitle" name="shellSubtitle">
+                  <input class="form-control form-control-sm" [(ngModel)]="model.shellSubtitle" name="shellSubtitle">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Titulo mobile</label>
-                  <input class="form-control" [(ngModel)]="model.mobileTitle" name="mobileTitle">
+                  <input class="form-control form-control-sm" [(ngModel)]="model.mobileTitle" name="mobileTitle">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Leyenda mobile</label>
-                  <input class="form-control" [(ngModel)]="model.mobileSubtitle" name="mobileSubtitle">
+                  <input class="form-control form-control-sm" [(ngModel)]="model.mobileSubtitle" name="mobileSubtitle">
                 </div>
               </div>
             </div>
@@ -87,7 +80,7 @@
                   <h2 class="h4 mb-1">Carrusel del login</h2>
                   <p class="text-muted mb-0">Puedes agregar, quitar o reemplazar fotos y leyendas por institucion.</p>
                 </div>
-                <button class="btn btn-outline-primary" type="button" (click)="addSlide()">
+                <button class="btn btn-sm btn-outline-primary" type="button" (click)="addSlide()">
                   <i class="bi bi-plus-lg me-2"></i>Agregar slide
                 </button>
               </div>
@@ -98,36 +91,36 @@
                     <div class="row g-3">
                       <div class="col-12 col-lg-4">
                         <div class="slide-image-preview mb-2" [style.background-image]="'linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.5)), url(' + slide.imageUrl + ')'"></div>
-                        <input class="form-control" type="file" accept="image/*" (change)="uploadSlideImage($event, $index)">
+                        <input class="form-control form-control-sm" type="file" accept="image/*" (change)="uploadSlideImage($event, $index)">
                       </div>
                       <div class="col-12 col-lg-8">
                         <div class="row g-3">
                           <div class="col-12 col-md-6">
                             <label class="form-label fw-semibold">Badge</label>
-                            <input class="form-control" [(ngModel)]="slide.badge" [name]="'slideBadge' + $index">
+                            <input class="form-control form-control-sm" [(ngModel)]="slide.badge" [name]="'slideBadge' + $index">
                           </div>
                           <div class="col-12 col-md-6">
                             <label class="form-label fw-semibold">Orden</label>
-                            <input class="form-control" type="number" min="1" [(ngModel)]="slide.slideOrder" [name]="'slideOrder' + $index">
+                            <input class="form-control form-control-sm" type="number" min="1" [(ngModel)]="slide.slideOrder" [name]="'slideOrder' + $index">
                           </div>
                           <div class="col-12">
                             <label class="form-label fw-semibold">Titulo</label>
-                            <input class="form-control" [(ngModel)]="slide.title" [name]="'slideTitle' + $index">
+                            <input class="form-control form-control-sm" [(ngModel)]="slide.title" [name]="'slideTitle' + $index">
                           </div>
                           <div class="col-12">
                             <label class="form-label fw-semibold">Descripcion</label>
-                            <textarea class="form-control" rows="2" [(ngModel)]="slide.description" [name]="'slideDescription' + $index"></textarea>
+                            <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="slide.description" [name]="'slideDescription' + $index"></textarea>
                           </div>
                           <div class="col-12">
                             <label class="form-label fw-semibold">URL de imagen</label>
-                            <input class="form-control" [(ngModel)]="slide.imageUrl" [name]="'slideImage' + $index">
+                            <input class="form-control form-control-sm" [(ngModel)]="slide.imageUrl" [name]="'slideImage' + $index">
                           </div>
                           <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2">
                             <label class="d-flex align-items-center gap-2 small">
                               <input class="form-check-input" type="checkbox" [(ngModel)]="slide.active" [name]="'slideActive' + $index">
                               <span>Slide activo</span>
                             </label>
-                            <button class="btn btn-outline-primary" type="button" (click)="removeSlide($index)">
+                            <button class="btn btn-sm btn-outline-primary" type="button" (click)="removeSlide($index)">
                               <i class="bi bi-trash me-2"></i>Eliminar
                             </button>
                           </div>
@@ -144,105 +137,6 @@
         <div class="col-12 col-xl-5 d-grid gap-4">
           <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
-              <h2 class="h4 mb-3">Colores</h2>
-
-              <!-- Colores Base -->
-              <h5 class="h6 mb-3 fw-semibold text-muted">Colores Base</h5>
-              <div class="row g-3 mb-4">
-                @for (field of baseColorFields; track field.key) {
-                  <div class="col-12 col-md-6">
-                    <label class="form-label fw-semibold">{{ field.label }}</label>
-                    <div class="d-flex gap-2 align-items-center">
-                      <input
-                        class="form-control form-control-color color-picker"
-                        type="color"
-                        [ngModel]="getColorValue(field.key)"
-                        (ngModelChange)="setColorValue(field.key, $event)"
-                        [name]="field.key">
-                      <input
-                        class="form-control"
-                        [ngModel]="getColorValue(field.key)"
-                        (ngModelChange)="setColorValue(field.key, $event)"
-                        [name]="field.key + 'Text'">
-                      <div class="color-preview" [style.background]="getColorValue(field.key)"></div>
-                    </div>
-                  </div>
-                }
-              </div>
-
-              <!-- Colores de Texto -->
-              <h5 class="h6 mb-3 fw-semibold text-muted">Colores de Texto</h5>
-              <div class="row g-3 mb-4">
-                @for (field of textColorFields; track field.key) {
-                  <div class="col-12 col-md-6">
-                    <label class="form-label fw-semibold">{{ field.label }}</label>
-                    <div class="d-flex gap-2 align-items-center">
-                      <input
-                        class="form-control form-control-color color-picker"
-                        type="color"
-                        [ngModel]="getColorValue(field.key)"
-                        (ngModelChange)="setColorValue(field.key, $event)"
-                        [name]="field.key">
-                      <input
-                        class="form-control"
-                        [ngModel]="getColorValue(field.key)"
-                        (ngModelChange)="setColorValue(field.key, $event)"
-                        [name]="field.key + 'Text'">
-                      <div class="color-preview" [style.background]="getColorValue(field.key)"></div>
-                    </div>
-                  </div>
-                }
-              </div>
-
-              <!-- Colores de Botones -->
-              <h5 class="h6 mb-3 fw-semibold text-muted">Colores de Botones</h5>
-              <div class="row g-3 mb-4">
-                @for (field of buttonColorFields; track field.key) {
-                  <div class="col-12 col-md-6">
-                    <label class="form-label fw-semibold">{{ field.label }}</label>
-                    <div class="d-flex gap-2 align-items-center">
-                      <input
-                        class="form-control form-control-color color-picker"
-                        type="color"
-                        [ngModel]="getColorValue(field.key)"
-                        (ngModelChange)="setColorValue(field.key, $event)"
-                        [name]="field.key">
-                      <input
-                        class="form-control"
-                        [ngModel]="getColorValue(field.key)"
-                        (ngModelChange)="setColorValue(field.key, $event)"
-                        [name]="field.key + 'Text'">
-                      <div class="color-preview" [style.background]="getColorValue(field.key)"></div>
-                    </div>
-                  </div>
-                }
-              </div>
-
-              <div class="mt-4">
-                <label class="form-label fw-semibold d-block mb-2">Paletas predeterminadas</label>
-                <div class="btn-group-vertical w-100 gap-2 d-flex flex-column">
-                  <button class="btn btn-outline-primary btn-sm text-start" type="button" (click)="applyMilitaryPalette()">
-                    <i class="bi bi-palette me-2"></i>Verde militar + café
-                  </button>
-                  <button class="btn btn-outline-primary btn-sm text-start" type="button" (click)="applyOceanPalette()">
-                    <i class="bi bi-palette me-2"></i>Azul océano
-                  </button>
-                  <button class="btn btn-outline-primary btn-sm text-start" type="button" (click)="applySunsetPalette()">
-                    <i class="bi bi-palette me-2"></i>Atardecer
-                  </button>
-                  <button class="btn btn-outline-primary btn-sm text-start" type="button" (click)="applyForestPalette()">
-                    <i class="bi bi-palette me-2"></i>Bosque verde
-                  </button>
-                  <button class="btn btn-outline-primary btn-sm text-start" type="button" (click)="applyMinimalPalette()">
-                    <i class="bi bi-palette me-2"></i>Minimalista
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
               <h2 class="h4 mb-3">Logos</h2>
               <div class="row g-3">
                 <div class="col-12">
@@ -254,8 +148,8 @@
                       <span>Sin logo cargado</span>
                     }
                   </div>
-                  <input class="form-control mb-2" [(ngModel)]="model.logoUrl" name="logoUrl" placeholder="URL o recurso subido">
-                  <input class="form-control" type="file" accept="image/*" (change)="uploadLogo($event, 'logoUrl')">
+                  <input class="form-control form-control-smmb-2" [(ngModel)]="model.logoUrl" name="logoUrl" placeholder="URL o recurso subido">
+                  <input class="form-control form-control-sm" type="file" accept="image/*" (change)="uploadLogo($event, 'logoUrl')">
                 </div>
                 <div class="col-12">
                   <label class="form-label fw-semibold">Logo del login</label>
@@ -266,8 +160,8 @@
                       <span>Sin logo cargado</span>
                     }
                   </div>
-                  <input class="form-control mb-2" [(ngModel)]="model.loginLogoUrl" name="loginLogoUrl" placeholder="URL o recurso subido">
-                  <input class="form-control" type="file" accept="image/*" (change)="uploadLogo($event, 'loginLogoUrl')">
+                  <input class="form-control form-control-smmb-2" [(ngModel)]="model.loginLogoUrl" name="loginLogoUrl" placeholder="URL o recurso subido">
+                  <input class="form-control form-control-sm" type="file" accept="image/*" (change)="uploadLogo($event, 'loginLogoUrl')">
                 </div>
               </div>
             </div>
@@ -277,8 +171,8 @@
             <div class="card-body p-4">
               <h2 class="h4 mb-3">Guardar cambios</h2>
               <p class="text-muted">Los cambios se reflejan en login web, panel principal y mobile usando la misma configuracion institucional.</p>
-              <button class="btn btn-primary w-100" type="button" (click)="save()">
-                <i class="bi bi-save me-2"></i>Guardar apariencia institucional
+              <button class="btn btn-sm btn-primary w-100" type="button" (click)="save()">
+                <i class="bi bi-save me-2"></i>Guardar configuracion institucional
               </button>
             </div>
           </div>

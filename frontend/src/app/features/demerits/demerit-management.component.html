@@ -26,24 +26,24 @@
 
             <div class="d-flex flex-wrap gap-2 align-items-center">
               <input
-                class="form-control search-box"
+                class="form-control form-control-smsearch-box"
                 type="search"
                 [(ngModel)]="searchTerm"
                 [ngModelOptions]="{ standalone: true }"
                 placeholder="Buscar por código, categoría o descripción">
 
               <details class="action-menu">
-                <summary class="btn btn-primary" [class.disabled]="!canManageDemerits">
+                <summary class="btn btn-sm btn-primary" [class.disabled]="!canManageDemerits">
                   <i class="bi bi-list-ul me-2"></i>Acciones
                 </summary>
                 <div class="action-menu-panel">
-                  <button class="btn btn-link text-start w-100" type="button" [disabled]="!canManageDemerits" (click)="openCreateDialog()">
+                  <button class="btn btn-sm btn-link text-start w-100" type="button" [disabled]="!canManageDemerits" (click)="openCreateDialog()">
                     <i class="bi bi-plus-circle me-2"></i>Nuevo demérito
                   </button>
-                  <button class="btn btn-link text-start w-100" type="button" (click)="downloadTemplate()">
+                  <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="downloadTemplate()">
                     <i class="bi bi-file-earmark-arrow-down me-2"></i>Descargar modelo Excel
                   </button>
-                  <button class="btn btn-link text-start w-100" type="button" [disabled]="!canManageDemerits" (click)="triggerImport()">
+                  <button class="btn btn-sm btn-link text-start w-100" type="button" [disabled]="!canManageDemerits" (click)="triggerImport()">
                     <i class="bi bi-file-earmark-arrow-up me-2"></i>Importar Excel
                   </button>
                 </div>
@@ -105,20 +105,20 @@
             <form class="d-grid gap-3" [formGroup]="form" (ngSubmit)="save()">
               <div>
                 <label class="form-label fw-semibold">Código</label>
-                <input class="form-control" type="text" formControlName="code" placeholder="Ejemplo: A1">
+                <input class="form-control form-control-sm" type="text" formControlName="code" placeholder="Ejemplo: A1">
               </div>
               <div>
                 <label class="form-label fw-semibold">Categoría</label>
-                <input class="form-control" type="text" formControlName="category" placeholder="Disciplina y convivencia">
+                <input class="form-control form-control-sm" type="text" formControlName="category" placeholder="Disciplina y convivencia">
               </div>
               <div>
                 <label class="form-label fw-semibold">Descripción</label>
-                <textarea class="form-control" rows="4" formControlName="description" placeholder="Describe la conducta o falta"></textarea>
+                <textarea class="form-control form-control-sm" rows="4" formControlName="description" placeholder="Describe la conducta o falta"></textarea>
               </div>
               <div class="row g-3">
                 <div class="col-12 col-md-6">
                   <label class="form-label fw-semibold">Puntaje</label>
-                  <input class="form-control" type="number" min="1" max="100" formControlName="score">
+                  <input class="form-control form-control-sm" type="number" min="1" max="100" formControlName="score">
                 </div>
                 <div class="col-12 col-md-6 d-flex align-items-end">
                   <div class="form-check form-switch border rounded px-3 py-2 w-100">
@@ -129,12 +129,12 @@
               </div>
 
               <div class="d-flex justify-content-between gap-2 pt-2">
-                <button class="btn btn-outline-danger" type="button" [disabled]="!editingId || !canManageDemerits" (click)="removeSelected()">
+                <button class="btn btn-sm btn-outline-danger" type="button" [disabled]="!editingId || !canManageDemerits" (click)="removeSelected()">
                   Eliminar
                 </button>
                 <div class="d-flex gap-2">
-                  <button class="btn btn-outline-primary" type="button" (click)="closeDialog()">Cancelar</button>
-                  <button class="btn btn-primary" type="submit" [disabled]="!canManageDemerits || form.invalid || saving">
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeDialog()">Cancelar</button>
+                  <button class="btn btn-sm btn-primary" type="submit" [disabled]="!canManageDemerits || form.invalid || saving">
                     {{ saving ? 'Guardando...' : (editingId ? 'Actualizar demérito' : 'Crear demérito') }}
                   </button>
                 </div>

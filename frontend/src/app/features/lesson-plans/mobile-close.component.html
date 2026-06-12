@@ -42,17 +42,17 @@
             <div class="d-grid gap-3">
               <div>
                 <label class="form-label fw-semibold">Usuario</label>
-                <input class="form-control form-control-lg" [(ngModel)]="form.username" placeholder="usuario institucional">
+                <input class="form-control form-control-sm" [(ngModel)]="form.username" placeholder="usuario institucional">
               </div>
               <div>
                 <label class="form-label fw-semibold">Codigo institucional</label>
-                <input class="form-control form-control-lg" [(ngModel)]="form.code" placeholder="identificacion o codigo">
+                <input class="form-control form-control-sm" [(ngModel)]="form.code" placeholder="identificacion o codigo">
               </div>
               <div>
                 <label class="form-label fw-semibold">{{ notesLabel() }}</label>
-                <textarea class="form-control" rows="3" [(ngModel)]="form.notes" placeholder="Comentario adicional"></textarea>
+                <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="form.notes" placeholder="Comentario adicional"></textarea>
               </div>
-              <button class="btn btn-warning btn-lg text-dark fw-semibold" type="button" (click)="submitClose()">
+              <button class="btn btn-sm btn-warning btn-sm text-dark fw-semibold" type="button" (click)="submitClose()">
                 {{ actionLabel() }}
               </button>
             </div>
@@ -61,7 +61,7 @@
           }
         }
 
-        <a class="btn btn-link mt-4 px-0" routerLink="/login">Volver al sistema</a>
+        <a class="btn btn-sm btn-link mt-4 px-0" routerLink="/login">Volver al sistema</a>
       </div>
     </section>
   

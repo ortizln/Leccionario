@@ -10,8 +10,8 @@
             <p class="text-muted mb-0">Completa los datos personales, estado operativo, perfiles asignados y materia si aplica.</p>
           </div>
           <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary" type="button" (click)="cancel.emit()">Cancelar</button>
-            <button class="btn btn-primary" type="button" (click)="submit()">
+            <button class="btn btn-sm btn-outline-primary" type="button" (click)="cancel.emit()">Cancelar</button>
+            <button class="btn btn-sm btn-primary" type="button" (click)="submit()">
               {{ mode === 'edit' ? 'Guardar cambios' : 'Crear usuario' }}
             </button>
           </div>
@@ -24,31 +24,31 @@
         <form [formGroup]="form" class="row g-3">
           <div class="col-12 col-md-6">
             <label class="form-label fw-semibold">Usuario</label>
-            <input class="form-control" type="text" formControlName="username">
+            <input class="form-control form-control-sm" type="text" formControlName="username">
           </div>
           <div class="col-12 col-md-6">
             <label class="form-label fw-semibold">Correo</label>
-            <input class="form-control" type="email" formControlName="email">
+            <input class="form-control form-control-sm" type="email" formControlName="email">
           </div>
           <div class="col-12 col-md-6">
             <label class="form-label fw-semibold">Contrasena {{ mode === 'edit' ? '(opcional)' : '' }}</label>
-            <input class="form-control" type="password" formControlName="password">
+            <input class="form-control form-control-sm" type="password" formControlName="password">
           </div>
           <div class="col-12 col-md-6">
             <label class="form-label fw-semibold">Identificacion</label>
-            <input class="form-control" type="text" formControlName="identification">
+            <input class="form-control form-control-sm" type="text" formControlName="identification">
           </div>
           <div class="col-12 col-md-6">
             <label class="form-label fw-semibold">Nombres</label>
-            <input class="form-control" type="text" formControlName="firstName">
+            <input class="form-control form-control-sm" type="text" formControlName="firstName">
           </div>
           <div class="col-12 col-md-6">
             <label class="form-label fw-semibold">Apellidos</label>
-            <input class="form-control" type="text" formControlName="lastName">
+            <input class="form-control form-control-sm" type="text" formControlName="lastName">
           </div>
           <div class="col-12 col-md-6">
             <label class="form-label fw-semibold">Institucion</label>
-            <select class="form-select" formControlName="institutionId">
+            <select class="form-select form-select-sm" formControlName="institutionId">
               @for (institution of institutions; track institution.id) {
                 <option [value]="institution.id">{{ institution.name }}</option>
               }

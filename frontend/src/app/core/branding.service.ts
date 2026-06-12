@@ -1,4 +1,3 @@
-import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
@@ -57,17 +56,12 @@ export type InstitutionBrandingPayload = Omit<InstitutionBranding, 'institutionI
 @Injectable({ providedIn: 'root' })
 export class BrandingService {
   private http = inject(HttpClient);
-  private document = inject(DOCUMENT);
   private auth = inject(AuthService);
   private readonly storageKey = 'selected_institution_code';
 
   readonly branding = signal<InstitutionBranding | null>(null);
   readonly publicInstitutions = signal<PublicInstitutionOption[]>([]);
   readonly selectedInstitutionCode = signal<string>(this.readSelectedInstitutionCode());
-
-  constructor() {
-    this.applyTheme(this.defaultBranding());
-  }
 
   loadPublicInstitutions(): Observable<PublicInstitutionOption[]> {
     return this.http.get<PublicInstitutionOption[]>(`${API_URL}/public/institutions`).pipe(
@@ -87,7 +81,6 @@ export class BrandingService {
       tap((branding) => {
         this.branding.set(branding);
         this.setSelectedInstitutionCode(branding.institutionCode);
-        this.applyTheme(branding);
       })
     );
   }
@@ -96,7 +89,6 @@ export class BrandingService {
     return this.http.get<InstitutionBranding>(`${API_URL}/branding/${institutionId}`).pipe(
       tap((branding) => {
         this.branding.set(branding);
-        this.applyTheme(branding);
       })
     );
   }
@@ -105,7 +97,6 @@ export class BrandingService {
     return this.http.put<InstitutionBranding>(`${API_URL}/branding/${institutionId}`, payload).pipe(
       tap((branding) => {
         this.branding.set(branding);
-        this.applyTheme(branding);
       })
     );
   }
@@ -121,11 +112,7 @@ export class BrandingService {
     if (!institutionCode) {
       return;
     }
-    this.loadPublicBranding(institutionCode).subscribe({
-      error: () => {
-        this.applyTheme(this.defaultBranding());
-      }
-    });
+    this.loadPublicBranding(institutionCode).subscribe();
   }
 
   setSelectedInstitutionCode(code: string | null): void {
@@ -142,145 +129,11 @@ export class BrandingService {
     }
   }
 
-  defaultBranding(): InstitutionBranding {
-    return {
-      institutionId: 0,
-      institutionCode: '',
-      institutionName: 'Unidad Educativa',
-      displayName: 'Unidad Educativa',
-      loginBadgeText: 'Acceso institucional',
-      loginTitle: 'Bienvenido al Leccionario Digital',
-      loginSubtitle: 'Ingresa con tus credenciales para continuar con el registro y control academico.',
-      loginHelperText: 'Usa tu cuenta institucional.',
-      shellTitle: 'Leccionario Estudiantil Digital',
-      shellSubtitle: 'Control de leccionario, avance curricular y auditoria academica.',
-      mobileTitle: 'Leccionario Mobile',
-      mobileSubtitle: 'Consulta tu horario, registra novedades y cierra cada bloque desde una sola vista.',
-      logoUrl: null,
-      loginLogoUrl: null,
-      primaryColor: '#586B3B',
-      secondaryColor: '#7A5C3E',
-      accentColor: '#E9DFC9',
-      backgroundColor: '#F2EFE7',
-      surfaceColor: '#FBF8F1',
-      textColor: '#2E261B',
-      contrastTextColor: '#FFFFFF',
-      mutedTextColor: '#8C7D6B',
-      headingLargeColor: '#586B3B',
-      headingMediumColor: '#7A5C3E',
-      bodyTextColor: '#2E261B',
-      buttonColor: '#586B3B',
-      buttonTextColor: '#FFFFFF',
-      slides: []
-    };
-  }
-
-  applyTheme(branding: InstitutionBranding): void {
-    const root = this.document.documentElement;
-    const primary = branding.primaryColor;
-    const secondary = branding.secondaryColor;
-    const accent = branding.accentColor;
-    const background = branding.backgroundColor;
-    const surface = branding.surfaceColor;
-    const text = branding.textColor;
-    const contrastText = branding.contrastTextColor;
-    const mutedText = branding.mutedTextColor;
-    const headingLarge = branding.headingLargeColor || primary;
-    const headingMedium = branding.headingMediumColor || text;
-    const bodyText = branding.bodyTextColor || text;
-    const button = branding.buttonColor || primary;
-    const buttonText = branding.buttonTextColor || contrastText;
-
-    // Core colors
-    root.style.setProperty('--app-primary', primary);
-    root.style.setProperty('--app-secondary', secondary);
-    root.style.setProperty('--app-accent', accent);
-    root.style.setProperty('--app-bg', background);
-    root.style.setProperty('--app-surface', this.hexToRgba(surface, 0.92));
-    root.style.setProperty('--app-surface-strong', this.hexToRgba(surface, 0.98));
-    root.style.setProperty('--app-line', this.hexToRgba(primary, 0.26));
-    root.style.setProperty('--app-text', text);
-    root.style.setProperty('--app-text-soft', mutedText);
-    root.style.setProperty('--app-text-muted', this.mixColors(mutedText, '#000000', 0.15));
-    root.style.setProperty('--app-contrast-text', contrastText);
-    root.style.setProperty('--app-contrast-text-rgb', this.hexToRgb(contrastText));
-    root.style.setProperty('--app-muted-text-rgb', this.hexToRgb(mutedText));
-
-    // RGB values for rgba() usage
-    root.style.setProperty('--app-primary-rgb', this.hexToRgb(primary));
-    root.style.setProperty('--app-secondary-rgb', this.hexToRgb(secondary));
-    root.style.setProperty('--app-accent-rgb', this.hexToRgb(accent));
-    root.style.setProperty('--app-bg-rgb', this.hexToRgb(background));
-    root.style.setProperty('--app-text-rgb', this.hexToRgb(text));
-
-    // Derived colors
-    root.style.setProperty('--app-black', this.mixColors(background, '#000000', 0.2));
-    root.style.setProperty('--app-black-soft', this.mixColors(background, '#000000', 0.1));
-    root.style.setProperty('--app-border', this.hexToRgba(primary, 0.16));
-
-    // Text hierarchy
-    root.style.setProperty('--text-heading-large', headingLarge);
-    root.style.setProperty('--text-heading-medium', headingMedium);
-    root.style.setProperty('--text-heading-small', headingMedium);
-    root.style.setProperty('--text-body', bodyText);
-    root.style.setProperty('--text-body-soft', mutedText);
-    root.style.setProperty('--text-muted', this.mixColors(mutedText, '#000000', 0.15));
-    root.style.setProperty('--text-contrast', contrastText);
-
-    // Cards
-    root.style.setProperty('--card-bg', this.hexToRgba(surface, 0.92));
-    root.style.setProperty('--card-bg-alt', this.hexToRgba(background, 0.96));
-    root.style.setProperty('--card-border', this.hexToRgba(primary, 0.12));
-    root.style.setProperty('--card-text', bodyText);
-
-    // Buttons
-    root.style.setProperty('--btn-primary-base', button);
-    root.style.setProperty('--btn-primary-text', buttonText);
-    root.style.setProperty('--btn-primary-hover', this.darkenColor(button, 0.2));
-
-    // Sidebar
-    root.style.setProperty('--sidebar-bg-gradient',
-      `linear-gradient(180deg, ${this.hexToRgba(primary, 0.94)} 0%, ${this.hexToRgba(secondary, 0.94)} 100%)`);
-    root.style.setProperty('--sidebar-text', contrastText);
-    root.style.setProperty('--sidebar-text-muted', this.hexToRgba(contrastText, 0.7));
-    root.style.setProperty('--sidebar-card-bg', this.hexToRgba(contrastText, 0.12));
-    root.style.setProperty('--sidebar-card-border', this.hexToRgba(contrastText, 0.16));
-    root.style.setProperty('--sidebar-nav-hover', this.hexToRgba(accent, 0.9));
-  }
-
-  private darkenColor(hex: string, factor: number = 0.2): string {
-    const rgb = this.hexToRgb(hex).split(', ').map(Number);
-    const darkened = rgb.map(val => Math.max(0, Math.floor(val * (1 - factor))));
-    return `#${darkened.map(x => x.toString(16).padStart(2, '0')).join('')}`;
-  }
-
   private readSelectedInstitutionCode(): string {
     try {
       return window.localStorage.getItem(this.storageKey) ?? '';
     } catch {
       return '';
     }
-  }
-
-  private hexToRgb(value: string): string {
-    const normalized = value.replace('#', '');
-    const red = parseInt(normalized.slice(0, 2), 16);
-    const green = parseInt(normalized.slice(2, 4), 16);
-    const blue = parseInt(normalized.slice(4, 6), 16);
-    return `${red}, ${green}, ${blue}`;
-  }
-
-  private hexToRgba(value: string, alpha: number): string {
-    return `rgba(${this.hexToRgb(value)}, ${alpha})`;
-  }
-
-  private mixColors(first: string, second: string, weight: number): string {
-    const a = first.replace('#', '');
-    const b = second.replace('#', '');
-    const mix = (start: string, end: string) =>
-      Math.round(parseInt(start, 16) * (1 - weight) + parseInt(end, 16) * weight)
-        .toString(16)
-        .padStart(2, '0');
-    return `#${mix(a.slice(0, 2), b.slice(0, 2))}${mix(a.slice(2, 4), b.slice(2, 4))}${mix(a.slice(4, 6), b.slice(4, 6))}`;
   }
 }

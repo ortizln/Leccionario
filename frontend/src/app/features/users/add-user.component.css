@@ -1,11 +1,11 @@
 
     .role-selector {
-      background: rgba(242, 194, 48, 0.04);
-      border-color: rgba(242, 194, 48, 0.12) !important;
+      background: rgba(85, 107, 47, 0.03);
+      border-color: rgba(85, 107, 47, 0.08) !important;
       cursor: pointer;
     }
     .info-box {
-      background: rgba(242, 194, 48, 0.04);
-      border-color: rgba(242, 194, 48, 0.12) !important;
+      background: rgba(85, 107, 47, 0.03);
+      border-color: rgba(85, 107, 47, 0.08) !important;
     }
   

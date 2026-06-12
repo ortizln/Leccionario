@@ -10,10 +10,10 @@
         <div class="card-body">
           <div class="row g-3 mb-4">
             <div class="col-12 col-md-4">
-              <input class="form-control" type="text" placeholder="Buscar por usuario" [(ngModel)]="usernameFilter">
+              <input class="form-control form-control-sm" type="text" placeholder="Buscar por usuario" [(ngModel)]="usernameFilter">
             </div>
             <div class="col-12 col-md-4">
-              <select class="form-select" [(ngModel)]="moduleFilter">
+              <select class="form-select form-select-sm" [(ngModel)]="moduleFilter">
                 <option value="">Todos los modulos</option>
                 <option value="USER">Usuarios</option>
                 <option value="LESSON_PLAN">Leccionario</option>
@@ -21,7 +21,7 @@
               </select>
             </div>
             <div class="col-12 col-md-4">
-              <button class="btn btn-outline-primary w-100" type="button" (click)="applyFilters()"><i class="bi bi-funnel me-2"></i>Aplicar filtros</button>
+              <button class="btn btn-sm btn-outline-primary w-100" type="button" (click)="applyFilters()"><i class="bi bi-funnel me-2"></i>Aplicar filtros</button>
             </div>
           </div>
 

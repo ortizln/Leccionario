@@ -45,9 +45,9 @@
               <p class="text-muted mb-0">Selecciona curso, periodo y fecha para generar o consultar el leccionario diario.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
-              <button class="btn btn-outline-primary" type="button" (click)="loadDailyLog()">Consultar jornada</button>
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="loadDailyLog()">Consultar jornada</button>
               @if (canManageLessonPlans) {
-                <button class="btn btn-primary" type="button" (click)="generateDailyLog()">Generar jornada</button>
+                <button class="btn btn-sm btn-primary" type="button" (click)="generateDailyLog()">Generar jornada</button>
               }
             </div>
           </div>
@@ -55,7 +55,7 @@
           <form [formGroup]="controlForm" class="row g-3">
             <div class="col-12 col-md-4">
               <label class="form-label fw-semibold">Curso</label>
-              <select class="form-select" formControlName="courseId">
+              <select class="form-select form-select-sm" formControlName="courseId">
                 @for (course of overview.courses; track course.id) {
                   <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
                 }
@@ -63,7 +63,7 @@
             </div>
             <div class="col-12 col-md-4">
               <label class="form-label fw-semibold">Periodo</label>
-              <select class="form-select" formControlName="periodId">
+              <select class="form-select form-select-sm" formControlName="periodId">
                 @for (period of overview.periods; track period.id) {
                   <option [value]="period.id">{{ period.name }}</option>
                 }
@@ -71,19 +71,19 @@
             </div>
             <div class="col-12 col-md-4">
               <label class="form-label fw-semibold">Fecha</label>
-              <input class="form-control" type="date" formControlName="logDate">
+              <input class="form-control form-control-sm" type="date" formControlName="logDate">
             </div>
             <div class="col-12 col-md-4">
               <label class="form-label fw-semibold">Dia laborado nro.</label>
-              <input class="form-control" type="number" formControlName="workDayNumber">
+              <input class="form-control form-control-sm" type="number" formControlName="workDayNumber">
             </div>
             <div class="col-12 col-md-4">
               <label class="form-label fw-semibold">Ciudad</label>
-              <input class="form-control" type="text" formControlName="city" placeholder="Tulcan">
+              <input class="form-control form-control-sm" type="text" formControlName="city" placeholder="Tulcan">
             </div>
             <div class="col-12 col-md-4">
               <label class="form-label fw-semibold">Notas generales</label>
-              <input class="form-control" type="text" formControlName="generalNotes" placeholder="Novedades generales de la jornada">
+              <input class="form-control form-control-sm" type="text" formControlName="generalNotes" placeholder="Novedades generales de la jornada">
             </div>
           </form>
         </div>
@@ -142,21 +142,21 @@
                         <div class="small text-muted">{{ entry.teacherName || 'Sin docente' }}</div>
                       </td>
                       <td class="align-top">
-                        <textarea class="form-control"
+                        <textarea class="form-control form-control-sm"
                                   rows="2"
                                   [(ngModel)]="entry.didacticUnit"
                                   [ngModelOptions]="{standalone: true}"
                                   [readonly]="!canEditEntry(entry)"></textarea>
                       </td>
                       <td class="align-top">
-                        <textarea class="form-control"
+                        <textarea class="form-control form-control-sm"
                                   rows="2"
                                   [(ngModel)]="entry.curricularSkill"
                                   [ngModelOptions]="{standalone: true}"
                                   [readonly]="!canEditEntry(entry)"></textarea>
                       </td>
                       <td class="align-top">
-                        <textarea class="form-control"
+                        <textarea class="form-control form-control-sm"
                                   rows="2"
                                   [(ngModel)]="entry.topic"
                                   [ngModelOptions]="{standalone: true}"
@@ -195,7 +195,7 @@
                         }
                       </td>
                       <td class="align-top">
-                        <textarea class="form-control"
+                        <textarea class="form-control form-control-sm"
                                   rows="2"
                                   [(ngModel)]="entry.generalNotes"
                                   [ngModelOptions]="{standalone: true}"
@@ -255,10 +255,11 @@
                         {{ hasSignature('TEACHER_TUTOR') ? 'Firmado' : 'Pendiente' }}
                       </span>
                     </div>
-                    @if (getSignature('TEACHER_TUTOR'); as signature) {
-                      <div class="small text-muted">{{ signature.signedAt }}</div>
-                      @if (signature.notes) {
-                        <div class="small mt-2">{{ signature.notes }}</div>
+                    @let teacherSignature = getSignature('TEACHER_TUTOR');
+                    @if (teacherSignature) {
+                      <div class="small text-muted">{{ teacherSignature.signedAt }}</div>
+                      @if (teacherSignature.notes) {
+                        <div class="small mt-2">{{ teacherSignature.notes }}</div>
                       }
                     } @else {
                       <div class="small text-muted mb-3">Esperando validacion del docente tutor del curso.</div>
@@ -280,10 +281,11 @@
                         {{ hasSignature('WEEK_STUDENT') ? 'Firmado' : 'Pendiente' }}
                       </span>
                     </div>
-                    @if (getSignature('WEEK_STUDENT'); as signature) {
-                      <div class="small text-muted">{{ signature.signedAt }}</div>
-                      @if (signature.notes) {
-                        <div class="small mt-2">{{ signature.notes }}</div>
+                    @let weekStudentSignature = getSignature('WEEK_STUDENT');
+                    @if (weekStudentSignature) {
+                      <div class="small text-muted">{{ weekStudentSignature.signedAt }}</div>
+                      @if (weekStudentSignature.notes) {
+                        <div class="small mt-2">{{ weekStudentSignature.notes }}</div>
                       }
                     } @else {
                       <div class="small text-muted mb-3">Esperando validacion del estudiante semanero.</div>
@@ -305,10 +307,11 @@
                         {{ hasSignature('GENERAL_INSPECTOR') ? 'Cerrado' : 'Pendiente' }}
                       </span>
                     </div>
-                    @if (getSignature('GENERAL_INSPECTOR'); as signature) {
-                      <div class="small text-muted">{{ signature.signedAt }}</div>
-                      @if (signature.notes) {
-                        <div class="small mt-2">{{ signature.notes }}</div>
+                    @let inspectorSignature = getSignature('GENERAL_INSPECTOR');
+                    @if (inspectorSignature) {
+                      <div class="small text-muted">{{ inspectorSignature.signedAt }}</div>
+                      @if (inspectorSignature.notes) {
+                        <div class="small mt-2">{{ inspectorSignature.notes }}</div>
                       }
                     } @else {
                       <div class="small text-muted mb-2">
@@ -435,8 +438,8 @@
             </div>
 
             <div class="d-flex justify-content-end gap-2">
-              <button class="btn btn-outline-primary" type="button" (click)="closeAbsenceDialog()">Cancelar</button>
-              <button class="btn btn-primary" type="button" (click)="saveAbsences()">Guardar inasistencias</button>
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeAbsenceDialog()">Cancelar</button>
+              <button class="btn btn-sm btn-primary" type="button" (click)="saveAbsences()">Guardar inasistencias</button>
             </div>
           </div>
         </div>
@@ -498,8 +501,8 @@
             </div>
 
             <div class="d-flex justify-content-end gap-2">
-              <button class="btn btn-outline-primary" type="button" (click)="closeIncidentDialog()">Cancelar</button>
-              <button class="btn btn-primary" type="button" (click)="saveIncidents()">Guardar novedades</button>
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeIncidentDialog()">Cancelar</button>
+              <button class="btn btn-sm btn-primary" type="button" (click)="saveIncidents()">Guardar novedades</button>
             </div>
           </div>
         </div>

@@ -44,7 +44,36 @@ export class LoginComponent implements OnDestroy {
   }
 
   branding() {
-    return this.brandingService.branding() ?? this.brandingService.defaultBranding();
+    return this.brandingService.branding() ?? {
+      institutionId: 0,
+      institutionCode: '',
+      institutionName: 'Unidad Educativa',
+      displayName: 'Unidad Educativa',
+      loginBadgeText: 'Acceso institucional',
+      loginTitle: 'Bienvenido al Leccionario Digital',
+      loginSubtitle: 'Ingresa con tus credenciales para continuar con el registro y control academico.',
+      loginHelperText: 'Usa tu cuenta institucional.',
+      shellTitle: 'Leccionario Estudiantil Digital',
+      shellSubtitle: 'Control de leccionario, avance curricular y auditoria academica.',
+      mobileTitle: 'Leccionario Mobile',
+      mobileSubtitle: 'Consulta tu horario, registra novedades y cierra cada bloque desde una sola vista.',
+      logoUrl: null,
+      loginLogoUrl: null,
+      primaryColor: '#556B2F',
+      secondaryColor: '#8D6E63',
+      accentColor: '#6B8E23',
+      backgroundColor: '#F8F6F0',
+      surfaceColor: '#FFFFFF',
+      textColor: '#2E2E2E',
+      contrastTextColor: '#FFFFFF',
+      mutedTextColor: '#9E9E9E',
+      headingLargeColor: '#556B2F',
+      headingMediumColor: '#8D6E63',
+      bodyTextColor: '#2E2E2E',
+      buttonColor: '#556B2F',
+      buttonTextColor: '#FFFFFF',
+      slides: []
+    };
   }
 
   activeSlides() {

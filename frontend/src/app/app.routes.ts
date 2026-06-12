@@ -13,6 +13,11 @@ import { AuditComponent } from './features/audit/audit.component';
 import { ScheduleManagementComponent } from './features/schedules/schedule-management.component';
 import { DemeritManagementComponent } from './features/demerits/demerit-management.component';
 import { BrandingManagementComponent } from './features/branding/branding-management.component';
+import { CoursesComponent } from './features/academic/courses/courses.component';
+import { StudentsComponent } from './features/academic/students/students.component';
+import { TeachersComponent } from './features/academic/teachers/teachers.component';
+import { SubjectsComponent } from './features/academic/subjects/subjects.component';
+import { RepresentativesComponent } from './features/academic/representatives/representatives.component';
 
 export const appRoutes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
@@ -29,7 +34,20 @@ export const appRoutes: Routes = [
       { path: 'lesson-plans', component: LessonPlanComponent, canActivate: [permissionGuard], data: { permission: 'LESSONPLAN_VIEW' } },
       { path: 'reports', component: ReportsComponent, canActivate: [permissionGuard], data: { permission: 'REPORT_VIEW' } },
       { path: 'users', component: UsersComponent, canActivate: [permissionGuard], data: { permission: 'USER_VIEW' } },
-      { path: 'academic', component: AcademicManagementComponent, canActivate: [permissionGuard], data: { permission: 'ACADEMIC_VIEW' } },
+      {
+        path: 'academic',
+        component: AcademicManagementComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'ACADEMIC_VIEW' },
+        children: [
+          { path: '', redirectTo: 'courses', pathMatch: 'full' },
+          { path: 'courses', component: CoursesComponent },
+          { path: 'students', component: StudentsComponent },
+          { path: 'teachers', component: TeachersComponent },
+          { path: 'subjects', component: SubjectsComponent },
+          { path: 'representatives', component: RepresentativesComponent }
+        ]
+      },
       { path: 'schedules', component: ScheduleManagementComponent, canActivate: [permissionGuard], data: { permission: 'ACADEMIC_VIEW' } },
       { path: 'demerits', component: DemeritManagementComponent, canActivate: [permissionGuard], data: { permission: 'ACADEMIC_VIEW' } },
       { path: 'audit', component: AuditComponent, canActivate: [permissionGuard], data: { permission: 'AUDIT_VIEW' } },

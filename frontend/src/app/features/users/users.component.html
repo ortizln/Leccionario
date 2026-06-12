@@ -76,34 +76,34 @@
                     </div>
 
                     <div class="d-flex flex-wrap gap-2 align-items-center">
-                      <button class="btn btn-outline-primary" type="button" (click)="showFilters = !showFilters">
+                      <button class="btn btn-sm btn-outline-primary" type="button" (click)="showFilters = !showFilters">
                         <i class="bi bi-funnel me-2"></i>{{ showFilters ? 'Ocultar filtros' : 'Mostrar filtros' }}
                       </button>
 
                       <details class="action-menu">
-                        <summary class="btn btn-primary">
+                        <summary class="btn btn-sm btn-primary">
                           <i class="bi bi-list-ul me-2"></i>Acciones
                         </summary>
                         <div class="action-menu-panel">
-                          <button class="btn btn-link text-start w-100" type="button" (click)="openCreateUser()">
+                          <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="openCreateUser()">
                             <i class="bi bi-person-plus me-2"></i>Nuevo usuario
                           </button>
-                          <button class="btn btn-link text-start w-100" type="button" (click)="downloadUserTemplate()">
+                          <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="downloadUserTemplate()">
                             <i class="bi bi-file-earmark-arrow-down me-2"></i>Descargar plantilla Excel
                           </button>
-                          <button class="btn btn-link text-start w-100" type="button" (click)="triggerUserImport()">
+                          <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="triggerUserImport()">
                             <i class="bi bi-file-earmark-arrow-up me-2"></i>Importar desde Excel
                           </button>
-                          <button class="btn btn-link text-start w-100" type="button" (click)="exportUsersExcel()">
+                          <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="exportUsersExcel()">
                             <i class="bi bi-file-earmark-excel me-2"></i>Exportar Excel
                           </button>
-                          <button class="btn btn-link text-start w-100" type="button" (click)="exportUsersCsv()">
+                          <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="exportUsersCsv()">
                             <i class="bi bi-filetype-csv me-2"></i>Exportar CSV
                           </button>
-                          <button class="btn btn-link text-start w-100" type="button" (click)="exportUsersPdf()">
+                          <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="exportUsersPdf()">
                             <i class="bi bi-file-earmark-pdf me-2"></i>Exportar PDF
                           </button>
-                          <button class="btn btn-link text-start w-100" type="button" (click)="printUsers()">
+                          <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="printUsers()">
                             <i class="bi bi-printer me-2"></i>Imprimir lista
                           </button>
                         </div>
@@ -116,11 +116,11 @@
                       <div class="row g-3">
                         <div class="col-12 col-lg-3">
                           <label class="form-label fw-semibold">Buscar</label>
-                          <input class="form-control" type="text" placeholder="Usuario o nombre" [(ngModel)]="userSearch">
+                          <input class="form-control form-control-sm" type="text" placeholder="Usuario o nombre" [(ngModel)]="userSearch">
                         </div>
                         <div class="col-12 col-lg-3">
                           <label class="form-label fw-semibold">Perfil</label>
-                          <select class="form-select" [(ngModel)]="roleFilter">
+                          <select class="form-select form-select-sm" [(ngModel)]="roleFilter">
                             <option value="">Todos los perfiles</option>
                             @for (role of roles; track role.name) {
                               <option [value]="role.name">{{ formatRole(role.name) }}</option>
@@ -129,7 +129,7 @@
                         </div>
                         <div class="col-12 col-lg-3">
                           <label class="form-label fw-semibold">Estado</label>
-                          <select class="form-select" [(ngModel)]="statusFilter">
+                          <select class="form-select form-select-sm" [(ngModel)]="statusFilter">
                             <option value="ALL">Todos los estados</option>
                             <option value="ACTIVE">Activos</option>
                             <option value="INACTIVE">Inactivos</option>
@@ -137,7 +137,7 @@
                         </div>
                         <div class="col-12 col-lg-3">
                           <label class="form-label fw-semibold">Materia</label>
-                          <select class="form-select" [(ngModel)]="subjectFilter">
+                          <select class="form-select form-select-sm" [(ngModel)]="subjectFilter">
                             <option value="">Todas las materias</option>
                             <option value="__NONE__">Sin materia</option>
                             @for (subject of subjectOptions; track subject) {
@@ -190,14 +190,14 @@
                                   <i class="bi bi-three-dots"></i>
                                 </summary>
                                 <div class="action-menu-panel">
-                                  <button class="btn btn-link text-start w-100" type="button" (click)="openEditUser(user)">
+                                  <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="openEditUser(user)">
                                     <i class="bi bi-pencil-square me-2"></i>Modificar usuario
                                   </button>
-                                  <button class="btn btn-link text-start w-100" type="button" (click)="openStatusDialog(user)">
+                                  <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="openStatusDialog(user)">
                                     <i class="bi" [class.bi-person-lock]="user.enabled" [class.bi-person-check]="!user.enabled"></i>
                                     <span class="ms-2">{{ user.enabled ? 'Bloquear usuario' : 'Habilitar usuario' }}</span>
                                   </button>
-                                  <button class="btn btn-link text-start w-100" type="button" (click)="openPasswordDialog(user)">
+                                  <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="openPasswordDialog(user)">
                                     <i class="bi bi-key me-2"></i>Restablecer clave
                                   </button>
                                 </div>
@@ -225,7 +225,7 @@
                         <h2 class="h4 mb-1">Perfiles disponibles</h2>
                         <p class="text-muted mb-0">Selecciona un perfil para editar su descripcion y permisos por modulo.</p>
                       </div>
-                      <button class="btn btn-primary" type="button" (click)="openRoleDialog()">
+                      <button class="btn btn-sm btn-primary" type="button" (click)="openRoleDialog()">
                         <i class="bi bi-plus-lg me-2"></i>Nuevo perfil
                       </button>
                     </div>
@@ -240,7 +240,7 @@
                                   (click)="selectRole(role.name)">
                             {{ formatRole(role.name) }}
                           </button>
-                          <button class="btn btn-outline-primary" type="button" (click)="deleteRole(role)">
+                          <button class="btn btn-sm btn-outline-primary" type="button" (click)="deleteRole(role)">
                             <i class="bi bi-trash"></i>
                           </button>
                         </div>
@@ -273,12 +273,12 @@
                           <h2 class="h4 mb-1">Perfil {{ formatRole(selectedRole.name) }}</h2>
                           <p class="text-muted mb-0">Controla que modulo puede ver o administrar cada tipo de usuario.</p>
                         </div>
-                        <button class="btn btn-primary" type="button" (click)="saveRole()">Guardar perfil</button>
+                        <button class="btn btn-sm btn-primary" type="button" (click)="saveRole()">Guardar perfil</button>
                       </div>
 
                       <div class="mb-4">
                         <label class="form-label fw-semibold">Descripcion del perfil</label>
-                        <input class="form-control" type="text" [formControl]="roleForm.controls.description">
+                        <input class="form-control form-control-sm" type="text" [formControl]="roleForm.controls.description">
                       </div>
 
                       <div class="row g-3">
@@ -331,8 +331,8 @@
             </div>
 
             <div class="d-flex justify-content-end gap-2">
-              <button class="btn btn-outline-primary" type="button" (click)="closeStatusDialog()">Cancelar</button>
-              <button class="btn btn-primary" type="button" (click)="confirmStatusToggle()">
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeStatusDialog()">Cancelar</button>
+              <button class="btn btn-sm btn-primary" type="button" (click)="confirmStatusToggle()">
                 {{ statusDialogUser.enabled ? 'Bloquear ahora' : 'Habilitar ahora' }}
               </button>
             </div>
@@ -359,12 +359,12 @@
 
             <div class="mb-4">
               <label class="form-label fw-semibold">Nueva contrasena</label>
-              <input class="form-control" type="password" [(ngModel)]="passwordResetValue" placeholder="Temp123*">
+              <input class="form-control form-control-sm" type="password" [(ngModel)]="passwordResetValue" placeholder="Temp123*">
             </div>
 
             <div class="d-flex justify-content-end gap-2">
-              <button class="btn btn-outline-primary" type="button" (click)="closePasswordDialog()">Cancelar</button>
-              <button class="btn btn-primary" type="button" (click)="confirmPasswordReset()">Guardar contrasena</button>
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="closePasswordDialog()">Cancelar</button>
+              <button class="btn btn-sm btn-primary" type="button" (click)="confirmPasswordReset()">Guardar contrasena</button>
             </div>
           </div>
         </div>
@@ -384,16 +384,16 @@
 
             <div class="mb-3">
               <label class="form-label fw-semibold">Nombre del perfil</label>
-              <input class="form-control" type="text" [formControl]="roleCreateForm.controls.name" placeholder="Ejemplo: Inspector academico">
+              <input class="form-control form-control-sm" type="text" [formControl]="roleCreateForm.controls.name" placeholder="Ejemplo: Inspector academico">
             </div>
             <div class="mb-4">
               <label class="form-label fw-semibold">Descripcion</label>
-              <input class="form-control" type="text" [formControl]="roleCreateForm.controls.description" placeholder="Resumen del alcance del perfil">
+              <input class="form-control form-control-sm" type="text" [formControl]="roleCreateForm.controls.description" placeholder="Resumen del alcance del perfil">
             </div>
 
             <div class="d-flex justify-content-end gap-2">
-              <button class="btn btn-outline-primary" type="button" (click)="closeRoleDialog()">Cancelar</button>
-              <button class="btn btn-primary" type="button" (click)="createRole()">Guardar perfil</button>
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeRoleDialog()">Cancelar</button>
+              <button class="btn btn-sm btn-primary" type="button" (click)="createRole()">Guardar perfil</button>
             </div>
           </div>
         </div>

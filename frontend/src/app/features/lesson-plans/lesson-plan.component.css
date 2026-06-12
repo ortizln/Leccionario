@@ -3,8 +3,8 @@
       min-width: 180px;
     }
     .signature-box {
-      background: rgba(242, 194, 48, 0.04);
-      border-color: rgba(242, 194, 48, 0.12) !important;
+      background: rgba(85, 107, 47, 0.03);
+      border-color: rgba(85, 107, 47, 0.08) !important;
     }
     .modal-shell {
       position: fixed;
@@ -13,42 +13,43 @@
       display: grid;
       place-items: center;
       padding: 1.5rem;
-      background: rgba(0, 0, 0, 0.62);
-      backdrop-filter: blur(6px);
+      background: rgba(0, 0, 0, 0.50);
+      backdrop-filter: blur(4px);
     }
     .modal-card {
       width: min(100%, 680px);
       padding: 1.5rem;
-      border-radius: 1.5rem;
-      background: linear-gradient(180deg, rgba(20, 20, 20, 0.98), rgba(8, 8, 8, 0.98));
-      border: 1px solid rgba(242, 194, 48, 0.18);
-      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+      border-radius: var(--radius-xl);
+      background: #FFFFFF;
+      border: 1px solid #D8D3C8;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.16);
     }
     .absence-option {
-      background: rgba(242, 194, 48, 0.04);
-      border-color: rgba(242, 194, 48, 0.12) !important;
+      background: rgba(85, 107, 47, 0.03);
+      border-color: rgba(85, 107, 47, 0.08) !important;
       cursor: pointer;
     }
     .qr-preview {
       width: min(100%, 280px);
       padding: 0.75rem;
-      border-radius: 1rem;
-      background: #fff;
+      border-radius: var(--radius-lg);
+      background: #FFFFFF;
+      border: 1px solid #D8D3C8;
     }
     .qr-link-box {
       padding: 0.9rem;
-      border-radius: 1rem;
-      background: rgba(242, 194, 48, 0.04);
-      border: 1px solid rgba(242, 194, 48, 0.12);
+      border-radius: var(--radius-lg);
+      background: rgba(85, 107, 47, 0.03);
+      border: 1px solid rgba(85, 107, 47, 0.08);
     }
     .signature-summary-card {
       height: 100%;
       padding: 1rem;
-      border-radius: 1rem;
-      background: rgba(242, 194, 48, 0.04);
-      border: 1px solid rgba(242, 194, 48, 0.12);
+      border-radius: var(--radius-lg);
+      background: rgba(85, 107, 47, 0.03);
+      border: 1px solid rgba(85, 107, 47, 0.08);
     }
     .final-signature-card {
-      background: rgba(255, 255, 255, 0.03);
+      background: #FFFFFF;
     }
   

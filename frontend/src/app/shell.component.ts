@@ -14,8 +14,15 @@ export class ShellComponent {
   protected brandingService = inject(BrandingService);
   private router = inject(Router);
 
+  protected academicMenuOpen = false;
+
   constructor() {
     this.brandingService.syncAuthenticatedBranding();
+    this.academicMenuOpen = this.router.url.startsWith('/app/academic/');
+  }
+
+  protected toggleAcademicMenu(): void {
+    this.academicMenuOpen = !this.academicMenuOpen;
   }
 
   protected displayName(): string {

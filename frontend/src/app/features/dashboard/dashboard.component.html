@@ -33,8 +33,8 @@
       </div>
 
       <div class="row g-3">
-        @if (metrics$ | async; as metrics) {
-          @if (metrics) {
+        @let metrics = metrics$ | async;
+        @if (metrics) {
           <div class="col-12 col-sm-6 col-xl">
             <div class="card border-0 shadow-sm h-100 metric-card">
               <div class="card-body">
@@ -80,7 +80,6 @@
               </div>
             </div>
           </div>
-          }
         }
       </div>
 
