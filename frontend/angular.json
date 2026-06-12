@@ -32,6 +32,10 @@
           "options": {
             "buildTarget": "leccionario-frontend:build"
           }
+        },
+        "test": {
+          "builder": "@angular-builders/jest:run",
+          "options": {}
         }
       }
     }
