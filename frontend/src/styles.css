@@ -149,6 +149,17 @@ app-root {
   color: var(--sidebar-text-muted) !important;
 }
 
+/* Sidebar white text override for elements user wants in pure white */
+.app-sidebar .sidebar-white-text,
+.app-sidebar .sidebar-white-text span {
+  color: #FFFFFF !important;
+}
+
+.app-sidebar .sidebar-badge-white {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+}
+
 .app-sidebar .text-warning-emphasis {
   color: var(--sidebar-text) !important;
   opacity: 0.9;
