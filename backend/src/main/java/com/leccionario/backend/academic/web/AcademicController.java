@@ -5,6 +5,8 @@ import com.leccionario.backend.academic.dto.AcademicCourseResponse;
 import com.leccionario.backend.academic.dto.AcademicOverviewResponse;
 import com.leccionario.backend.academic.dto.AcademicStudentRequest;
 import com.leccionario.backend.academic.dto.AcademicStudentResponse;
+import com.leccionario.backend.academic.dto.AcademicSubjectRequest;
+import com.leccionario.backend.academic.dto.AcademicSubjectResponse;
 import com.leccionario.backend.academic.dto.AcademicTeacherRequest;
 import com.leccionario.backend.academic.dto.AcademicTeacherResponse;
 import com.leccionario.backend.common.excel.ImportSummaryResponse;
@@ -102,6 +104,32 @@ public class AcademicController {
             @Valid @RequestBody AcademicStudentRequest request,
             Principal principal) {
         return ResponseEntity.ok(academicService.updateStudent(id, request, principal.getName()));
+    }
+
+    @PutMapping("/teachers/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<AcademicTeacherResponse> updateTeacher(
+            @PathVariable Long id,
+            @Valid @RequestBody AcademicTeacherRequest request,
+            Principal principal) {
+        return ResponseEntity.ok(academicService.updateTeacher(id, request, principal.getName()));
+    }
+
+    @PostMapping("/subjects")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<AcademicSubjectResponse> createSubject(
+            @Valid @RequestBody AcademicSubjectRequest request,
+            Principal principal) {
+        return ResponseEntity.ok(academicService.createSubject(request, principal.getName()));
+    }
+
+    @PutMapping("/subjects/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<AcademicSubjectResponse> updateSubject(
+            @PathVariable Long id,
+            @Valid @RequestBody AcademicSubjectRequest request,
+            Principal principal) {
+        return ResponseEntity.ok(academicService.updateSubject(id, request, principal.getName()));
     }
 
     @PostMapping("/teachers")

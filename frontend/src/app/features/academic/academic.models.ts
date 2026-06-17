@@ -28,6 +28,8 @@ export type AcademicStudent = {
   courseId: number;
   courseName: string;
   enrollmentNumber: string;
+  birthDate: string | null;
+  gender: string | null;
 };
 
 export type AcademicTeacher = {

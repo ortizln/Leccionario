@@ -40,6 +40,10 @@ public interface CourseScheduleRepository extends JpaRepository<CourseSchedule, 
             short weekday,
             Long id);
 
+    List<CourseSchedule> findByTeacherIdOrderByWeekdayAscScheduleBlock_BlockOrderAsc(Long teacherId);
+
+    List<CourseSchedule> findByTeacherIdAndPeriodIdOrderByWeekdayAscScheduleBlock_BlockOrderAsc(Long teacherId, Long periodId);
+
     boolean existsByCourseIdAndPeriodIdAndTeacherIdAndSubjectIdAndWeekday(
             Long courseId,
             Long periodId,

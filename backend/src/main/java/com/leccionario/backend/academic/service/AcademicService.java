@@ -8,6 +8,7 @@ import com.leccionario.backend.academic.dto.AcademicPeriodResponse;
 import com.leccionario.backend.academic.dto.AcademicStudentRequest;
 import com.leccionario.backend.academic.dto.AcademicStudentResponse;
 import com.leccionario.backend.academic.dto.AcademicSubjectResponse;
+import com.leccionario.backend.academic.dto.AcademicSubjectRequest;
 import com.leccionario.backend.academic.dto.AcademicTeacherRequest;
 import com.leccionario.backend.academic.dto.AcademicTeacherResponse;
 import com.leccionario.backend.academic.repository.AcademicPeriodRepository;
@@ -120,6 +121,10 @@ public class AcademicService {
         student.setUser(savedUser);
         student.setCourse(course);
         student.setEnrollmentNumber(request.enrollmentNumber().trim());
+        student.setBirthDate(request.birthDate());
+        if (request.gender() != null) {
+            student.setGender(Student.Gender.valueOf(request.gender()));
+        }
         Student savedStudent = studentRepository.save(student);
 
         auditService.log(username, "CREATE_STUDENT", "ACADEMIC", savedUser.getUsername() + " -> " + course.getName() + " " + course.getParallel());
@@ -141,6 +146,12 @@ public class AcademicService {
 
         student.setCourse(course);
         student.setEnrollmentNumber(request.enrollmentNumber().trim());
+        student.setBirthDate(request.birthDate());
+        if (request.gender() != null) {
+            student.setGender(Student.Gender.valueOf(request.gender()));
+        } else {
+            student.setGender(null);
+        }
         Student savedStudent = studentRepository.save(student);
 
         if (!previousCourse.getId().equals(course.getId())
@@ -166,6 +177,69 @@ public class AcademicService {
                 request.enabled(),
                 username);
         return toTeacherResponse(teacher, java.util.List.of());
+    }
+
+    @Transactional
+    public AcademicTeacherResponse updateTeacher(Long id, AcademicTeacherRequest request, String username) {
+        Teacher teacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("El docente seleccionado no existe."));
+
+        User user = teacher.getUser();
+        if (!user.getUsername().equalsIgnoreCase(request.username().trim())
+                && userRepository.existsByUsernameIgnoreCase(request.username().trim())) {
+            throw new BusinessException("Ya existe un usuario con ese nombre de acceso.");
+        }
+        String normalizedEmail = request.email().trim().toLowerCase();
+        if (!user.getEmail().equalsIgnoreCase(normalizedEmail)
+                && userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+            throw new BusinessException("Ya existe un usuario con ese correo institucional.");
+        }
+        if (!user.getIdentification().equals(request.identification().trim())
+                && userRepository.existsByIdentification(request.identification().trim())) {
+            throw new BusinessException("Ya existe un usuario con esa identificacion institucional.");
+        }
+
+        user.setUsername(request.username().trim());
+        user.setEmail(normalizedEmail);
+        user.setIdentification(request.identification().trim());
+        user.setFirstName(request.firstName().trim());
+        user.setLastName(request.lastName().trim());
+        user.setEnabled(request.enabled());
+        userRepository.save(user);
+
+        teacher.setSpecialization(request.specialization().trim());
+        Teacher saved = teacherRepository.save(teacher);
+
+        auditService.log(username, "UPDATE_TEACHER", "ACADEMIC", saved.getUser().getUsername());
+        return toTeacherResponse(saved, courseScheduleRepository.findByTeacherIdOrderByWeekdayAscScheduleBlock_BlockOrderAsc(
+                saved.getId()));
+    }
+
+    @Transactional
+    public AcademicSubjectResponse createSubject(AcademicSubjectRequest request, String username) {
+        com.leccionario.backend.academic.domain.Subject subject = new com.leccionario.backend.academic.domain.Subject();
+        subject.setName(request.name().trim());
+        subject.setCode(request.code().trim().toUpperCase());
+        subject.setCurriculumArea(request.curriculumArea() != null ? request.curriculumArea().trim() : null);
+        com.leccionario.backend.academic.domain.Subject saved = subjectRepository.save(subject);
+        auditService.log(username, "CREATE_SUBJECT", "ACADEMIC", saved.getName() + " (" + saved.getCode() + ")");
+        return toSubjectResponse(saved);
+    }
+
+    @Transactional
+    public AcademicSubjectResponse updateSubject(Long id, AcademicSubjectRequest request, String username) {
+        com.leccionario.backend.academic.domain.Subject subject = subjectRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("La materia seleccionada no existe."));
+        if (!subject.getCode().equalsIgnoreCase(request.code().trim())
+                && subjectRepository.findByCodeIgnoreCase(request.code().trim()).isPresent()) {
+            throw new BusinessException("Ya existe una materia con ese codigo.");
+        }
+        subject.setName(request.name().trim());
+        subject.setCode(request.code().trim().toUpperCase());
+        subject.setCurriculumArea(request.curriculumArea() != null ? request.curriculumArea().trim() : null);
+        com.leccionario.backend.academic.domain.Subject saved = subjectRepository.save(subject);
+        auditService.log(username, "UPDATE_SUBJECT", "ACADEMIC", saved.getName() + " (" + saved.getCode() + ")");
+        return toSubjectResponse(saved);
     }
 
     @Transactional(readOnly = true)
@@ -309,7 +383,9 @@ public class AcademicService {
                         ExcelSupport.getString(row, 4),
                         ExcelSupport.getString(row, 5),
                         course.getId(),
-                        ExcelSupport.getBoolean(row, 8, true)), actor);
+                        ExcelSupport.getBoolean(row, 8, true),
+                        null,
+                        null), actor);
                 imported++;
             } catch (Exception exception) {
                 errors.add("Fila " + excelRow + ": " + exception.getMessage());
@@ -560,7 +636,17 @@ public class AcademicService {
                 user.isEnabled(),
                 course.getId(),
                 course.getName() + " " + course.getParallel(),
-                student.getEnrollmentNumber());
+                student.getEnrollmentNumber(),
+                student.getBirthDate(),
+                student.getGender() != null ? student.getGender().name() : null);
+    }
+
+    private AcademicSubjectResponse toSubjectResponse(com.leccionario.backend.academic.domain.Subject subject) {
+        return new AcademicSubjectResponse(
+                subject.getId(),
+                subject.getName(),
+                subject.getCode(),
+                subject.getCurriculumArea());
     }
 
     private AcademicTeacherResponse toTeacherResponse(

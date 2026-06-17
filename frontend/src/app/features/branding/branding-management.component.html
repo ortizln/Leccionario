@@ -143,24 +143,24 @@
                   <label class="form-label fw-semibold">Logo general</label>
                   <div class="logo-preview mb-2">
                     @if (model.logoUrl) {
-                      <img [src]="model.logoUrl" alt="Logo general">
+                      <img [src]="model.logoUrl" alt="Logo general" class="img-fluid">
                     } @else {
                       <span>Sin logo cargado</span>
                     }
                   </div>
-                  <input class="form-control form-control-smmb-2" [(ngModel)]="model.logoUrl" name="logoUrl" placeholder="URL o recurso subido">
+                  <input class="form-control form-control-sm mb-2" [(ngModel)]="model.logoUrl" name="logoUrl" placeholder="URL o recurso subido">
                   <input class="form-control form-control-sm" type="file" accept="image/*" (change)="uploadLogo($event, 'logoUrl')">
                 </div>
                 <div class="col-12">
                   <label class="form-label fw-semibold">Logo del login</label>
                   <div class="logo-preview mb-2">
                     @if (model.loginLogoUrl) {
-                      <img [src]="model.loginLogoUrl" alt="Logo login">
+                      <img [src]="model.loginLogoUrl" alt="Logo login" class="img-fluid">
                     } @else {
                       <span>Sin logo cargado</span>
                     }
                   </div>
-                  <input class="form-control form-control-smmb-2" [(ngModel)]="model.loginLogoUrl" name="loginLogoUrl" placeholder="URL o recurso subido">
+                  <input class="form-control form-control-sm mb-2" [(ngModel)]="model.loginLogoUrl" name="loginLogoUrl" placeholder="URL o recurso subido">
                   <input class="form-control form-control-sm" type="file" accept="image/*" (change)="uploadLogo($event, 'loginLogoUrl')">
                 </div>
               </div>

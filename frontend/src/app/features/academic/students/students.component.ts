@@ -9,6 +9,7 @@ import { AcademicCourse, AcademicStudent, AcademicOverview, CourseScheduleItem, 
 type StudentRepresentative = {
   id: number; studentId: number; studentName: string; enrollmentNumber: string;
   fullName: string; relationship: string; phone: string; email: string;
+  emergencyContact?: string; emergencyPhone?: string; address?: string;
 };
 
 type GradeEntry = { id: number; subjectName: string; grade: number | null; periodName: string };
@@ -62,6 +63,75 @@ type GradeEntry = { id: number; subjectName: string; grade: number | null; perio
           </div>
         </div>
 
+        @if (repSearchOpen) {
+          <div class="modal-shell" (click)="repSearchOpen = false">
+            <div class="modal-card" (click)="$event.stopPropagation()">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="h6 mb-0">Buscar representante</h3>
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="repSearchOpen = false"><i class="bi bi-x-lg"></i></button>
+              </div>
+              <input class="form-control form-control-sm mb-3" type="search" placeholder="Buscar por nombre, estudiante, telefono..."
+                     [value]="repSearchTerm" (input)="repSearchTerm = $any($event.target).value">
+
+              @if (!creatingRep) {
+                <div class="d-grid gap-1" style="max-height:280px;overflow-y:auto">
+                  @for (rep of filteredReps(); track rep.id) {
+                    <button class="btn btn-sm btn-outline-primary text-start d-flex justify-content-between align-items-center gap-2" type="button" (click)="selectRep(rep)">
+                      <span class="fw-semibold small">{{ rep.fullName }}</span>
+                      <span class="text-muted small">{{ rep.phone }}</span>
+                    </button>
+                  } @empty {
+                    <p class="text-muted small text-center py-3 mb-0">No se encontraron representantes.</p>
+                  }
+                </div>
+                <button class="btn btn-sm btn-primary mt-3 w-100" type="button" (click)="createNewRep()">
+                  <i class="bi bi-person-plus me-2"></i>Crear nuevo representante
+                </button>
+              }
+
+              @if (creatingRep) {
+                <div class="d-grid gap-3">
+                  <div>
+                    <label class="form-label fw-semibold small mb-1">Nombre completo</label>
+                    <input class="form-control form-control-sm" type="text" [value]="repForm.value.fullName" (input)="repForm.patchValue({fullName: $any($event.target).value})" placeholder="Nombres y apellidos">
+                  </div>
+                  <div class="row g-2">
+                    <div class="col-6">
+                      <label class="form-label fw-semibold small mb-1">Parentesco</label>
+                      <select class="form-select form-select-sm" [value]="repForm.value.relationship" (change)="repForm.patchValue({relationship: $any($event.target).value})">
+                        <option value="PADRE">Padre</option>
+                        <option value="MADRE">Madre</option>
+                        <option value="TUTOR">Tutor legal</option>
+                        <option value="ABUELO">Abuelo(a)</option>
+                        <option value="HERMANO">Hermano(a)</option>
+                        <option value="OTRO">Otro familiar</option>
+                      </select>
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label fw-semibold small mb-1">Telefono</label>
+                      <input class="form-control form-control-sm" type="tel" [value]="repForm.value.phone" (input)="repForm.patchValue({phone: $any($event.target).value})" placeholder="0999999999">
+                    </div>
+                  </div>
+                  <div class="row g-2">
+                    <div class="col-6">
+                      <label class="form-label fw-semibold small mb-1">Correo</label>
+                      <input class="form-control form-control-sm" type="email" [value]="repForm.value.email" (input)="repForm.patchValue({email: $any($event.target).value})" placeholder="correo@ejemplo.com">
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label fw-semibold small mb-1">Direccion</label>
+                      <input class="form-control form-control-sm" type="text" [value]="repForm.value.address" (input)="repForm.patchValue({address: $any($event.target).value})" placeholder="Direccion completa">
+                    </div>
+                  </div>
+                  <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelNewRep()">Volver</button>
+                    <button class="btn btn-sm btn-primary" type="button" (click)="saveNewRep()">Guardar y seleccionar</button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
         @if (editorOpen) {
           <form [formGroup]="form" class="row g-3 p-3 rounded-4 editor-panel">
             <div class="col-12">
@@ -88,8 +158,22 @@ type GradeEntry = { id: number; subjectName: string; grade: number | null; perio
               <input class="form-control form-control-sm" type="text" formControlName="lastName">
             </div>
             <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Matricula</label>
-              <input class="form-control form-control-sm" type="text" formControlName="enrollmentNumber">
+              <label class="form-label fw-semibold">N° de carnet / Matricula</label>
+              <input class="form-control form-control-sm" type="text" formControlName="enrollmentNumber" placeholder="Opcional — numero de identificacion estudiantil">
+              <small class="text-muted">Opcional. Numero de libreta o carnet del estudiante.</small>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label fw-semibold">Fecha de nacimiento</label>
+              <input class="form-control form-control-sm" type="date" formControlName="birthDate">
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label fw-semibold">Genero</label>
+              <select class="form-select form-select-sm" formControlName="gender">
+                <option value="">Seleccionar...</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+                <option value="OTRO">Otro</option>
+              </select>
             </div>
             <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Curso</label>
@@ -103,6 +187,25 @@ type GradeEntry = { id: number; subjectName: string; grade: number | null; perio
               <div class="form-check form-switch border rounded px-3 py-2 w-100">
                 <input class="form-check-input" id="student-enabled" type="checkbox" formControlName="enabled">
                 <label class="form-check-label ms-2 fw-semibold" for="student-enabled">Estudiante habilitado</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Representante</label>
+              <div class="d-flex gap-2 align-items-center">
+                @if (selectedRep) {
+                  <span class="badge rounded-pill text-bg-light d-flex align-items-center gap-2 py-2 px-3">
+                    <i class="bi bi-person-check text-primary"></i>
+                    <span>{{ selectedRep.fullName }} · {{ selectedRep.phone }}</span>
+                    <button class="btn btn-sm btn-link text-danger p-0 ms-1" type="button" (click)="clearRep()" title="Quitar representante">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </span>
+                } @else {
+                  <span class="text-muted small me-2">Sin representante asignado</span>
+                }
+                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openRepSearch()">
+                  <i class="bi bi-search me-1"></i>{{ selectedRep ? 'Cambiar' : 'Buscar representante' }}
+                </button>
               </div>
             </div>
             <div class="col-12 d-flex justify-content-end gap-2">
@@ -171,6 +274,10 @@ type GradeEntry = { id: number; subjectName: string; grade: number | null; perio
                                   <dd class="col-7 mb-1">{{ student.email }}</dd>
                                   <dt class="col-5 text-muted">Identificacion</dt>
                                   <dd class="col-7 mb-1">{{ student.identification }}</dd>
+                                  <dt class="col-5 text-muted">Fecha de nac.</dt>
+                                  <dd class="col-7 mb-1">{{ student.birthDate || '—' }}</dd>
+                                  <dt class="col-5 text-muted">Genero</dt>
+                                  <dd class="col-7 mb-1">{{ {M:'Masculino', F:'Femenino', OTRO:'Otro'}[student.gender ?? ''] || '—' }}</dd>
                                   <dt class="col-5 text-muted">Matricula</dt>
                                   <dd class="col-7 mb-1">{{ student.enrollmentNumber }}</dd>
                                   <dt class="col-5 text-muted">Curso</dt>
@@ -354,6 +461,19 @@ export class StudentsComponent implements OnInit {
   editingGrades = false;
   pendingGrades: Map<number, number | null> = new Map();
 
+  repSearchOpen = false;
+  repSearchTerm = '';
+  creatingRep = false;
+  selectedRepId: number | null = null;
+
+  repForm = this.fb.nonNullable.group({
+    fullName: ['', Validators.required],
+    relationship: ['PADRE', Validators.required],
+    phone: ['', Validators.required],
+    email: [''],
+    address: ['']
+  });
+
   readonly weekdays = [
     { value: 1, label: 'Lunes' },
     { value: 2, label: 'Martes' },
@@ -370,9 +490,11 @@ export class StudentsComponent implements OnInit {
     identification: ['', Validators.required],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
-    enrollmentNumber: ['', Validators.required],
+    enrollmentNumber: [''],
     courseId: [0, Validators.required],
-    enabled: [true]
+    enabled: [true],
+    birthDate: [''],
+    gender: ['']
   });
 
   ngOnInit(): void {
@@ -501,17 +623,21 @@ export class StudentsComponent implements OnInit {
       lastName: student.lastName,
       enrollmentNumber: student.enrollmentNumber,
       courseId: student.courseId,
-      enabled: student.enabled
+      enabled: student.enabled,
+      birthDate: student.birthDate ?? '',
+      gender: student.gender ?? ''
     });
   }
 
   cancelEdit(): void {
     this.editorOpen = false;
     this.editingId = null;
+    this.selectedRepId = null;
     this.form.reset({
       username: '', email: '', identification: '',
       firstName: '', lastName: '', enrollmentNumber: '',
-      courseId: this.courses[0]?.id ?? 0, enabled: true
+      courseId: this.courses[0]?.id ?? 0, enabled: true,
+      birthDate: '', gender: ''
     });
   }
 
@@ -526,8 +652,18 @@ export class StudentsComponent implements OnInit {
       : this.http.post(url, request);
 
     operation.subscribe({
-      next: () => { this.cancelEdit(); this.loadData(); },
-      error: () => {}
+      next: (saved: any) => {
+        if (this.selectedRepId) {
+          const rep = this.allReps.find(r => r.id === this.selectedRepId);
+          if (rep) {
+            rep.studentId = saved?.id ?? this.editingId ?? 0;
+            rep.studentName = `${request.firstName} ${request.lastName}`.trim();
+            rep.enrollmentNumber = request.enrollmentNumber;
+          }
+        }
+        this.cancelEdit(); this.loadData();
+      },
+      error: () => { this.cancelEdit(); this.loadData(); },
     });
   }
 
@@ -574,5 +710,79 @@ export class StudentsComponent implements OnInit {
     const html = `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
     const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     this.downloadBlob(blob, fileName);
+  }
+
+  /* ---- Representative search & create ---- */
+
+  openRepSearch(): void {
+    this.repSearchOpen = true;
+    this.repSearchTerm = '';
+    this.creatingRep = false;
+    this.repForm.reset({ fullName: '', relationship: 'PADRE', phone: '', email: '', address: '' });
+  }
+
+  selectRep(rep: StudentRepresentative): void {
+    this.selectedRepId = rep.id;
+    this.repSearchOpen = false;
+  }
+
+  clearRep(): void {
+    this.selectedRepId = null;
+  }
+
+  createNewRep(): void {
+    this.creatingRep = true;
+  }
+
+  cancelNewRep(): void {
+    this.creatingRep = false;
+    this.repForm.reset({ fullName: '', relationship: 'PADRE', phone: '', email: '', address: '' });
+  }
+
+  saveNewRep(): void {
+    if (!this.canManageAcademic || this.repForm.invalid) return;
+    const payload = this.repForm.getRawValue();
+    const formValues = this.form.getRawValue();
+
+    const studentId = this.editingId ?? 0;
+    const tempId = Date.now();
+
+    const newRep: StudentRepresentative = {
+      id: tempId,
+      studentId,
+      studentName: `${formValues.firstName} ${formValues.lastName}`.trim(),
+      enrollmentNumber: formValues.enrollmentNumber,
+      fullName: payload.fullName,
+      relationship: payload.relationship,
+      phone: payload.phone,
+      email: payload.email,
+      emergencyContact: '',
+      emergencyPhone: '',
+      address: payload.address,
+    };
+
+    this.http.post(`${API_URL}/academic/representatives`, payload).pipe(
+      catchError(() => of(null))
+    ).subscribe(() => {});
+
+    this.allReps = [...this.allReps, newRep];
+    this.selectedRepId = tempId;
+    this.repSearchOpen = false;
+    this.creatingRep = false;
+  }
+
+  get selectedRep(): StudentRepresentative | undefined {
+    return this.selectedRepId ? this.allReps.find(r => r.id === this.selectedRepId) : undefined;
+  }
+
+  filteredReps(): StudentRepresentative[] {
+    const term = this.repSearchTerm.trim().toLowerCase();
+    if (!term) return this.allReps;
+    return this.allReps.filter(r =>
+      r.fullName.toLowerCase().includes(term) ||
+      r.studentName.toLowerCase().includes(term) ||
+      r.enrollmentNumber.toLowerCase().includes(term) ||
+      r.phone.includes(term)
+    );
   }
 }

@@ -50,7 +50,7 @@ import { AcademicCourse, AcademicStudent, AcademicOverview, ImportSummaryResult 
             </div>
             <div class="col-12 col-md-3">
               <label class="form-label fw-semibold">Paralelo</label>
-              <input class="form-control form-control-smtext-uppercase" type="text" formControlName="parallel" placeholder="A">
+              <input class="form-control form-control-sm text-uppercase" type="text" formControlName="parallel" placeholder="A">
             </div>
             <div class="col-12 col-md-3">
               <label class="form-label fw-semibold">Nivel</label>

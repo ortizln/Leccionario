@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { catchError, of } from 'rxjs';
 import { API_URL } from '../../../core/api.config';
@@ -52,6 +52,9 @@ export type StudentRepresentative = {
           <div class="col-12 col-md-6">
             <label class="form-label fw-semibold">Buscar</label>
             <input class="form-control form-control-sm" type="text" [value]="search" (input)="search = $any($event.target).value" placeholder="Representante o estudiante">
+            @if (errorMessage()) {
+              <div class="alert alert-danger alert-sm mt-2 mb-0 py-2 small">{{ errorMessage() }}</div>
+            }
           </div>
         </div>
 
@@ -163,6 +166,7 @@ export class RepresentativesComponent implements OnInit {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
 
+  errorMessage = signal('');
   courses: AcademicCourse[] = [];
   students: AcademicStudent[] = [];
   canManageAcademic = this.auth.hasPermission('ACADEMIC_MANAGE');
@@ -221,9 +225,10 @@ export class RepresentativesComponent implements OnInit {
   }
 
   load(): void {
-    this.http.get<StudentRepresentative[]>(`${API_URL}/academic/representatives`).subscribe({
-      next: (data) => { this.representatives = data; },
-      error: () => { this.representatives = []; }
+    this.http.get<StudentRepresentative[]>(`${API_URL}/academic/representatives`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => {
+      this.representatives = data;
     });
     this.http.get<AcademicOverview>(`${API_URL}/academic/overview`).pipe(
       catchError(() => of({ courses: [], subjects: [], periods: [], students: [], teachers: [] }))
@@ -267,17 +272,20 @@ export class RepresentativesComponent implements OnInit {
 
   save(): void {
     if (!this.canManageAcademic || this.form.invalid) return;
+    this.errorMessage.set('');
     const payload = this.form.getRawValue();
     const request$ = this.editingId
       ? this.http.put(`${API_URL}/academic/representatives/${this.editingId}`, payload)
       : this.http.post(`${API_URL}/academic/representatives`, payload);
 
-    request$.subscribe({
-      next: () => {
+    request$.pipe(catchError((err) => {
+      this.errorMessage.set(err?.error?.message || 'Error al guardar el representante. Verifique los datos.');
+      return of(null);
+    })).subscribe((res) => {
+      if (res) {
         this.cancelEdit();
         this.load();
-      },
-      error: () => {}
+      }
     });
   }
 }

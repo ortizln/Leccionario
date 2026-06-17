@@ -136,6 +136,14 @@ public class ScheduleService {
         return toCourseScheduleResponse(saved);
     }
 
+    @Transactional
+    public void deleteSchedule(Long id, String actor) {
+        CourseSchedule schedule = courseScheduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado"));
+        courseScheduleRepository.delete(schedule);
+        auditService.log(actor, "DELETE", "SCHEDULE", "Horario eliminado: " + schedule.getCourse().getName());
+    }
+
     @Transactional(readOnly = true)
     public byte[] exportBlockTemplate() {
         Workbook workbook = ExcelSupport.newWorkbook();

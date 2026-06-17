@@ -1,27 +1,28 @@
 :root {
-  /* === Core Palette === */
-  --app-primary: #556B2F;
-  --app-primary-rgb: 85, 107, 47;
-  --app-secondary: #8D6E63;
-  --app-secondary-rgb: 141, 110, 99;
-  --app-accent: #6B8E23;
-  --app-accent-rgb: 107, 142, 35;
+  /* === Core Palette — "Tactical Tech" === */
+  /* 60% background / 30% structure / 10% accent */
+  --app-primary: #3B4436;
+  --app-primary-rgb: 59, 68, 54;
+  --app-secondary: #606C56;
+  --app-secondary-rgb: 96, 108, 86;
+  --app-accent: #E07A5F;
+  --app-accent-rgb: 224, 122, 95;
 
   /* Surface & Background */
-  --app-bg: #F8F6F0;
-  --app-bg-rgb: 248, 246, 240;
+  --app-bg: #F4F1DE;
+  --app-bg-rgb: 244, 241, 222;
   --app-surface: #FFFFFF;
   --app-surface-rgb: 255, 255, 255;
-  --app-surface-strong: #F0EDE4;
-  --app-surface-strong-rgb: 240, 237, 228;
+  --app-surface-strong: #E8E4D0;
+  --app-surface-strong-rgb: 232, 228, 208;
 
   /* Text */
   --app-text: #2E2E2E;
   --app-text-rgb: 46, 46, 46;
   --app-text-soft: #616161;
   --app-text-muted: #9E9E9E;
-  --app-contrast-text: #FFFFFF;
-  --app-contrast-text-rgb: 255, 255, 255;
+  --app-contrast-text: #F5F5F5;
+  --app-contrast-text-rgb: 245, 245, 245;
 
   /* Semantic */
   --app-success: #4CAF50;
@@ -30,53 +31,53 @@
   --app-warning-rgb: 255, 179, 0;
   --app-danger: #D32F2F;
   --app-danger-rgb: 211, 47, 47;
-  --app-info: #556B2F;
-  --app-info-rgb: 85, 107, 47;
+  --app-info: #3B4436;
+  --app-info-rgb: 59, 68, 54;
 
   /* Borders */
-  --app-line: #E0DBD0;
-  --app-border: #D8D3C8;
+  --app-line: #D8D3C0;
+  --app-border: #D0CBB8;
 
   /* Derived */
-  --app-black: #1A1A1A;
-  --app-black-soft: #374028;
+  --app-black: #1B1E1A;
+  --app-black-soft: #2A2E28;
 
   /* === Typography === */
   --text-heading-large: #2E2E2E;
   --text-heading-medium: #2E2E2E;
-  --text-heading-small: #556B2F;
+  --text-heading-small: #3B4436;
   --text-body: #2E2E2E;
   --text-body-soft: #616161;
   --text-muted: #9E9E9E;
-  --text-contrast: #FFFFFF;
+  --text-contrast: #F5F5F5;
 
   /* === Cards === */
   --card-bg: #FFFFFF;
-  --card-bg-alt: #F8F6F0;
-  --card-border: #D8D3C8;
+  --card-bg-alt: #F4F1DE;
+  --card-border: #D0CBB8;
   --card-text: #2E2E2E;
-  --card-gradient: linear-gradient(180deg, #FFFFFF 0%, #FAF8F3 100%);
+  --card-gradient: linear-gradient(180deg, #FFFFFF 0%, #F8F6EF 100%);
 
-  /* === Buttons === */
-  --btn-primary-base: #556B2F;
+  /* === Buttons — Accent orange for primary CTA, olive for outlines === */
+  --btn-primary-base: #E07A5F;
   --btn-primary-text: #FFFFFF;
-  --btn-primary-hover: #465A24;
-  --btn-outline-border: #556B2F;
-  --btn-outline-text: #556B2F;
+  --btn-primary-hover: #C96A50;
+  --btn-outline-border: #3B4436;
+  --btn-outline-text: #3B4436;
   --btn-outline-bg: transparent;
-  --btn-outline-hover-bg: #F0F5E8;
+  --btn-outline-hover-bg: #EDEADE;
 
   /* === Sidebar === */
-  --sidebar-bg: #374028;
-  --sidebar-bg-rgb: 55, 64, 40;
-  --sidebar-bg-gradient: linear-gradient(180deg, #374028 0%, #2D3421 100%);
-  --sidebar-text: #ECECEC;
-  --sidebar-text-muted: #9CA88B;
-  --sidebar-card-bg: rgba(255, 255, 255, 0.08);
-  --sidebar-card-border: rgba(255, 255, 255, 0.12);
-  --sidebar-nav-hover: rgba(255, 255, 255, 0.10);
-  --sidebar-active: #556B2F;
-  --sidebar-divider: rgba(255, 255, 255, 0.08);
+  --sidebar-bg: #1B1E1A;
+  --sidebar-bg-rgb: 27, 30, 26;
+  --sidebar-bg-gradient: linear-gradient(180deg, #1B1E1A 0%, #2A2E28 100%);
+  --sidebar-text: #F5F5F5;
+  --sidebar-text-muted: #A8B2A0;
+  --sidebar-card-bg: rgba(255, 255, 255, 0.05);
+  --sidebar-card-border: rgba(255, 255, 255, 0.08);
+  --sidebar-nav-hover: rgba(255, 255, 255, 0.06);
+  --sidebar-active: #3B4436;
+  --sidebar-divider: rgba(255, 255, 255, 0.06);
 
   /* === Spacing & Radius === */
   --radius-sm: 6px;
@@ -189,12 +190,12 @@ app-root {
   color: #FFFFFF;
   font-weight: 800;
   letter-spacing: 0.08em;
-  background: linear-gradient(135deg, #6B8E23, #556B2F 58%, #465A24);
+  background: linear-gradient(135deg, #606C56, #3B4436 58%, #2A2E28);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
 }
 
 .user-badge {
-  background: linear-gradient(135deg, #8D6E63, #556B2F) !important;
+  background: linear-gradient(135deg, #E07A5F, #3B4436) !important;
   color: #FFFFFF !important;
 }
 
@@ -228,15 +229,15 @@ app-root {
 /* Sidebar buttons */
 .app-sidebar .btn-outline-light {
   color: var(--sidebar-text);
-  border-color: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.20);
   border-radius: var(--radius-md);
 }
 
 .app-sidebar .btn-outline-light:hover,
 .app-sidebar .btn-outline-light:focus {
   color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.32);
+  background: var(--sidebar-active);
+  border-color: rgba(255, 255, 255, 0.30);
 }
 
 /* === Main Shell === */
@@ -257,7 +258,7 @@ app-root {
 
 /* === Dashboard === */
 .dashboard-hero {
-  background: linear-gradient(135deg, #374028, #556B2F 56%, #6B8E23) !important;
+  background: linear-gradient(135deg, #1B1E1A, #3B4436 56%, #606C56) !important;
   border-radius: var(--radius-lg);
 }
 
@@ -280,11 +281,12 @@ app-root {
 .metric-card .metric-icon {
   font-size: 1.35rem;
   margin-bottom: 0.5rem;
-  color: var(--app-primary);
+  color: var(--app-secondary);
 }
 
 .metric-card .display-6 {
   color: var(--app-primary);
+  font-weight: 700;
 }
 
 .quick-action {
@@ -296,7 +298,7 @@ app-root {
 
 .quick-action:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(85, 107, 47, 0.10);
+  box-shadow: 0 4px 12px rgba(59, 68, 54, 0.10);
   border-color: var(--app-primary) !important;
 }
 
@@ -336,8 +338,8 @@ app-root {
 .table {
   --bs-table-bg: transparent;
   --bs-table-color: var(--app-text);
-  --bs-table-striped-bg: rgba(85, 107, 47, 0.03);
-  --bs-table-hover-bg: rgba(85, 107, 47, 0.05);
+  --bs-table-striped-bg: rgba(59, 68, 54, 0.03);
+  --bs-table-hover-bg: rgba(59, 68, 54, 0.05);
   --bs-table-border-color: var(--app-line);
   color: var(--card-text);
 }
@@ -365,8 +367,8 @@ app-root {
 .form-select:focus {
   background: #FFFFFF;
   color: var(--app-text);
-  border-color: var(--app-primary);
-  box-shadow: 0 0 0 0.25rem rgba(85, 107, 47, 0.12);
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 0.25rem rgba(224, 122, 95, 0.12);
 }
 
 .input-group-text {
@@ -383,7 +385,7 @@ app-root {
 
 .form-check-input:focus {
   border-color: var(--app-primary);
-  box-shadow: 0 0 0 0.25rem rgba(85, 107, 47, 0.12);
+  box-shadow: 0 0 0 0.25rem rgba(59, 68, 54, 0.12);
 }
 
 /* === Buttons === */
@@ -407,18 +409,18 @@ app-root {
   border-color: var(--btn-primary-hover);
   color: var(--btn-primary-text);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(85, 107, 47, 0.25);
+  box-shadow: 0 4px 14px rgba(224, 122, 95, 0.30);
 }
 
 .btn-primary:active {
-  background: #3D4F20;
-  border-color: #3D4F20;
+  background: #B35A40;
+  border-color: #B35A40;
   transform: translateY(0);
 }
 
 .btn-primary:disabled {
-  background: #A0AB8A;
-  border-color: #A0AB8A;
+  background: #C8A898;
+  border-color: #C8A898;
   transform: none;
   box-shadow: none;
 }
@@ -438,8 +440,8 @@ app-root {
 }
 
 .btn-outline-primary:active {
-  background: #465A24;
-  border-color: #465A24;
+  background: #2D3428;
+  border-color: #2D3428;
   transform: translateY(0);
 }
 
@@ -484,6 +486,50 @@ app-root {
   color: #FFFFFF;
 }
 
+/* Solid olive-green button for secondary actions that need a filled style */
+.btn-olive {
+  background: var(--app-primary);
+  border-color: var(--app-primary);
+  color: #FFFFFF;
+}
+
+.btn-olive:hover,
+.btn-olive:focus {
+  background: #2D3428;
+  border-color: #2D3428;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+/* Accent orange action button (alternative to btn-primary for specific CTAs) */
+.btn-accent {
+  background: var(--app-accent);
+  border-color: var(--app-accent);
+  color: #FFFFFF;
+}
+
+.btn-accent:hover,
+.btn-accent:focus {
+  background: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(224, 122, 95, 0.25);
+}
+
+.btn-outline-accent {
+  border: 1.5px solid var(--app-accent);
+  color: var(--app-accent);
+  background: transparent;
+}
+
+.btn-outline-accent:hover,
+.btn-outline-accent:focus {
+  background: var(--app-accent);
+  border-color: var(--app-accent);
+  color: #FFFFFF;
+}
+
 /* === Badges === */
 .badge {
   font-weight: 500;
@@ -521,8 +567,8 @@ app-root {
 }
 
 .text-bg-dark {
-  background: #374028 !important;
-  color: #FFFFFF !important;
+  background: var(--sidebar-bg) !important;
+  color: var(--sidebar-text) !important;
 }
 
 .text-bg-light {
@@ -545,6 +591,7 @@ app-root {
 .text-success { color: var(--app-success) !important; }
 .text-warning { color: var(--app-warning) !important; }
 .text-danger { color: var(--app-danger) !important; }
+.text-accent { color: var(--app-accent) !important; }
 .text-info { color: var(--app-primary) !important; }
 
 .text-muted,
@@ -583,8 +630,8 @@ app-root {
 }
 
 .alert-info {
-  background: rgba(85, 107, 47, 0.08);
-  color: #3E5A1F;
+  background: rgba(59, 68, 54, 0.08);
+  color: #2E3828;
 }
 
 /* === Links === */
@@ -682,7 +729,7 @@ a:hover {
 
 /* === Selection === */
 ::selection {
-  background: rgba(85, 107, 47, 0.20);
+  background: rgba(59, 68, 54, 0.20);
   color: #2E2E2E;
 }
 
@@ -703,10 +750,90 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #C8CDBB;
+  background: #B8BFA8;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #A0AB8A;
+  background: #9CA88B;
+}
+
+/* === Table cell text control === */
+.table-cell-truncate {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table-cell-truncate-sm {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table-cell-truncate-lg {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ensure all table headers and cells have consistent sizing */
+.table th {
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--app-text-soft);
+  border-bottom-width: 1px;
+  padding: 0.625rem 0.5rem;
+  vertical-align: middle;
+}
+
+.table td {
+  padding: 0.5rem;
+  vertical-align: middle;
+  font-size: 0.875rem;
+}
+
+/* Action columns stay narrow */
+.table .col-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* Search input consistent sizing */
+.search-box {
+  max-width: 320px;
+  min-width: 180px;
+}
+
+/* Module tab buttons consistent sizing */
+.module-tabs .btn {
+  font-size: 0.8125rem;
+}
+
+/* Responsive card spacing on small screens */
+@media (max-width: 576px) {
+  .card-body {
+    padding: 1rem !important;
+  }
+  .table td,
+  .table th {
+    padding: 0.375rem 0.375rem;
+    font-size: 0.8125rem;
+  }
+  .table-cell-truncate {
+    max-width: 100px;
+  }
+  .table-cell-truncate-lg {
+    max-width: 140px;
+  }
+  .search-box {
+    max-width: 100%;
+    min-width: auto;
+  }
 }

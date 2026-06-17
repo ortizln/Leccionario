@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -90,6 +91,13 @@ public class ScheduleController {
             @Valid @RequestBody CourseScheduleRequest request,
             Principal principal) {
         return ResponseEntity.ok(scheduleService.updateSchedule(id, request, principal.getName()));
+    }
+
+    @DeleteMapping("/course-assignments/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<Void> deleteSchedule(@PathVariable Long id, Principal principal) {
+        scheduleService.deleteSchedule(id, principal.getName());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/import/blocks")
