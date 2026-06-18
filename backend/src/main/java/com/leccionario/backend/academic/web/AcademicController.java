@@ -9,10 +9,13 @@ import com.leccionario.backend.academic.dto.AcademicSubjectRequest;
 import com.leccionario.backend.academic.dto.AcademicSubjectResponse;
 import com.leccionario.backend.academic.dto.AcademicTeacherRequest;
 import com.leccionario.backend.academic.dto.AcademicTeacherResponse;
+import com.leccionario.backend.academic.dto.RepresentativeRequest;
+import com.leccionario.backend.academic.dto.RepresentativeResponse;
 import com.leccionario.backend.common.excel.ImportSummaryResponse;
 import com.leccionario.backend.academic.service.AcademicService;
 import jakarta.validation.Valid;
 import java.security.Principal;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -162,6 +165,27 @@ public class AcademicController {
             @RequestParam("file") MultipartFile file,
             Principal principal) {
         return ResponseEntity.ok(academicService.importTeachers(file, principal.getName()));
+    }
+
+    @GetMapping("/representatives")
+    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    public ResponseEntity<List<RepresentativeResponse>> listRepresentatives() {
+        return ResponseEntity.ok(academicService.getAllRepresentatives());
+    }
+
+    @PostMapping("/representatives")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<RepresentativeResponse> createRepresentative(
+            @Valid @RequestBody RepresentativeRequest request) {
+        return ResponseEntity.ok(academicService.createRepresentative(request));
+    }
+
+    @PutMapping("/representatives/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<RepresentativeResponse> updateRepresentative(
+            @PathVariable Long id,
+            @Valid @RequestBody RepresentativeRequest request) {
+        return ResponseEntity.ok(academicService.updateRepresentative(id, request));
     }
 
 }
