@@ -128,6 +128,21 @@ CREATE TABLE students (
 );
 
 ALTER TABLE courses ADD COLUMN week_student_id BIGINT REFERENCES students(id);
+ALTER TABLE courses ADD COLUMN section VARCHAR(20);
+ALTER TABLE courses ADD COLUMN sub_level VARCHAR(20);
+ALTER TABLE courses ADD COLUMN grade INTEGER;
+
+CREATE TABLE week_student_assignments (
+    id BIGSERIAL PRIMARY KEY,
+    course_id BIGINT NOT NULL REFERENCES courses(id),
+    student_id BIGINT NOT NULL REFERENCES students(id),
+    start_date DATE NOT NULL,
+    end_date DATE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_week_student_assignments_course ON week_student_assignments(course_id);
 
 CREATE TABLE schedule_blocks (
     id BIGSERIAL PRIMARY KEY,

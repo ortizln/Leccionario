@@ -22,6 +22,11 @@ export class LoginComponent implements OnDestroy {
   currentSlideIndex = 0;
   loginError = '';
   isLoading = false;
+  showPassword = false;
+
+  togglePassword(): void {
+    this.showPassword = !this.showPassword;
+  }
 
   form = this.fb.nonNullable.group({
     username: ['', Validators.required],
@@ -109,14 +114,14 @@ export class LoginComponent implements OnDestroy {
     this.isLoading = true;
     this.loginError = '';
     this.authService.login(this.form.getRawValue()).subscribe({
-      next: () => {
+      next: (session) => {
         this.isLoading = false;
+        if (!session) {
+          this.loginError = 'Usuario o contraseña incorrectos';
+          return;
+        }
         this.brandingService.syncAuthenticatedBranding();
         void this.router.navigateByUrl(this.authService.defaultRoute());
-      },
-      error: () => {
-        this.isLoading = false;
-        this.loginError = 'Usuario o contraseña incorrectos';
       }
     });
   }

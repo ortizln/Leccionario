@@ -34,6 +34,16 @@
             <a class="nav-link app-nav-link" routerLink="/app" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
               <i class="bi bi-speedometer2 me-2"></i>Dashboard
             </a>
+            @if (auth.hasPermission('STUDENT_SELF_VIEW')) {
+              <a class="nav-link app-nav-link" routerLink="/app/my-course" routerLinkActive="active">
+                <i class="bi bi-mortarboard me-2"></i>Mi curso
+              </a>
+            }
+            @if (auth.hasPermission('TEACHER_SELF_VIEW')) {
+              <a class="nav-link app-nav-link" routerLink="/app/my-teaching" routerLinkActive="active">
+                <i class="bi bi-person-workspace me-2"></i>Mi carga academica
+              </a>
+            }
             @if (auth.hasPermission('USER_VIEW')) {
               <a class="nav-link app-nav-link" routerLink="/app/users" routerLinkActive="active">
                 <i class="bi bi-people me-2"></i>Usuarios
@@ -61,11 +71,11 @@
                   <a class="nav-link app-nav-link" routerLink="/app/academic/representatives" routerLinkActive="active">
                     <i class="bi bi-people me-2"></i>Representantes
                   </a>
+                  <a class="nav-link app-nav-link" routerLink="/app/schedules" routerLinkActive="active">
+                    <i class="bi bi-calendar-week me-2"></i>Horarios
+                  </a>
                 </div>
               }
-              <a class="nav-link app-nav-link" routerLink="/app/schedules" routerLinkActive="active">
-                <i class="bi bi-calendar-week me-2"></i>Horarios
-              </a>
               <a class="nav-link app-nav-link" routerLink="/app/demerits" routerLinkActive="active">
                 <i class="bi bi-exclamation-diamond me-2"></i>Deméritos
               </a>
@@ -92,13 +102,13 @@
             }
           </nav>
 
-          <div class="card border-0 shadow-sm sidebar-mini-card mt-auto">
-            <div class="card-body small text-white-50">
+          <div class="card border-0 shadow-sm sidebar-mini-card mt-auto sidebar-security-card">
+            <div class="card-body small">
               <div class="d-flex align-items-center justify-content-between mb-2">
-                <span><i class="bi bi-shield-check text-white me-2"></i>Seguridad</span>
+                <span><i class="bi bi-shield-check me-2"></i>Seguridad</span>
                 <span class="badge rounded-pill text-bg-success">Activa</span>
               </div>
-              <div>JWT, auditoria y control por roles habilitados.</div>
+              <div class="text-muted">JWT, auditoria y control por roles habilitados.</div>
             </div>
           </div>
         </aside>

@@ -11,6 +11,9 @@ export type AcademicCourse = {
   name: string;
   parallel: string;
   level: string;
+  section: string | null;
+  subLevel: string | null;
+  grade: number | null;
   weekStudentId: number | null;
   weekStudentName: string | null;
 };
@@ -36,6 +39,10 @@ export type AcademicTeacher = {
   id: number;
   userId: number;
   username: string;
+  email: string;
+  identification: string;
+  firstName: string;
+  lastName: string;
   fullName: string;
   specialization: string;
   enabled: boolean;
@@ -47,10 +54,10 @@ export type AcademicTeacher = {
 export type ScheduleOverview = {
   blocks: ScheduleBlockItem[];
   schedules: CourseScheduleItem[];
-  courses: Array<{ id: number; name: string; parallel: string; level: string }>;
+  courses: Array<{ id: number; name: string; parallel: string; level: string; section: string | null; subLevel: string | null; grade: number | null }>;
   periods: Array<{ id: number; name: string; startDate: string; endDate: string; active: boolean }>;
   subjects: Array<{ id: number; name: string; code: string; curriculumArea: string }>;
-  teachers: Array<{ id: number; name: string; specialization: string }>;
+  teachers: Array<{ id: number; name: string; specialization: string; subjectIds: number[] }>;
 };
 
 export type ScheduleBlockItem = {
@@ -77,6 +84,16 @@ export type CourseScheduleItem = {
   teacherName: string;
   weekday: number;
   classroom: string | null;
+};
+
+export type WeekStudentAssignment = {
+  id: number;
+  courseId: number;
+  studentId: number;
+  studentName: string;
+  enrollmentNumber: string;
+  startDate: string;
+  endDate: string | null;
 };
 
 export type ImportSummaryResult = {

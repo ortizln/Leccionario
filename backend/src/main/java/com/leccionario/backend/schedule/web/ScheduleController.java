@@ -9,6 +9,7 @@ import com.leccionario.backend.common.excel.ImportSummaryResponse;
 import com.leccionario.backend.schedule.service.ScheduleService;
 import jakarta.validation.Valid;
 import java.security.Principal;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +38,12 @@ public class ScheduleController {
     @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
     public ResponseEntity<ScheduleOverviewResponse> overview() {
         return ResponseEntity.ok(scheduleService.getOverview());
+    }
+
+    @GetMapping("/by-course/{courseId}")
+    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    public ResponseEntity<List<CourseScheduleResponse>> getCourseSchedules(@PathVariable Long courseId) {
+        return ResponseEntity.ok(scheduleService.getCourseSchedules(courseId));
     }
 
     @GetMapping("/import-template/blocks")

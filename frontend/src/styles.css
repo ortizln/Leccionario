@@ -180,6 +180,11 @@ app-root {
   border-radius: var(--radius-lg);
 }
 
+.sidebar-mini-card.sidebar-security-card {
+  background: #FFFFFF !important;
+  color: #212529;
+}
+
 /* Sidebar user badge */
 .brand-badge {
   width: 54px;
@@ -731,6 +736,17 @@ a:hover {
 ::selection {
   background: rgba(59, 68, 54, 0.20);
   color: #2E2E2E;
+}
+
+/* === Cursor pointer for interactive cards === */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* === Active card state === */
+.card-active {
+  border-color: var(--app-primary) !important;
+  box-shadow: 0 0 0 2px rgba(59, 68, 54, 0.15) !important;
 }
 
 /* === Focus Visible === */

@@ -1,6 +1,8 @@
 package com.leccionario.backend.academic.service;
 
 import com.leccionario.backend.academic.domain.Course;
+import com.leccionario.backend.academic.domain.CourseSection;
+import com.leccionario.backend.academic.domain.CourseSubLevel;
 import com.leccionario.backend.academic.dto.AcademicCourseRequest;
 import com.leccionario.backend.academic.dto.AcademicCourseResponse;
 import com.leccionario.backend.academic.dto.AcademicOverviewResponse;
@@ -13,9 +15,12 @@ import com.leccionario.backend.academic.dto.AcademicTeacherRequest;
 import com.leccionario.backend.academic.dto.AcademicTeacherResponse;
 import com.leccionario.backend.academic.dto.RepresentativeRequest;
 import com.leccionario.backend.academic.dto.RepresentativeResponse;
+import com.leccionario.backend.academic.dto.WeekStudentAssignmentResponse;
+import com.leccionario.backend.academic.domain.WeekStudentAssignment;
 import com.leccionario.backend.academic.repository.AcademicPeriodRepository;
 import com.leccionario.backend.academic.repository.CourseRepository;
 import com.leccionario.backend.academic.repository.SubjectRepository;
+import com.leccionario.backend.academic.repository.WeekStudentAssignmentRepository;
 import com.leccionario.backend.audit.service.AuditService;
 import com.leccionario.backend.common.excel.ExcelSupport;
 import com.leccionario.backend.common.excel.ImportSummaryResponse;
@@ -62,6 +67,7 @@ public class AcademicService {
     private final AuditService auditService;
     private final PasswordEncoder passwordEncoder;
     private final RepresentativeRepository representativeRepository;
+    private final WeekStudentAssignmentRepository weekStudentAssignmentRepository;
 
     @Transactional(readOnly = true)
     public AcademicOverviewResponse getOverview() {
@@ -93,6 +99,9 @@ public class AcademicService {
         Course course = new Course();
         applyCourse(course, request);
         Course saved = courseRepository.save(course);
+        if (saved.getWeekStudent() != null) {
+            createAssignment(saved, saved.getWeekStudent(), java.time.LocalDate.now());
+        }
         auditService.log(username, "CREATE_COURSE", "ACADEMIC", saved.getName() + " " + saved.getParallel());
         return toCourseResponse(saved);
     }
@@ -101,8 +110,21 @@ public class AcademicService {
     public AcademicCourseResponse updateCourse(Long id, AcademicCourseRequest request, String username) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("El curso seleccionado no existe."));
+        Long previousWeekStudentId = course.getWeekStudent() != null ? course.getWeekStudent().getId() : null;
         applyCourse(course, request);
         Course saved = courseRepository.save(course);
+        Long newWeekStudentId = saved.getWeekStudent() != null ? saved.getWeekStudent().getId() : null;
+        if (!java.util.Objects.equals(previousWeekStudentId, newWeekStudentId)) {
+            java.time.LocalDate today = java.time.LocalDate.now();
+            weekStudentAssignmentRepository.findByCourseIdAndEndDateIsNull(saved.getId())
+                    .ifPresent(active -> {
+                        active.setEndDate(today);
+                        weekStudentAssignmentRepository.save(active);
+                    });
+            if (saved.getWeekStudent() != null) {
+                createAssignment(saved, saved.getWeekStudent(), today);
+            }
+        }
         auditService.log(username, "UPDATE_COURSE", "ACADEMIC", saved.getName() + " " + saved.getParallel());
         return toCourseResponse(saved);
     }
@@ -166,6 +188,11 @@ public class AcademicService {
                 && previousCourse.getWeekStudent().getId().equals(savedStudent.getId())) {
             previousCourse.setWeekStudent(null);
             courseRepository.save(previousCourse);
+            weekStudentAssignmentRepository.findByCourseIdAndEndDateIsNull(previousCourse.getId())
+                    .ifPresent(active -> {
+                        active.setEndDate(java.time.LocalDate.now());
+                        weekStudentAssignmentRepository.save(active);
+                    });
         }
 
         auditService.log(username, "UPDATE_STUDENT", "ACADEMIC", savedStudent.getUser().getUsername() + " -> " + course.getName() + " " + course.getParallel());
@@ -182,8 +209,18 @@ public class AcademicService {
                 request.lastName(),
                 request.specialization(),
                 request.enabled(),
+                request.subjects(),
+                request.courses(),
                 username);
         return toTeacherResponse(teacher, java.util.List.of());
+    }
+
+    @Transactional(readOnly = true)
+    public AcademicTeacherResponse getTeacher(Long id) {
+        Teacher teacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Docente no encontrado"));
+        return toTeacherResponse(teacher,
+                courseScheduleRepository.findByTeacherIdOrderByWeekdayAscScheduleBlock_BlockOrderAsc(id));
     }
 
     @Transactional
@@ -215,6 +252,12 @@ public class AcademicService {
         userRepository.save(user);
 
         teacher.setSpecialization(request.specialization().trim());
+        if (request.subjects() != null) {
+            teacher.setSubjects(new java.util.ArrayList<>(request.subjects().stream().map(String::trim).toList()));
+        }
+        if (request.courses() != null) {
+            teacher.setCourses(new java.util.ArrayList<>(request.courses().stream().map(String::trim).toList()));
+        }
         Teacher saved = teacherRepository.save(teacher);
 
         auditService.log(username, "UPDATE_TEACHER", "ACADEMIC", saved.getUser().getUsername());
@@ -253,13 +296,16 @@ public class AcademicService {
     public byte[] exportCourseTemplate() {
         Workbook workbook = ExcelSupport.newWorkbook();
         Sheet sheet = workbook.createSheet("cursos");
-        ExcelSupport.writeHeaders(sheet, "name", "parallel", "level", "weekStudentEnrollment");
+        ExcelSupport.writeHeaders(sheet, "name", "parallel", "level", "section", "subLevel", "grade", "weekStudentEnrollment");
         var sample = sheet.createRow(1);
         sample.createCell(0).setCellValue("Primero BGU");
         sample.createCell(1).setCellValue("A");
         sample.createCell(2).setCellValue("Bachillerato");
-        sample.createCell(3).setCellValue("1001");
-        ExcelSupport.autoSize(sheet, 4);
+        sample.createCell(3).setCellValue("BACHILLERATO");
+        sample.createCell(4).setCellValue("BGU");
+        sample.createCell(5).setCellValue(1);
+        sample.createCell(6).setCellValue("1001");
+        ExcelSupport.autoSize(sheet, 7);
         return ExcelSupport.toBytes(workbook);
     }
 
@@ -280,13 +326,18 @@ public class AcademicService {
         sample.createCell(8).setCellValue("true");
 
         Sheet catalog = workbook.createSheet("catalogos");
-        ExcelSupport.writeHeaders(catalog, "courseName", "parallel", "level");
+        ExcelSupport.writeHeaders(catalog, "courseName", "parallel", "level", "section", "subLevel", "grade");
         var courses = courseRepository.findAll();
         for (int index = 0; index < courses.size(); index++) {
             var row = catalog.createRow(index + 1);
             row.createCell(0).setCellValue(courses.get(index).getName());
             row.createCell(1).setCellValue(courses.get(index).getParallel());
             row.createCell(2).setCellValue(courses.get(index).getLevel());
+            row.createCell(3).setCellValue(courses.get(index).getSection() != null ? courses.get(index).getSection().name() : "");
+            row.createCell(4).setCellValue(courses.get(index).getSubLevel() != null ? courses.get(index).getSubLevel().name() : "");
+            if (courses.get(index).getGrade() != null) {
+                row.createCell(5).setCellValue(courses.get(index).getGrade());
+            }
         }
 
         ExcelSupport.autoSize(sheet, 9);
@@ -342,6 +393,9 @@ public class AcademicService {
                         ExcelSupport.getString(row, 0),
                         ExcelSupport.getString(row, 1),
                         ExcelSupport.getString(row, 2),
+                        null,
+                        null,
+                        null,
                         resolveWeekStudentId(
                                 ExcelSupport.getString(row, 0),
                                 ExcelSupport.getString(row, 1),
@@ -432,6 +486,8 @@ public class AcademicService {
                         ExcelSupport.getString(row, 4),
                         ExcelSupport.getString(row, 5),
                         ExcelSupport.getBoolean(row, 6, true),
+                        java.util.List.of(),
+                        java.util.List.of(),
                         actor);
                 imported++;
             } catch (Exception exception) {
@@ -453,6 +509,15 @@ public class AcademicService {
         course.setName(request.name().trim());
         course.setParallel(request.parallel().trim().toUpperCase());
         course.setLevel(request.level().trim());
+        if (request.section() != null) {
+            course.setSection(CourseSection.valueOf(request.section().toUpperCase()));
+        }
+        if (request.subLevel() != null) {
+            course.setSubLevel(CourseSubLevel.valueOf(request.subLevel().toUpperCase()));
+        }
+        if (request.grade() != null) {
+            course.setGrade(request.grade());
+        }
         course.setWeekStudent(resolveWeekStudent(request.weekStudentId(), course));
     }
 
@@ -464,6 +529,8 @@ public class AcademicService {
             String lastName,
             String specialization,
             boolean enabled,
+            java.util.List<String> subjects,
+            java.util.List<String> courses,
             String actor) {
         validateTeacherUniqueness(username, email, identification);
 
@@ -487,6 +554,12 @@ public class AcademicService {
         Teacher teacher = new Teacher();
         teacher.setUser(savedUser);
         teacher.setSpecialization(specialization.trim());
+        if (subjects != null) {
+            teacher.setSubjects(new java.util.ArrayList<>(subjects.stream().map(String::trim).toList()));
+        }
+        if (courses != null) {
+            teacher.setCourses(new java.util.ArrayList<>(courses.stream().map(String::trim).toList()));
+        }
         Teacher savedTeacher = teacherRepository.save(teacher);
 
         auditService.log(actor, "CREATE_TEACHER", "ACADEMIC", savedUser.getUsername() + " -> " + specialization.trim());
@@ -579,12 +652,44 @@ public class AcademicService {
                 course.getName(),
                 course.getParallel(),
                 course.getLevel(),
+                course.getSection() != null ? course.getSection().name() : null,
+                course.getSubLevel() != null ? course.getSubLevel().name() : null,
+                course.getGrade(),
                 course.getWeekStudent() != null ? course.getWeekStudent().getId() : null,
                 course.getWeekStudent() != null
                         ? course.getWeekStudent().getEnrollmentNumber() + " - "
                                 + course.getWeekStudent().getUser().getFirstName() + " "
                                 + course.getWeekStudent().getUser().getLastName()
                         : null);
+    }
+
+    private void createAssignment(Course course, Student student, java.time.LocalDate startDate) {
+        WeekStudentAssignment assignment = new WeekStudentAssignment();
+        assignment.setCourse(course);
+        assignment.setStudent(student);
+        assignment.setStartDate(startDate);
+        weekStudentAssignmentRepository.save(assignment);
+    }
+
+    @Transactional(readOnly = true)
+    public List<WeekStudentAssignmentResponse> getWeekStudentAssignments(Long courseId) {
+        return weekStudentAssignmentRepository.findByCourseIdOrderByStartDateDesc(courseId)
+                .stream()
+                .map(this::toAssignmentResponse)
+                .toList();
+    }
+
+    private WeekStudentAssignmentResponse toAssignmentResponse(WeekStudentAssignment assignment) {
+        Student student = assignment.getStudent();
+        String studentName = student.getUser().getFirstName() + " " + student.getUser().getLastName();
+        return new WeekStudentAssignmentResponse(
+                assignment.getId(),
+                assignment.getCourse().getId(),
+                student.getId(),
+                studentName,
+                student.getEnrollmentNumber(),
+                assignment.getStartDate(),
+                assignment.getEndDate());
     }
 
     private Student resolveWeekStudent(Long weekStudentId, Course course) {
@@ -720,17 +825,27 @@ public class AcademicService {
             Teacher teacher,
             java.util.List<com.leccionario.backend.schedule.domain.CourseSchedule> schedules) {
         User user = teacher.getUser();
-        LinkedHashSet<String> subjects = schedules.stream()
-                .map(schedule -> schedule.getSubject().getName())
-                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
-        LinkedHashSet<String> courses = schedules.stream()
-                .map(schedule -> schedule.getCourse().getName() + " " + schedule.getCourse().getParallel())
-                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+        java.util.LinkedHashSet<String> subjects = new java.util.LinkedHashSet<>(teacher.getSubjects());
+        java.util.LinkedHashSet<String> courses = new java.util.LinkedHashSet<>(teacher.getCourses());
+        if (subjects.isEmpty()) {
+            schedules.stream()
+                    .map(s -> s.getSubject().getName())
+                    .forEach(subjects::add);
+        }
+        if (courses.isEmpty()) {
+            schedules.stream()
+                    .map(s -> s.getCourse().getName() + " " + s.getCourse().getParallel())
+                    .forEach(courses::add);
+        }
 
         return new AcademicTeacherResponse(
                 teacher.getId(),
                 user.getId(),
                 user.getUsername(),
+                user.getEmail(),
+                user.getIdentification(),
+                user.getFirstName(),
+                user.getLastName(),
                 user.getFirstName() + " " + user.getLastName(),
                 teacher.getSpecialization(),
                 user.isEnabled(),

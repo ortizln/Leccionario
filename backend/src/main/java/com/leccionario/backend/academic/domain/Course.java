@@ -4,6 +4,8 @@ import com.leccionario.backend.common.domain.BaseEntity;
 import com.leccionario.backend.user.domain.Student;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -25,6 +27,16 @@ public class Course extends BaseEntity {
 
     @Column(nullable = false, length = 50)
     private String level;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private CourseSection section;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private CourseSubLevel subLevel;
+
+    private Integer grade;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "week_student_id")

@@ -50,10 +50,10 @@ public final class RoleDefaults {
                     PermissionCode.SETTINGS_VIEW,
                     PermissionCode.SETTINGS_MANAGE);
             case DOCENTE -> EnumSet.of(
-                    PermissionCode.ACADEMIC_VIEW,
                     PermissionCode.LESSONPLAN_VIEW,
                     PermissionCode.LESSONPLAN_MANAGE,
-                    PermissionCode.REPORT_VIEW);
+                    PermissionCode.REPORT_VIEW,
+                    PermissionCode.TEACHER_SELF_VIEW);
             case ADMINISTRATIVO -> EnumSet.of(
                     PermissionCode.ACADEMIC_VIEW,
                     PermissionCode.ACADEMIC_MANAGE,
@@ -62,7 +62,8 @@ public final class RoleDefaults {
                     PermissionCode.REPORT_EXPORT,
                     PermissionCode.AUDIT_VIEW,
                     PermissionCode.SETTINGS_VIEW);
-            case ESTUDIANTE -> EnumSet.noneOf(PermissionCode.class);
+            case ESTUDIANTE -> EnumSet.of(
+                    PermissionCode.STUDENT_SELF_VIEW);
             default -> EnumSet.noneOf(PermissionCode.class);
         };
     }

@@ -11,6 +11,7 @@ import com.leccionario.backend.academic.dto.AcademicTeacherRequest;
 import com.leccionario.backend.academic.dto.AcademicTeacherResponse;
 import com.leccionario.backend.academic.dto.RepresentativeRequest;
 import com.leccionario.backend.academic.dto.RepresentativeResponse;
+import com.leccionario.backend.academic.dto.WeekStudentAssignmentResponse;
 import com.leccionario.backend.common.excel.ImportSummaryResponse;
 import com.leccionario.backend.academic.service.AcademicService;
 import jakarta.validation.Valid;
@@ -109,6 +110,12 @@ public class AcademicController {
         return ResponseEntity.ok(academicService.updateStudent(id, request, principal.getName()));
     }
 
+    @GetMapping("/teachers/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    public ResponseEntity<AcademicTeacherResponse> getTeacher(@PathVariable Long id) {
+        return ResponseEntity.ok(academicService.getTeacher(id));
+    }
+
     @PutMapping("/teachers/{id}")
     @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
     public ResponseEntity<AcademicTeacherResponse> updateTeacher(
@@ -186,6 +193,13 @@ public class AcademicController {
             @PathVariable Long id,
             @Valid @RequestBody RepresentativeRequest request) {
         return ResponseEntity.ok(academicService.updateRepresentative(id, request));
+    }
+
+    @GetMapping("/courses/{courseId}/week-student-assignments")
+    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    public ResponseEntity<List<WeekStudentAssignmentResponse>> getWeekStudentAssignments(
+            @PathVariable Long courseId) {
+        return ResponseEntity.ok(academicService.getWeekStudentAssignments(courseId));
     }
 
 }

@@ -615,6 +615,8 @@ export class StudentsComponent implements OnInit {
   edit(student: AcademicStudent): void {
     this.editingId = student.id;
     this.editorOpen = true;
+    const rep = this.allReps.find(r => r.studentId === student.id);
+    this.selectedRepId = rep?.id ?? null;
     this.form.setValue({
       username: student.username,
       email: student.email,
@@ -653,12 +655,20 @@ export class StudentsComponent implements OnInit {
 
     operation.subscribe({
       next: (saved: any) => {
+        const studentId = saved?.id ?? this.editingId ?? 0;
         if (this.selectedRepId) {
           const rep = this.allReps.find(r => r.id === this.selectedRepId);
           if (rep) {
-            rep.studentId = saved?.id ?? this.editingId ?? 0;
+            rep.studentId = studentId;
             rep.studentName = `${request.firstName} ${request.lastName}`.trim();
             rep.enrollmentNumber = request.enrollmentNumber;
+            this.http.put(`${API_URL}/academic/representatives/${this.selectedRepId}`, {
+              studentId,
+              fullName: rep.fullName,
+              relationship: rep.relationship,
+              phone: rep.phone,
+              email: rep.email || ''
+            }).pipe(catchError(() => of(null))).subscribe();
           }
         }
         this.cancelEdit(); this.loadData();
@@ -747,28 +757,28 @@ export class StudentsComponent implements OnInit {
     const studentId = this.editingId ?? 0;
     const tempId = Date.now();
 
-    const newRep: StudentRepresentative = {
-      id: tempId,
-      studentId,
-      studentName: `${formValues.firstName} ${formValues.lastName}`.trim(),
-      enrollmentNumber: formValues.enrollmentNumber,
-      fullName: payload.fullName,
-      relationship: payload.relationship,
-      phone: payload.phone,
-      email: payload.email,
-      emergencyContact: '',
-      emergencyPhone: '',
-      address: payload.address,
-    };
-
-    this.http.post(`${API_URL}/academic/representatives`, payload).pipe(
+    this.http.post<{ id: number }>(`${API_URL}/academic/representatives`, payload).pipe(
       catchError(() => of(null))
-    ).subscribe(() => {});
-
-    this.allReps = [...this.allReps, newRep];
-    this.selectedRepId = tempId;
-    this.repSearchOpen = false;
-    this.creatingRep = false;
+    ).subscribe((saved) => {
+      const repId = saved?.id ?? Date.now();
+      const newRep: StudentRepresentative = {
+        id: repId,
+        studentId,
+        studentName: `${formValues.firstName} ${formValues.lastName}`.trim(),
+        enrollmentNumber: formValues.enrollmentNumber,
+        fullName: payload.fullName,
+        relationship: payload.relationship,
+        phone: payload.phone,
+        email: payload.email,
+        emergencyContact: '',
+        emergencyPhone: '',
+        address: payload.address,
+      };
+      this.allReps = [...this.allReps, newRep];
+      this.selectedRepId = repId;
+      this.repSearchOpen = false;
+      this.creatingRep = false;
+    });
   }
 
   get selectedRep(): StudentRepresentative | undefined {

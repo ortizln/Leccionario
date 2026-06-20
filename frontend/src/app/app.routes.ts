@@ -18,6 +18,8 @@ import { StudentsComponent } from './features/academic/students/students.compone
 import { TeachersComponent } from './features/academic/teachers/teachers.component';
 import { SubjectsComponent } from './features/academic/subjects/subjects.component';
 import { RepresentativesComponent } from './features/academic/representatives/representatives.component';
+import { MyCourseComponent } from './features/self/my-course/my-course.component';
+import { MyTeachingComponent } from './features/self/my-teaching/my-teaching.component';
 
 export const appRoutes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
@@ -49,6 +51,8 @@ export const appRoutes: Routes = [
         ]
       },
       { path: 'schedules', component: ScheduleManagementComponent, canActivate: [permissionGuard], data: { permission: 'ACADEMIC_VIEW' } },
+      { path: 'my-course', component: MyCourseComponent, canActivate: [permissionGuard], data: { permission: 'STUDENT_SELF_VIEW' } },
+      { path: 'my-teaching', component: MyTeachingComponent, canActivate: [permissionGuard], data: { permission: 'TEACHER_SELF_VIEW' } },
       { path: 'demerits', component: DemeritManagementComponent, canActivate: [permissionGuard], data: { permission: 'ACADEMIC_VIEW' } },
       { path: 'audit', component: AuditComponent, canActivate: [permissionGuard], data: { permission: 'AUDIT_VIEW' } },
       { path: 'branding', component: BrandingManagementComponent, canActivate: [permissionGuard], data: { permission: 'SETTINGS_VIEW' } }

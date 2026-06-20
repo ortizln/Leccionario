@@ -1,4 +1,3 @@
-const isLocalHost = typeof window !== 'undefined'
-  && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+import { environment } from '../../environments/environment';
 
-export const API_URL = isLocalHost ? 'http://localhost:1080/api' : '/api';
+export const API_URL = environment.apiUrl;

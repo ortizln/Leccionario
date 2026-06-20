@@ -50,4 +50,17 @@ public interface CourseScheduleRepository extends JpaRepository<CourseSchedule, 
             Long teacherId,
             Long subjectId,
             short weekday);
+
+    boolean existsByCourseIdAndPeriodIdAndSubjectIdAndTeacherIdNot(
+            Long courseId,
+            Long periodId,
+            Long subjectId,
+            Long teacherId);
+
+    boolean existsByCourseIdAndPeriodIdAndSubjectIdAndTeacherIdNotAndIdNot(
+            Long courseId,
+            Long periodId,
+            Long subjectId,
+            Long teacherId,
+            Long id);
 }

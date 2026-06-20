@@ -24,6 +24,7 @@ import com.leccionario.backend.schedule.repository.CourseScheduleRepository;
 import com.leccionario.backend.schedule.repository.ScheduleBlockRepository;
 import com.leccionario.backend.user.repository.TeacherRepository;
 import java.util.Comparator;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -63,6 +64,9 @@ public class ScheduleService {
                                 course.getName(),
                                 course.getParallel(),
                                 course.getLevel(),
+                                course.getSection() != null ? course.getSection().name() : null,
+                                course.getSubLevel() != null ? course.getSubLevel().name() : null,
+                                course.getGrade(),
                                 null,
                                 null))
                         .toList(),
@@ -85,11 +89,27 @@ public class ScheduleService {
                         .toList(),
                 teacherRepository.findAll().stream()
                         .sorted(Comparator.comparing(teacher -> teacher.getUser().getLastName() + teacher.getUser().getFirstName()))
-                        .map(teacher -> new ScheduleTeacherOptionResponse(
-                                teacher.getId(),
-                                teacher.getUser().getFirstName() + " " + teacher.getUser().getLastName(),
-                                teacher.getSpecialization()))
+                        .map(teacher -> {
+                            List<Long> subjectIds = courseScheduleRepository.findByTeacherIdOrderByWeekdayAscScheduleBlock_BlockOrderAsc(teacher.getId())
+                                    .stream()
+                                    .map(s -> s.getSubject().getId())
+                                    .distinct()
+                                    .toList();
+                            return new ScheduleTeacherOptionResponse(
+                                    teacher.getId(),
+                                    teacher.getUser().getFirstName() + " " + teacher.getUser().getLastName(),
+                                    teacher.getSpecialization(),
+                                    subjectIds);
+                        })
                         .toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseScheduleResponse> getCourseSchedules(Long courseId) {
+        return courseScheduleRepository.findByCourseIdOrderByWeekdayAscScheduleBlock_BlockOrderAsc(courseId)
+                .stream()
+                .map(this::toCourseScheduleResponse)
+                .toList();
     }
 
     @Transactional
@@ -354,6 +374,26 @@ public class ScheduleService {
                     .orElse("bloque seleccionado");
             throw new BusinessException("El docente ya tiene horario asignado el " + Weekday.label(request.weekday())
                     + " en el bloque " + blockLabel + " para ese periodo.");
+        }
+
+        boolean sameSubjectDifferentTeacher = currentScheduleId == null
+                ? courseScheduleRepository.existsByCourseIdAndPeriodIdAndSubjectIdAndTeacherIdNot(
+                        request.courseId(),
+                        request.periodId(),
+                        request.subjectId(),
+                        request.teacherId())
+                : courseScheduleRepository.existsByCourseIdAndPeriodIdAndSubjectIdAndTeacherIdNotAndIdNot(
+                        request.courseId(),
+                        request.periodId(),
+                        request.subjectId(),
+                        request.teacherId(),
+                        currentScheduleId);
+        if (sameSubjectDifferentTeacher) {
+            String subjectName = subjectRepository.findById(request.subjectId())
+                    .map(subject -> subject.getName())
+                    .orElse("materia seleccionada");
+            throw new BusinessException("El curso ya tiene un docente asignado para la materia " + subjectName
+                    + ". No puede asignar dos docentes distintos a la misma materia en el mismo curso.");
         }
     }
 

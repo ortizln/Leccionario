@@ -5,6 +5,9 @@ public record AcademicCourseResponse(
         String name,
         String parallel,
         String level,
+        String section,
+        String subLevel,
+        Integer grade,
         Long weekStudentId,
         String weekStudentName) {
 }

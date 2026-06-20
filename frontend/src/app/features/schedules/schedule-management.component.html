@@ -20,7 +20,7 @@
 
       <div class="row g-3">
         <div class="col-12 col-md-4">
-          <div class="card border-0 shadow-sm h-100">
+          <div class="card border-0 shadow-sm h-100 cursor-pointer" [class.card-active]="activeTab === 'blocks'" (click)="activeTab = 'blocks'">
             <div class="card-body">
               <div class="fw-semibold">Bloques</div>
               <div class="text-muted small">{{ blocks.length }} bloques horarios configurados.</div>
@@ -28,7 +28,7 @@
           </div>
         </div>
         <div class="col-12 col-md-4">
-          <div class="card border-0 shadow-sm h-100">
+          <div class="card border-0 shadow-sm h-100 cursor-pointer" [class.card-active]="activeTab === 'schedules'" (click)="activeTab = 'schedules'">
             <div class="card-body">
               <div class="fw-semibold">Asignaciones</div>
               <div class="text-muted small">{{ filteredSchedules.length }} asignaciones visibles para el filtro actual.</div>
@@ -36,7 +36,7 @@
           </div>
         </div>
         <div class="col-12 col-md-4">
-          <div class="card border-0 shadow-sm h-100">
+          <div class="card border-0 shadow-sm h-100 cursor-pointer" [class.card-active]="activeTab === 'courses'" (click)="activeTab = 'courses'">
             <div class="card-body">
               <div class="fw-semibold">Cursos</div>
               <div class="text-muted small">{{ overview.courses.length }} cursos listos para armar horario institucional.</div>
@@ -45,225 +45,315 @@
         </div>
       </div>
 
-      <div class="row g-4 align-items-start">
-        <div class="col-12 col-xl-5">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-              <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                  <h2 class="h4 mb-1">{{ editingBlockId ? 'Editar bloque' : 'Nuevo bloque' }}</h2>
-                  <p class="text-muted mb-0">Configura horas de clase o receso para la jornada.</p>
-                </div>
-                @if (canManageSchedules) {
-                  <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="downloadBlockTemplate()">Plantilla Excel</button>
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="triggerBlockImport()">Importar Excel</button>
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="resetBlockForm()">Limpiar</button>
-                  </div>
-                }
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" [class.active]="activeTab === 'blocks'" type="button" role="tab" (click)="activeTab = 'blocks'">
+            <i class="bi bi-clock me-1"></i>Bloques
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" [class.active]="activeTab === 'schedules'" type="button" role="tab" (click)="activeTab = 'schedules'">
+            <i class="bi bi-calendar-check me-1"></i>Asignaciones
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" [class.active]="activeTab === 'courses'" type="button" role="tab" (click)="activeTab = 'courses'">
+            <i class="bi bi-mortarboard me-1"></i>Cursos
+          </button>
+        </li>
+      </ul>
+
+      @if (activeTab === 'blocks') {
+        <div class="card border-0 shadow-sm" role="tabpanel">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h2 class="h4 mb-1">Bloques horarios</h2>
+                <p class="text-muted mb-0">Configura horas de clase o receso para la jornada.</p>
               </div>
-
-              <form [formGroup]="blockForm" class="row g-3">
-                <div class="col-12">
-                  <label class="form-label fw-semibold">Etiqueta</label>
-                  <input class="form-control form-control-sm" type="text" formControlName="label" placeholder="07H00-07H40" [readonly]="!canManageSchedules">
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Hora inicio</label>
-                  <input class="form-control form-control-sm" type="time" formControlName="startTime" [readonly]="!canManageSchedules">
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Hora fin</label>
-                  <input class="form-control form-control-sm" type="time" formControlName="endTime" [readonly]="!canManageSchedules">
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Orden</label>
-                  <input class="form-control form-control-sm" type="number" formControlName="blockOrder" [readonly]="!canManageSchedules">
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Tipo</label>
-                  <select class="form-select form-select-sm" formControlName="blockType" [disabled]="!canManageSchedules">
-                    <option value="CLASS">Clase</option>
-                    <option value="RECESS">Receso</option>
-                  </select>
-                </div>
-                <div class="col-12">
-                  <div class="form-check form-switch border rounded p-3">
-                    <input class="form-check-input" id="blockActive" type="checkbox" formControlName="active" [disabled]="!canManageSchedules">
-                    <label class="form-check-label ms-2 fw-semibold" for="blockActive">Bloque activo</label>
-                  </div>
-                </div>
-                @if (canManageSchedules) {
-                  <div class="col-12">
-                    <button class="btn btn-sm btn-primary w-100" type="button" (click)="saveBlock()">
-                      {{ editingBlockId ? 'Guardar bloque' : 'Crear bloque' }}
-                    </button>
-                  </div>
-                }
-              </form>
-            </div>
-          </div>
-
-          <div class="card border-0 shadow-sm mt-4">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="h5 mb-0">Bloques registrados</h3>
-                <span class="badge rounded-pill text-bg-light">Horario</span>
-              </div>
-              <div class="d-grid gap-2">
-                @for (block of blocks; track block.id) {
-                  <button class="btn btn-sm btn-outline-primary text-start"
-                          type="button"
-                          (click)="editBlock(block)">
-                    <div class="fw-semibold">{{ block.label }}</div>
-                    <div class="small text-muted">{{ block.startTime }} - {{ block.endTime }} · {{ block.blockType === 'CLASS' ? 'Clase' : 'Receso' }}</div>
-                  </button>
-                }
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-xl-7">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-              <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
-                <div>
-                  <h2 class="h4 mb-1">{{ editingScheduleId ? 'Editar asignacion' : 'Nueva asignacion' }}</h2>
-                  <p class="text-muted mb-0">Relaciona curso, periodo, bloque, materia, docente y aula.</p>
-                </div>
-                @if (canManageSchedules) {
-                  <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="downloadAssignmentTemplate()">Plantilla Excel</button>
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="triggerAssignmentImport()">Importar Excel</button>
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="resetScheduleForm()">Limpiar</button>
-                  </div>
-                }
-              </div>
-
-              <form [formGroup]="scheduleForm" class="row g-3">
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Curso</label>
-                  <select class="form-select form-select-sm" formControlName="courseId" [disabled]="!canManageSchedules">
-                    @for (course of overview.courses; track course.id) {
-                      <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
-                    }
-                  </select>
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Periodo</label>
-                  <select class="form-select form-select-sm" formControlName="periodId" [disabled]="!canManageSchedules">
-                    @for (period of overview.periods; track period.id) {
-                      <option [value]="period.id">{{ period.name }}</option>
-                    }
-                  </select>
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Bloque</label>
-                  <select class="form-select form-select-sm" formControlName="scheduleBlockId" [disabled]="!canManageSchedules">
-                    @for (block of classBlocks; track block.id) {
-                      <option [value]="block.id">{{ block.label }}</option>
-                    }
-                  </select>
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Dia</label>
-                  <select class="form-select form-select-sm" formControlName="weekday" [disabled]="!canManageSchedules">
-                    @for (day of weekdays; track day.value) {
-                      <option [value]="day.value">{{ day.label }}</option>
-                    }
-                  </select>
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Materia</label>
-                  <select class="form-select form-select-sm" formControlName="subjectId" [disabled]="!canManageSchedules">
-                    @for (subject of overview.subjects; track subject.id) {
-                      <option [value]="subject.id">{{ subject.name }}</option>
-                    }
-                  </select>
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Docente</label>
-                  <select class="form-select form-select-sm" formControlName="teacherId" [disabled]="!canManageSchedules">
-                    @for (teacher of overview.teachers; track teacher.id) {
-                      <option [value]="teacher.id">{{ teacher.name }} · {{ teacher.specialization }}</option>
-                    }
-                  </select>
-                </div>
-                <div class="col-12">
-                  <label class="form-label fw-semibold">Aula</label>
-                  <input class="form-control form-control-sm" type="text" formControlName="classroom" placeholder="Aula 1" [readonly]="!canManageSchedules">
-                </div>
-                @if (canManageSchedules) {
-                  <div class="col-12">
-                    <button class="btn btn-sm btn-primary w-100" type="button" (click)="saveSchedule()">
-                      {{ editingScheduleId ? 'Guardar asignacion' : 'Crear asignacion' }}
-                    </button>
-                  </div>
-                }
-              </form>
-            </div>
-          </div>
-
-          <div class="card border-0 shadow-sm mt-4">
-            <div class="card-body">
-              <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
-                <div>
-                  <h3 class="h5 mb-1">Horario cargado</h3>
-                  <p class="text-muted mb-0">Filtra por curso y revisa las asignaciones activas por dia y bloque.</p>
-                </div>
+              @if (canManageSchedules) {
                 <div class="d-flex gap-2">
-                  <select class="form-select form-select-sm" [(ngModel)]="scheduleCourseFilter">
-                    <option value="">Todos los cursos</option>
-                    @for (course of overview.courses; track course.id) {
-                      <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
-                    }
-                  </select>
+                  <details class="action-menu">
+                    <summary class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-list-ul me-2"></i>Acciones
+                    </summary>
+                    <div class="action-menu-panel">
+                      <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="downloadBlockTemplate()">
+                        <i class="bi bi-file-earmark-excel me-2"></i>Plantilla Excel
+                      </button>
+                      <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="triggerBlockImport()">
+                        <i class="bi bi-file-earmark-arrow-up me-2"></i>Importar Excel
+                      </button>
+                      <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="resetBlockForm()">
+                        <i class="bi bi-eraser me-2"></i>Limpiar
+                      </button>
+                    </div>
+                  </details>
+                  <button class="btn btn-sm btn-primary" type="button" (click)="openBlockModal()">
+                    <i class="bi bi-plus-circle me-2"></i>Nuevo bloque
+                  </button>
                 </div>
-              </div>
+              }
+            </div>
 
-              <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                  <thead>
-                    <tr>
-                      <th>Dia</th>
-                      <th>Bloque</th>
-                      <th>Curso</th>
-                      <th>Materia</th>
-                      <th>Docente</th>
-                      <th>Aula</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (schedule of filteredSchedules; track schedule.id) {
-                      <tr>
-                        <td>{{ weekdayLabel(schedule.weekday) }}</td>
-                        <td>{{ schedule.scheduleLabel }}</td>
-                        <td>{{ schedule.courseName }}</td>
-                        <td>{{ schedule.subjectName }}</td>
-                        <td>{{ schedule.teacherName }}</td>
-                        <td>{{ schedule.classroom || 'Sin aula' }}</td>
-                        <td class="text-end">
-                          @if (canManageSchedules) {
-                            <button class="btn btn-sm btn-outline-primary" type="button" (click)="editSchedule(schedule)">Editar</button>
-                          }
-                        </td>
-                      </tr>
-                    } @empty {
-                      <tr>
-                        <td colspan="7" class="text-center text-muted py-4">No hay horarios cargados para el filtro seleccionado.</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
+            <div class="d-grid gap-2">
+              @for (block of blocks; track block.id) {
+                <button class="btn btn-sm btn-outline-primary text-start"
+                        type="button"
+                        (click)="editBlock(block)">
+                  <div class="fw-semibold">{{ block.label }}</div>
+                  <div class="small text-muted">{{ block.startTime }} - {{ block.endTime }} &middot; {{ block.blockType === 'CLASS' ? 'Clase' : 'Receso' }}</div>
+                </button>
+              } @empty {
+                <p class="text-muted small text-center py-4 mb-0">No hay bloques configurados. Cree el primer bloque usando el boton "Nuevo bloque".</p>
+              }
             </div>
           </div>
         </div>
-      </div>
+      }
+
+      @if (activeTab === 'schedules') {
+        <div class="card border-0 shadow-sm" role="tabpanel">
+          <div class="card-body p-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+              <div>
+                <h2 class="h4 mb-1">Asignaciones</h2>
+                <p class="text-muted mb-0">Relaciona curso, periodo, bloque, materia, docente y aula.</p>
+              </div>
+              @if (canManageSchedules) {
+                <div class="d-flex gap-2">
+                  <details class="action-menu">
+                    <summary class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-list-ul me-2"></i>Acciones
+                    </summary>
+                    <div class="action-menu-panel">
+                      <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="downloadAssignmentTemplate()">
+                        <i class="bi bi-file-earmark-excel me-2"></i>Plantilla Excel
+                      </button>
+                      <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="triggerAssignmentImport()">
+                        <i class="bi bi-file-earmark-arrow-up me-2"></i>Importar Excel
+                      </button>
+                      <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="resetScheduleForm()">
+                        <i class="bi bi-eraser me-2"></i>Limpiar
+                      </button>
+                    </div>
+                  </details>
+                  <button class="btn btn-sm btn-primary" type="button" (click)="openScheduleModal()">
+                    <i class="bi bi-plus-circle me-2"></i>Nueva asignacion
+                  </button>
+                </div>
+              }
+            </div>
+
+            <div class="d-flex gap-2 mb-3">
+              <select class="form-select form-select-sm" [(ngModel)]="scheduleCourseFilter">
+                <option value="">Todos los cursos</option>
+                @for (course of overview.courses; track course.id) {
+                  <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Dia</th>
+                    <th>Bloque</th>
+                    <th>Curso</th>
+                    <th>Materia</th>
+                    <th>Docente</th>
+                    <th>Aula</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (schedule of filteredSchedules; track schedule.id) {
+                    <tr>
+                      <td>{{ weekdayLabel(schedule.weekday) }}</td>
+                      <td>{{ schedule.scheduleLabel }}</td>
+                      <td>{{ schedule.courseName }}</td>
+                      <td>{{ schedule.subjectName }}</td>
+                      <td>{{ schedule.teacherName }}</td>
+                      <td>{{ schedule.classroom || 'Sin aula' }}</td>
+                      <td class="text-end">
+                        @if (canManageSchedules) {
+                          <button class="btn btn-sm btn-outline-primary" type="button" (click)="editSchedule(schedule)">Editar</button>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="7" class="text-center text-muted py-4">No hay horarios cargados para el filtro seleccionado.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (activeTab === 'courses') {
+        <div class="card border-0 shadow-sm" role="tabpanel">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h2 class="h4 mb-1">Cursos registrados</h2>
+                <p class="text-muted mb-0">Cursos disponibles para la asignacion de horarios.</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Curso</th>
+                    <th>Paralelo</th>
+                    <th>Seccion</th>
+                    <th>Subnivel</th>
+                    <th>Grado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (course of overview.courses; track course.id) {
+                    <tr>
+                      <td>{{ course.name }}</td>
+                      <td>{{ course.parallel }}</td>
+                      <td>{{ course.section || '-' }}</td>
+                      <td>{{ course.subLevel || '-' }}</td>
+                      <td>{{ course.grade ?? '-' }}</td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">No hay cursos registrados.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      }
 
       <input id="blocks-import-input" class="d-none" type="file" accept=".xlsx" (change)="handleBlockImport($event)">
       <input id="assignments-import-input" class="d-none" type="file" accept=".xlsx" (change)="handleAssignmentImport($event)">
     </section>
-  
+
+    @if (blockModalOpen) {
+      <div class="modal-shell">
+        <div class="modal-card" style="max-width: 520px;">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="mb-0">{{ editingBlockId ? 'Editar bloque' : 'Nuevo bloque' }}</h5>
+            <button class="btn-close" type="button" (click)="blockModalOpen = false"></button>
+          </div>
+          <form [formGroup]="blockForm" class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-semibold">Etiqueta</label>
+              <input class="form-control form-control-sm" type="text" formControlName="label" placeholder="07H00-07H40">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Hora inicio</label>
+              <input class="form-control form-control-sm" type="time" formControlName="startTime">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Hora fin</label>
+              <input class="form-control form-control-sm" type="time" formControlName="endTime">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Orden</label>
+              <input class="form-control form-control-sm" type="number" formControlName="blockOrder">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Tipo</label>
+              <select class="form-select form-select-sm" formControlName="blockType">
+                <option value="CLASS">Clase</option>
+                <option value="RECESS">Receso</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <div class="form-check form-switch border rounded p-3">
+                <input class="form-check-input" id="blockActive" type="checkbox" formControlName="active">
+                <label class="form-check-label ms-2 fw-semibold" for="blockActive">Bloque activo</label>
+              </div>
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-2">
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="blockModalOpen = false">Cancelar</button>
+              <button class="btn btn-sm btn-primary" type="button" (click)="saveBlock()">
+                {{ editingBlockId ? 'Guardar bloque' : 'Crear bloque' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    @if (scheduleModalOpen) {
+      <div class="modal-shell">
+        <div class="modal-card" style="max-width: 640px;">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="mb-0">{{ editingScheduleId ? 'Editar asignacion' : 'Nueva asignacion' }}</h5>
+            <button class="btn-close" type="button" (click)="scheduleModalOpen = false"></button>
+          </div>
+          <form [formGroup]="scheduleForm" class="row g-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Curso</label>
+              <select class="form-select form-select-sm" formControlName="courseId">
+                @for (course of overview.courses; track course.id) {
+                  <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Periodo</label>
+              <select class="form-select form-select-sm" formControlName="periodId">
+                @for (period of overview.periods; track period.id) {
+                  <option [value]="period.id">{{ period.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Bloque</label>
+              <select class="form-select form-select-sm" formControlName="scheduleBlockId">
+                @for (block of classBlocks; track block.id) {
+                  <option [value]="block.id">{{ block.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Dia</label>
+              <select class="form-select form-select-sm" formControlName="weekday">
+                @for (day of weekdays; track day.value) {
+                  <option [value]="day.value">{{ day.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Docente</label>
+              <select class="form-select form-select-sm" formControlName="teacherId" (change)="onTeacherChange()">
+                @for (teacher of overview.teachers; track teacher.id) {
+                  <option [value]="teacher.id">{{ teacher.name }} &middot; {{ teacher.specialization }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Materia</label>
+              <select class="form-select form-select-sm" formControlName="subjectId">
+                @for (subject of filteredSubjects; track subject.id) {
+                  <option [value]="subject.id">{{ subject.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Aula</label>
+              <input class="form-control form-control-sm" type="text" formControlName="classroom" placeholder="Aula 1">
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-2">
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="scheduleModalOpen = false">Cancelar</button>
+              <button class="btn btn-sm btn-primary" type="button" (click)="saveSchedule()">
+                {{ editingScheduleId ? 'Guardar asignacion' : 'Crear asignacion' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }

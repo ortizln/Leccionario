@@ -21,6 +21,9 @@ export class ScheduleManagementComponent {
   editingScheduleId: number | null = null;
   scheduleCourseFilter = '';
   errorMessage = '';
+  blockModalOpen = false;
+  scheduleModalOpen = false;
+  activeTab = 'blocks';
 
   overview: ScheduleOverview = {
     blocks: [],
@@ -79,8 +82,31 @@ export class ScheduleManagementComponent {
     return this.overview.schedules.filter(schedule => String(schedule.courseId) === this.scheduleCourseFilter);
   }
 
+  get filteredSubjects() {
+    const subjects = this.overview?.subjects ?? [];
+    const teachers = this.overview?.teachers ?? [];
+    const teacherId = this.scheduleForm.controls.teacherId.value;
+    if (!teacherId) return subjects;
+    const teacher = teachers.find(t => t.id === teacherId);
+    if (!teacher || !teacher.subjectIds || teacher.subjectIds.length === 0) return subjects;
+    return subjects.filter(s => teacher.subjectIds.includes(s.id));
+  }
+
+  onTeacherChange(): void {
+    const subjects = this.filteredSubjects;
+    const current = this.scheduleForm.controls.subjectId.value;
+    if (subjects.length > 0 && !subjects.some(s => s.id === current)) {
+      this.scheduleForm.controls.subjectId.setValue(subjects[0].id);
+    }
+  }
+
   weekdayLabel(weekday: number): string {
     return this.weekdays.find(day => day.value === weekday)?.label ?? `Dia ${weekday}`;
+  }
+
+  openBlockModal(): void {
+    this.resetBlockForm();
+    this.blockModalOpen = true;
   }
 
   editBlock(block: ScheduleBlockItem): void {
@@ -93,6 +119,12 @@ export class ScheduleManagementComponent {
       blockType: block.blockType,
       active: block.active
     });
+    this.blockModalOpen = true;
+  }
+
+  openScheduleModal(): void {
+    this.resetScheduleForm();
+    this.scheduleModalOpen = true;
   }
 
   editSchedule(schedule: CourseScheduleItem): void {
@@ -106,6 +138,7 @@ export class ScheduleManagementComponent {
       weekday: schedule.weekday,
       classroom: schedule.classroom ?? ''
     });
+    this.scheduleModalOpen = true;
   }
 
   resetBlockForm(): void {
@@ -272,10 +305,10 @@ export class ScheduleManagementComponent {
 type ScheduleOverview = {
   blocks: ScheduleBlockItem[];
   schedules: CourseScheduleItem[];
-  courses: Array<{ id: number; name: string; parallel: string; level: string }>;
+  courses: Array<{ id: number; name: string; parallel: string; level: string; section: string | null; subLevel: string | null; grade: number | null }>;
   periods: Array<{ id: number; name: string; startDate: string; endDate: string; active: boolean }>;
   subjects: Array<{ id: number; name: string; code: string; curriculumArea: string }>;
-  teachers: Array<{ id: number; name: string; specialization: string }>;
+  teachers: Array<{ id: number; name: string; specialization: string; subjectIds: number[] }>;
 };
 
 type ScheduleBlockItem = {

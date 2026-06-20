@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap } from 'rxjs';
+import { catchError, of, tap } from 'rxjs';
 import { API_URL } from './api.config';
 
 @Injectable({ providedIn: 'root' })
@@ -9,8 +9,13 @@ export class AuthService {
   private readonly apiUrl = API_URL;
 
   login(payload: { username: string; password: string }) {
-    return this.http.post<AuthSession>(`${this.apiUrl}/auth/login`, payload)
-      .pipe(tap((response) => this.setSession(response)));
+    return this.http.post<AuthSession | null>(`${this.apiUrl}/auth/login`, payload)
+      .pipe(
+        tap((response) => {
+          if (response) this.setSession(response);
+        }),
+        catchError(() => of(null))
+      );
   }
 
   token(): string | null {
@@ -58,6 +63,10 @@ export class AuthService {
   }
 
   hasPermission(permission: string): boolean {
+    const selfPermissions = ['STUDENT_SELF_VIEW', 'TEACHER_SELF_VIEW'];
+    if (selfPermissions.includes(permission)) {
+      return this.permissions().includes(permission);
+    }
     return this.isAdmin() || this.permissions().includes(permission);
   }
 
@@ -67,6 +76,12 @@ export class AuthService {
     }
     if (this.hasPermission('ACADEMIC_VIEW')) {
       return '/app/academic';
+    }
+    if (this.hasPermission('TEACHER_SELF_VIEW')) {
+      return '/app/my-teaching';
+    }
+    if (this.hasPermission('STUDENT_SELF_VIEW')) {
+      return '/app/my-course';
     }
     if (this.hasPermission('LESSONPLAN_VIEW')) {
       return '/app/lesson-plans';

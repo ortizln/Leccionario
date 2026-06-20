@@ -69,8 +69,39 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
               <input class="form-control form-control-sm" type="text" formControlName="lastName">
             </div>
             <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Especialidad</label>
-              <input class="form-control form-control-sm" type="text" formControlName="specialization">
+              <label class="form-label fw-semibold">Area curricular</label>
+              <select class="form-select form-select-sm" formControlName="specialization" (change)="onAreaChange()">
+                <option value="">Seleccionar area...</option>
+                @for (area of allAreas; track area) {
+                  <option [value]="area">{{ area }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Materias que imparte</label>
+              <div class="d-flex align-items-center gap-2">
+                @if (pendingSubjectSelection.size > 0) {
+                  <span class="text-muted small">{{ pendingSubjectSelection.size }} materia(s) seleccionada(s)</span>
+                } @else {
+                  <span class="text-muted small">Ninguna materia seleccionada</span>
+                }
+                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openSubjectModal()">
+                  <i class="bi bi-eye me-1"></i>{{ pendingSubjectSelection.size > 0 ? 'Ver y editar' : 'Seleccionar materias' }}
+                </button>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Cursos asignados</label>
+              <div class="d-flex align-items-center gap-2">
+                @if (pendingCourseSelection.size > 0) {
+                  <span class="text-muted small">{{ pendingCourseSelection.size }} curso(s) seleccionado(s)</span>
+                } @else {
+                  <span class="text-muted small">Ningun curso seleccionado</span>
+                }
+                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openCourseModal()">
+                  <i class="bi bi-eye me-1"></i>{{ pendingCourseSelection.size > 0 ? 'Ver y editar' : 'Seleccionar cursos' }}
+                </button>
+              </div>
             </div>
             <div class="col-12 col-md-6 d-flex align-items-end">
               <div class="form-check form-switch border rounded px-3 py-2 w-100">
@@ -151,37 +182,15 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                               <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                   <h3 class="h6 mb-0"><i class="bi bi-book me-2"></i>Materias asignadas</h3>
-                                  @if (canManageAcademic && editingSubjectsFor !== teacher.id) {
-                                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="startEditSubjects(teacher)">
-                                      <i class="bi bi-pencil"></i>
-                                    </button>
-                                  }
                                 </div>
-                                @if (editingSubjectsFor === teacher.id) {
-                                  <div class="d-grid gap-2" style="max-height:200px;overflow-y:auto">
-                                    @for (subj of allSubjectNames; track subj) {
-                                      <label class="d-flex align-items-center gap-2 small fw-normal">
-                                        <input class="form-check-input m-0" type="checkbox"
-                                               [checked]="pendingSubjectSelection.has(subj)"
-                                               (change)="togglePendingSubject(subj)">
-                                        {{ subj }}
-                                      </label>
+                                @if (teacher.subjects.length > 0) {
+                                  <ul class="list-unstyled mb-0 small">
+                                    @for (subj of teacher.subjects; track subj) {
+                                      <li><i class="bi bi-dot me-1"></i>{{ subj }}</li>
                                     }
-                                  </div>
-                                  <div class="d-flex gap-2 mt-2">
-                                    <button class="btn btn-sm btn-primary" type="button" (click)="saveSubjects(teacher)">Guardar</button>
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEditSection()">Cancelar</button>
-                                  </div>
+                                  </ul>
                                 } @else {
-                                  @if (teacher.subjects.length > 0) {
-                                    <ul class="list-unstyled mb-0 small">
-                                      @for (subj of teacher.subjects; track subj) {
-                                        <li><i class="bi bi-dot me-1"></i>{{ subj }}</li>
-                                      }
-                                    </ul>
-                                  } @else {
-                                    <p class="text-muted small mb-0">Sin materias asignadas.</p>
-                                  }
+                                  <p class="text-muted small mb-0">Sin materias asignadas.</p>
                                 }
                               </div>
                             </div>
@@ -191,37 +200,15 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                               <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                   <h3 class="h6 mb-0"><i class="bi bi-mortarboard me-2"></i>Cursos asignados</h3>
-                                  @if (canManageAcademic && editingCoursesFor !== teacher.id) {
-                                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="startEditCourses(teacher)">
-                                      <i class="bi bi-pencil"></i>
-                                    </button>
-                                  }
                                 </div>
-                                @if (editingCoursesFor === teacher.id) {
-                                  <div class="d-grid gap-2" style="max-height:200px;overflow-y:auto">
-                                    @for (course of allCourseNames; track course) {
-                                      <label class="d-flex align-items-center gap-2 small fw-normal">
-                                        <input class="form-check-input m-0" type="checkbox"
-                                               [checked]="pendingCourseSelection.has(course)"
-                                               (change)="togglePendingCourse(course)">
-                                        {{ course }}
-                                      </label>
+                                @if (teacher.courses.length > 0) {
+                                  <ul class="list-unstyled mb-0 small">
+                                    @for (course of teacher.courses; track course) {
+                                      <li><i class="bi bi-dot me-1"></i>{{ course }}</li>
                                     }
-                                  </div>
-                                  <div class="d-flex gap-2 mt-2">
-                                    <button class="btn btn-sm btn-primary" type="button" (click)="saveCourses(teacher)">Guardar</button>
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEditSection()">Cancelar</button>
-                                  </div>
+                                  </ul>
                                 } @else {
-                                  @if (teacher.courses.length > 0) {
-                                    <ul class="list-unstyled mb-0 small">
-                                      @for (course of teacher.courses; track course) {
-                                        <li><i class="bi bi-dot me-1"></i>{{ course }}</li>
-                                      }
-                                    </ul>
-                                  } @else {
-                                    <p class="text-muted small mb-0">Sin cursos asignados.</p>
-                                  }
+                                  <p class="text-muted small mb-0">Sin cursos asignados.</p>
                                 }
                               </div>
                             </div>
@@ -395,6 +382,76 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
     </div>
 
     <input id="teachers-import-input" class="d-none" type="file" accept=".xlsx" (change)="handleImport($event)">
+
+    @if (subjectModalOpen) {
+      <div class="modal-shell">
+        <div class="modal-card" style="max-width: 520px;">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="mb-0">Materias que imparte</h5>
+            <button class="btn-close" type="button" (click)="subjectModalOpen = false"></button>
+          </div>
+          <div class="mb-2">
+            <input class="form-control form-control-sm" type="search" placeholder="Buscar materia..."
+                   [value]="subjectSearch" (input)="subjectSearch = $any($event.target).value">
+          </div>
+          <div class="d-grid gap-1" style="max-height: 320px; overflow-y: auto;">
+            @for (subj of filteredSubjectOptions; track subj) {
+              <label class="d-flex align-items-center gap-2 px-2 py-1 rounded-2 small" style="cursor:pointer"
+                     [class.bg-primary]="subjectTempSelection.has(subj)" [class.text-white]="subjectTempSelection.has(subj)"
+                     [class.bg-light]="!subjectTempSelection.has(subj)"
+                     (click)="toggleSubjectTemp(subj)">
+                <input class="form-check-input m-0" type="checkbox" [checked]="subjectTempSelection.has(subj)">
+                {{ subj }}
+              </label>
+            } @empty {
+              <p class="text-muted small text-center py-3 mb-0">
+                @if (selectedArea) {
+                  No hay materias en el area "{{ selectedArea }}".
+                } @else {
+                  Seleccione un area curricular primero.
+                }
+              </p>
+            }
+          </div>
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <button class="btn btn-sm btn-outline-primary" type="button" (click)="subjectModalOpen = false">Cancelar</button>
+            <button class="btn btn-sm btn-primary" type="button" (click)="confirmSubjectSelection()">Aceptar</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (courseModalOpen) {
+      <div class="modal-shell">
+        <div class="modal-card" style="max-width: 520px;">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="mb-0">Cursos asignados</h5>
+            <button class="btn-close" type="button" (click)="courseModalOpen = false"></button>
+          </div>
+          <div class="mb-2">
+            <input class="form-control form-control-sm" type="search" placeholder="Buscar curso..."
+                   [value]="courseSearch" (input)="courseSearch = $any($event.target).value">
+          </div>
+          <div class="d-grid gap-1" style="max-height: 320px; overflow-y: auto;">
+            @for (course of filteredCourseOptions; track course) {
+              <label class="d-flex align-items-center gap-2 px-2 py-1 rounded-2 small" style="cursor:pointer"
+                     [class.bg-primary]="courseTempSelection.has(course)" [class.text-white]="courseTempSelection.has(course)"
+                     [class.bg-light]="!courseTempSelection.has(course)"
+                     (click)="toggleCourseTemp(course)">
+                <input class="form-check-input m-0" type="checkbox" [checked]="courseTempSelection.has(course)">
+                {{ course }}
+              </label>
+            } @empty {
+              <p class="text-muted small text-center py-3 mb-0">No hay cursos disponibles.</p>
+            }
+          </div>
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <button class="btn btn-sm btn-outline-primary" type="button" (click)="courseModalOpen = false">Cancelar</button>
+            <button class="btn btn-sm btn-primary" type="button" (click)="confirmCourseSelection()">Aceptar</button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class TeachersComponent implements OnInit {
@@ -409,8 +466,9 @@ export class TeachersComponent implements OnInit {
   allSchedules: CourseScheduleItem[] = [];
   allSubjectNames: string[] = [];
   allCourseNames: string[] = [];
+  allAreas: string[] = [];
   overviewCourses: Array<{ id: number; name: string; parallel: string }> = [];
-  overviewSubjects: Array<{ id: number; name: string }> = [];
+  overviewSubjects: Array<{ id: number; name: string; code: string; curriculumArea: string }> = [];
   periods: Array<{ id: number; name: string; active: boolean }> = [];
 
   search = '';
@@ -423,6 +481,13 @@ export class TeachersComponent implements OnInit {
   pendingCourseSelection: Set<string> = new Set();
   editingScheduleEntryId: number | null = null;
   addingScheduleFor: number | null = null;
+
+  subjectModalOpen = false;
+  courseModalOpen = false;
+  subjectSearch = '';
+  courseSearch = '';
+  subjectTempSelection: Set<string> = new Set();
+  courseTempSelection: Set<string> = new Set();
 
   scheduleForm = this.fb.nonNullable.group({
     courseId: [0, Validators.required],
@@ -462,6 +527,7 @@ export class TeachersComponent implements OnInit {
     ).subscribe(data => {
       this.teachers = data.teachers;
       this.allSubjectNames = data.subjects.map(s => s.name);
+      this.allAreas = [...new Set(data.subjects.map(s => s.curriculumArea).filter(Boolean))];
       this.allCourseNames = data.courses.map(c => c.name + ' ' + c.parallel);
       this.overviewCourses = data.courses;
       this.overviewSubjects = data.subjects;
@@ -519,44 +585,85 @@ export class TeachersComponent implements OnInit {
     }
   }
 
-  togglePendingCourse(course: string): void {
-    if (this.pendingCourseSelection.has(course)) {
-      this.pendingCourseSelection.delete(course);
-    } else {
-      this.pendingCourseSelection.add(course);
-    }
-  }
-
   saveSubjects(teacher: AcademicTeacher): void {
     if (!this.canManageAcademic) return;
-    const updated = Array.from(this.pendingSubjectSelection);
-    this.http.put(`${API_URL}/academic/teachers/${teacher.id}`, { subjects: updated }).pipe(
-      catchError(() => of(null))
-    ).subscribe({
-      next: () => {
-        const idx = this.teachers.findIndex(t => t.id === teacher.id);
-        if (idx !== -1) {
-          this.teachers[idx] = { ...this.teachers[idx], subjects: updated };
-        }
-        this.cancelEditSection();
-      }
-    });
+    this.cancelEditSection();
   }
 
   saveCourses(teacher: AcademicTeacher): void {
     if (!this.canManageAcademic) return;
-    const updated = Array.from(this.pendingCourseSelection);
-    this.http.put(`${API_URL}/academic/teachers/${teacher.id}`, { courses: updated }).pipe(
-      catchError(() => of(null))
-    ).subscribe({
-      next: () => {
-        const idx = this.teachers.findIndex(t => t.id === teacher.id);
-        if (idx !== -1) {
-          this.teachers[idx] = { ...this.teachers[idx], courses: updated };
-        }
-        this.cancelEditSection();
-      }
-    });
+    this.cancelEditSection();
+  }
+
+  get selectedArea(): string {
+    return this.form.get('specialization')?.value || '';
+  }
+
+  get filteredSubjectOptions(): string[] {
+    let list = this.allSubjectNames;
+    const area = this.selectedArea;
+    if (area) {
+      list = this.overviewSubjects
+        .filter(s => s.curriculumArea === area)
+        .map(s => s.name);
+    }
+    const q = this.subjectSearch.toLowerCase().trim();
+    if (q) {
+      list = list.filter(s => s.toLowerCase().includes(q));
+    }
+    return list;
+  }
+
+  get filteredCourseOptions(): string[] {
+    let list = this.allCourseNames;
+    const q = this.courseSearch.toLowerCase().trim();
+    if (q) {
+      list = list.filter(c => c.toLowerCase().includes(q));
+    }
+    return list;
+  }
+
+  onAreaChange(): void {
+    this.subjectSearch = '';
+    this.pendingSubjectSelection.clear();
+  }
+
+  openSubjectModal(): void {
+    this.subjectTempSelection = new Set(this.pendingSubjectSelection);
+    this.subjectSearch = '';
+    this.subjectModalOpen = true;
+  }
+
+  openCourseModal(): void {
+    this.courseTempSelection = new Set(this.pendingCourseSelection);
+    this.courseSearch = '';
+    this.courseModalOpen = true;
+  }
+
+  toggleSubjectTemp(subj: string): void {
+    if (this.subjectTempSelection.has(subj)) {
+      this.subjectTempSelection.delete(subj);
+    } else {
+      this.subjectTempSelection.add(subj);
+    }
+  }
+
+  toggleCourseTemp(course: string): void {
+    if (this.courseTempSelection.has(course)) {
+      this.courseTempSelection.delete(course);
+    } else {
+      this.courseTempSelection.add(course);
+    }
+  }
+
+  confirmSubjectSelection(): void {
+    this.pendingSubjectSelection = this.subjectTempSelection;
+    this.subjectModalOpen = false;
+  }
+
+  confirmCourseSelection(): void {
+    this.pendingCourseSelection = this.courseTempSelection;
+    this.courseModalOpen = false;
   }
 
   classBlocks(): ScheduleBlockItem[] {
@@ -649,25 +756,33 @@ export class TeachersComponent implements OnInit {
       username: '', email: '', identification: '',
       firstName: '', lastName: '', specialization: '', enabled: true
     });
+    this.pendingSubjectSelection = new Set();
+    this.pendingCourseSelection = new Set();
   }
 
   editTeacher(teacher: AcademicTeacher): void {
     this.editingId = teacher.id;
     this.editorOpen = true;
     this.selectedTeacherId = null;
-    this.http.get<any>(`${API_URL}/academic/teachers/${teacher.id}`).pipe(
+    this.pendingSubjectSelection = new Set(teacher.subjects);
+    this.pendingCourseSelection = new Set(teacher.courses);
+    this.http.get<AcademicTeacher>(`${API_URL}/academic/teachers/${teacher.id}`).pipe(
       catchError(() => of(null))
     ).subscribe(detail => {
       if (detail) {
         this.form.setValue({
-          username: detail.username || teacher.username,
-          email: detail.email || '',
-          identification: detail.identification || '',
-          firstName: detail.firstName || '',
-          lastName: detail.lastName || '',
-          specialization: detail.specialization || teacher.specialization,
-          enabled: detail.enabled ?? teacher.enabled
+          username: detail.username,
+          email: detail.email,
+          identification: detail.identification,
+          firstName: detail.firstName,
+          lastName: detail.lastName,
+          specialization: detail.specialization,
+          enabled: detail.enabled
         });
+        if (detail.subjects.length > 0 || detail.courses.length > 0) {
+          this.pendingSubjectSelection = new Set(detail.subjects);
+          this.pendingCourseSelection = new Set(detail.courses);
+        }
       } else {
         this.form.setValue({
           username: teacher.username,
@@ -685,6 +800,8 @@ export class TeachersComponent implements OnInit {
   cancelEdit(): void {
     this.editorOpen = false;
     this.editingId = null;
+    this.pendingSubjectSelection = new Set();
+    this.pendingCourseSelection = new Set();
     this.form.reset({
       username: '', email: '', identification: '',
       firstName: '', lastName: '', specialization: '', enabled: true
@@ -693,7 +810,11 @@ export class TeachersComponent implements OnInit {
 
   save(): void {
     if (!this.canManageAcademic || this.form.invalid) return;
-    const payload = this.form.getRawValue();
+    const payload = {
+      ...this.form.getRawValue(),
+      subjects: Array.from(this.pendingSubjectSelection),
+      courses: Array.from(this.pendingCourseSelection)
+    };
     const url = this.editingId
       ? `${API_URL}/academic/teachers/${this.editingId}`
       : `${API_URL}/academic/teachers`;

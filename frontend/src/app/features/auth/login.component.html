@@ -73,7 +73,10 @@
                   <label class="form-label fw-semibold">Contrasena</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-shield-lock-fill"></i></span>
-                    <input class="form-control form-control-sm" type="password" placeholder="Admin123*" formControlName="password" [attr.disabled]="isLoading ? true : null">
+                    <input class="form-control form-control-sm" [type]="showPassword ? 'text' : 'password'" placeholder="Admin123*" formControlName="password" [attr.disabled]="isLoading ? true : null">
+                    <button class="btn btn-outline-secondary btn-sm" type="button" (click)="togglePassword()" tabindex="-1">
+                      <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+                    </button>
                   </div>
                 </div>
 

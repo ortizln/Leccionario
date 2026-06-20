@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, of, tap } from 'rxjs';
 import { API_URL } from './api.config';
 import { AuthService } from './auth.service';
 
@@ -70,6 +70,10 @@ export class BrandingService {
         if (!this.selectedInstitutionCode() && institutions.length > 0) {
           this.setSelectedInstitutionCode(institutions[0].code);
         }
+      }),
+      catchError(() => {
+        this.publicInstitutions.set([]);
+        return of([]);
       })
     );
   }
@@ -81,7 +85,8 @@ export class BrandingService {
       tap((branding) => {
         this.branding.set(branding);
         this.setSelectedInstitutionCode(branding.institutionCode);
-      })
+      }),
+      catchError(() => of(null as unknown as InstitutionBranding))
     );
   }
 
@@ -89,7 +94,8 @@ export class BrandingService {
     return this.http.get<InstitutionBranding>(`${API_URL}/branding/${institutionId}`).pipe(
       tap((branding) => {
         this.branding.set(branding);
-      })
+      }),
+      catchError(() => of(null as unknown as InstitutionBranding))
     );
   }
 
@@ -97,14 +103,17 @@ export class BrandingService {
     return this.http.put<InstitutionBranding>(`${API_URL}/branding/${institutionId}`, payload).pipe(
       tap((branding) => {
         this.branding.set(branding);
-      })
+      }),
+      catchError(() => of(null as unknown as InstitutionBranding))
     );
   }
 
   uploadAsset(file: File): Observable<{ fileName: string; url: string }> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<{ fileName: string; url: string }>(`${API_URL}/branding/assets`, formData);
+    return this.http.post<{ fileName: string; url: string }>(`${API_URL}/branding/assets`, formData).pipe(
+      catchError(() => of({ fileName: '', url: '' }))
+    );
   }
 
   syncAuthenticatedBranding(): void {
