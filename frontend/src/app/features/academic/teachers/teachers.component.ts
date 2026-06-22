@@ -43,79 +43,6 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
           </div>
         </div>
 
-        @if (editorOpen) {
-          <form [formGroup]="form" class="row g-3 p-3 rounded-4 editor-panel mb-4">
-            <div class="col-12">
-              <h3 class="h6 mb-0">{{ editingId ? 'Editar docente' : 'Nuevo docente' }}</h3>
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Usuario</label>
-              <input class="form-control form-control-sm" type="text" formControlName="username">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Correo</label>
-              <input class="form-control form-control-sm" type="email" formControlName="email">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Identificacion</label>
-              <input class="form-control form-control-sm" type="text" formControlName="identification">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Nombres</label>
-              <input class="form-control form-control-sm" type="text" formControlName="firstName">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Apellidos</label>
-              <input class="form-control form-control-sm" type="text" formControlName="lastName">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Area curricular</label>
-              <select class="form-select form-select-sm" formControlName="specialization" (change)="onAreaChange()">
-                <option value="">Seleccionar area...</option>
-                @for (area of allAreas; track area) {
-                  <option [value]="area">{{ area }}</option>
-                }
-              </select>
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Materias que imparte</label>
-              <div class="d-flex align-items-center gap-2">
-                @if (pendingSubjectSelection.size > 0) {
-                  <span class="text-muted small">{{ pendingSubjectSelection.size }} materia(s) seleccionada(s)</span>
-                } @else {
-                  <span class="text-muted small">Ninguna materia seleccionada</span>
-                }
-                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openSubjectModal()">
-                  <i class="bi bi-eye me-1"></i>{{ pendingSubjectSelection.size > 0 ? 'Ver y editar' : 'Seleccionar materias' }}
-                </button>
-              </div>
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Cursos asignados</label>
-              <div class="d-flex align-items-center gap-2">
-                @if (pendingCourseSelection.size > 0) {
-                  <span class="text-muted small">{{ pendingCourseSelection.size }} curso(s) seleccionado(s)</span>
-                } @else {
-                  <span class="text-muted small">Ningun curso seleccionado</span>
-                }
-                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openCourseModal()">
-                  <i class="bi bi-eye me-1"></i>{{ pendingCourseSelection.size > 0 ? 'Ver y editar' : 'Seleccionar cursos' }}
-                </button>
-              </div>
-            </div>
-            <div class="col-12 col-md-6 d-flex align-items-end">
-              <div class="form-check form-switch border rounded px-3 py-2 w-100">
-                <input class="form-check-input" id="teacher-enabled" type="checkbox" formControlName="enabled">
-                <label class="form-check-label ms-2 fw-semibold" for="teacher-enabled">Docente habilitado</label>
-              </div>
-            </div>
-            <div class="col-12 d-flex justify-content-end gap-2">
-              <button class="btn btn-sm btn-outline-primary" type="button" (click)="cancelEdit()">Cancelar</button>
-              <button class="btn btn-sm btn-primary" type="button" (click)="save()">Guardar docente</button>
-            </div>
-          </form>
-        }
-
         <div class="table-responsive">
           <table class="table table-striped align-middle mb-0">
             <thead>
@@ -226,51 +153,6 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                               }
                             </div>
 
-                            @if (addingScheduleFor === teacher.id) {
-                              <form [formGroup]="scheduleForm" class="row g-2 p-3 rounded-3 editor-panel mb-3">
-                                <div class="col-12 col-md-3">
-                                  <label class="form-label small fw-semibold">Dia</label>
-                                  <select class="form-select form-select-sm" formControlName="weekday">
-                                    @for (d of weekdays; track d.value) {
-                                      <option [value]="d.value">{{ d.label }}</option>
-                                    }
-                                  </select>
-                                </div>
-                                <div class="col-12 col-md-3">
-                                  <label class="form-label small fw-semibold">Bloque</label>
-                                  <select class="form-select form-select-sm" formControlName="scheduleBlockId">
-                                    @for (b of classBlocks(); track b.id) {
-                                      <option [value]="b.id">{{ b.label }} ({{ b.startTime }}-{{ b.endTime }})</option>
-                                    }
-                                  </select>
-                                </div>
-                                <div class="col-12 col-md-3">
-                                  <label class="form-label small fw-semibold">Materia</label>
-                                  <select class="form-select form-select-sm" formControlName="subjectId">
-                                    @for (s of overviewSubjects; track s.id) {
-                                      <option [value]="s.id">{{ s.name }}</option>
-                                    }
-                                  </select>
-                                </div>
-                                <div class="col-12 col-md-3">
-                                  <label class="form-label small fw-semibold">Curso</label>
-                                  <select class="form-select form-select-sm" formControlName="courseId">
-                                    @for (c of overviewCourses; track c.id) {
-                                      <option [value]="c.id">{{ c.name }} {{ c.parallel }}</option>
-                                    }
-                                  </select>
-                                </div>
-                                <div class="col-12 col-md-6">
-                                  <label class="form-label small fw-semibold">Aula</label>
-                                  <input class="form-control form-control-sm" type="text" formControlName="classroom" placeholder="Aula 1">
-                                </div>
-                                <div class="col-12 col-md-6 d-flex align-items-end gap-2">
-                                  <button class="btn btn-sm btn-primary" type="button" (click)="saveScheduleEntry(teacher.id)">Guardar</button>
-                                  <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelScheduleEdit()">Cancelar</button>
-                                </div>
-                              </form>
-                            }
-
                             @if (teacherSchedule(teacher.id).length === 0) {
                               <p class="text-muted small mb-0">Sin horario asignado.</p>
                             } @else {
@@ -292,53 +174,6 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                                         </thead>
                                         <tbody>
                                           @for (entry of entries; track entry.id) {
-                                            @if (editingScheduleEntryId === entry.id) {
-                                              <tr>
-                                                <td colspan="5" class="p-2 border-0">
-                                                  <form [formGroup]="scheduleForm" class="row g-2 p-2 rounded-3 editor-panel">
-                                                    <div class="col-12 col-md-2">
-                                                      <select class="form-select form-select-sm" formControlName="weekday">
-                                                        @for (d of weekdays; track d.value) {
-                                                          <option [value]="d.value">{{ d.label }}</option>
-                                                        }
-                                                      </select>
-                                                    </div>
-                                                    <div class="col-12 col-md-2">
-                                                      <select class="form-select form-select-sm" formControlName="scheduleBlockId">
-                                                        @for (b of classBlocks(); track b.id) {
-                                                          <option [value]="b.id">{{ b.label }}</option>
-                                                        }
-                                                      </select>
-                                                    </div>
-                                                    <div class="col-12 col-md-2">
-                                                      <select class="form-select form-select-sm" formControlName="subjectId">
-                                                        @for (s of overviewSubjects; track s.id) {
-                                                          <option [value]="s.id">{{ s.name }}</option>
-                                                        }
-                                                      </select>
-                                                    </div>
-                                                    <div class="col-12 col-md-2">
-                                                      <select class="form-select form-select-sm" formControlName="courseId">
-                                                        @for (c of overviewCourses; track c.id) {
-                                                          <option [value]="c.id">{{ c.name }} {{ c.parallel }}</option>
-                                                        }
-                                                      </select>
-                                                    </div>
-                                                    <div class="col-12 col-md-2">
-                                                      <input class="form-control form-control-sm" type="text" formControlName="classroom" placeholder="Aula">
-                                                    </div>
-                                                    <div class="col-12 col-md-2 d-flex gap-1">
-                                                      <button class="btn btn-sm btn-primary" type="button" (click)="saveScheduleEntry(teacher.id)">
-                                                        <i class="bi bi-check"></i>
-                                                      </button>
-                                                      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelScheduleEdit()">
-                                                        <i class="bi bi-x"></i>
-                                                      </button>
-                                                    </div>
-                                                  </form>
-                                                </td>
-                                              </tr>
-                                            } @else {
                                               <tr>
                                                 <td class="small">{{ entry.scheduleLabel }}</td>
                                                 <td class="fw-semibold small">{{ entry.subjectName }}</td>
@@ -357,7 +192,6 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                                                   }
                                                 </td>
                                               </tr>
-                                            }
                                           }
                                         </tbody>
                                       </table>
@@ -382,6 +216,95 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
     </div>
 
     <input id="teachers-import-input" class="d-none" type="file" accept=".xlsx" (change)="handleImport($event)">
+
+    @if (editorOpen) {
+      <div class="modal-shell" (click)="cancelEdit()">
+        <div class="modal-card" style="max-width: 720px;" (click)="$event.stopPropagation()">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="mb-0">{{ editingId ? 'Editar docente' : 'Nuevo docente' }}</h5>
+            <button class="btn-close" type="button" (click)="cancelEdit()"></button>
+          </div>
+          <form [formGroup]="form" class="d-grid gap-3">
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold small">Usuario</label>
+                <input class="form-control form-control-sm" type="text" formControlName="username">
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold small">Correo</label>
+                <input class="form-control form-control-sm" type="email" formControlName="email">
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold small">Identificacion</label>
+                <input class="form-control form-control-sm" type="text" formControlName="identification">
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold small">Nombres</label>
+                <input class="form-control form-control-sm" type="text" formControlName="firstName">
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold small">Apellidos</label>
+                <input class="form-control form-control-sm" type="text" formControlName="lastName">
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold small">Area curricular</label>
+                <select class="form-select form-select-sm" formControlName="specialization" (change)="onAreaChange()">
+                  <option value="">Seleccionar area...</option>
+                  @for (area of allAreas; track area) {
+                    <option [value]="area">{{ area }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <hr class="my-1">
+
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold small">Materias que imparte</label>
+                <div class="d-flex align-items-center gap-2">
+                  @if (pendingSubjectSelection.size > 0) {
+                    <span class="text-muted small">{{ pendingSubjectSelection.size }} materia(s) seleccionada(s)</span>
+                  } @else {
+                    <span class="text-muted small">Ninguna materia seleccionada</span>
+                  }
+                  <button class="btn btn-sm btn-outline-primary ms-auto" type="button" (click)="openSubjectModal()">
+                    <i class="bi bi-eye me-1"></i>{{ pendingSubjectSelection.size > 0 ? 'Ver y editar' : 'Seleccionar' }}
+                  </button>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold small">Cursos asignados</label>
+                <div class="d-flex align-items-center gap-2">
+                  @if (pendingCourseSelection.size > 0) {
+                    <span class="text-muted small">{{ pendingCourseSelection.size }} curso(s) seleccionado(s)</span>
+                  } @else {
+                    <span class="text-muted small">Ningun curso seleccionado</span>
+                  }
+                  <button class="btn btn-sm btn-outline-primary ms-auto" type="button" (click)="openCourseModal()">
+                    <i class="bi bi-eye me-1"></i>{{ pendingCourseSelection.size > 0 ? 'Ver y editar' : 'Seleccionar' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-check form-switch border rounded px-3 py-2">
+              <input class="form-check-input" id="teacher-enabled-modal" type="checkbox" formControlName="enabled">
+              <label class="form-check-label ms-2 fw-semibold" for="teacher-enabled-modal">Docente habilitado</label>
+            </div>
+
+            @if (saveError) {
+              <div class="alert alert-danger py-2 mb-0 small">{{ saveError }}</div>
+            }
+
+            <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="cancelEdit()">Cancelar</button>
+              <button class="btn btn-sm btn-primary" type="button" (click)="save()">Guardar docente</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
 
     @if (subjectModalOpen) {
       <div class="modal-shell">
@@ -452,6 +375,109 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
         </div>
       </div>
     }
+
+    @if (scheduleModalTeacher && (addingScheduleFor !== null || editingScheduleEntryId !== null)) {
+      <div class="modal-shell" (click)="cancelScheduleEdit()">
+        <div class="modal-card" style="max-width: 720px;" (click)="$event.stopPropagation()">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="mb-0">
+              <i class="bi bi-calendar-week me-2"></i>
+              {{ editingScheduleEntryId ? 'Editar bloque' : 'Agregar bloque' }}
+              <span class="text-muted small ms-2">— {{ scheduleModalTeacher.fullName }}</span>
+            </h5>
+            <button class="btn-close" type="button" (click)="cancelScheduleEdit()"></button>
+          </div>
+
+          @if (teacherSchedule(scheduleModalTeacher.id).length > 0) {
+            <div class="mb-3">
+              <h6 class="small fw-bold text-muted mb-2">Horario asignado</h6>
+              <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+                <table class="table table-sm align-middle mb-0">
+                  <thead class="sticky-top bg-light">
+                    <tr>
+                      <th class="small">Dia</th>
+                      <th class="small">Bloque</th>
+                      <th class="small">Materia</th>
+                      <th class="small">Curso</th>
+                      <th class="small">Aula</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (day of weekdays; track day.value) {
+                      @let entries = teacherScheduleByDay(scheduleModalTeacher.id, day.value);
+                      @for (entry of entries; track entry.id) {
+                        <tr>
+                          <td class="small fw-semibold">{{ day.label }}</td>
+                          <td class="small">{{ entry.scheduleLabel }}</td>
+                          <td class="small">{{ entry.subjectName }}</td>
+                          <td class="small">{{ entry.courseName }}</td>
+                          <td class="small text-muted">{{ entry.classroom || '—' }}</td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <hr class="my-3">
+            </div>
+          } @else {
+            <div class="text-center text-muted small py-2 mb-3 border-bottom">
+              <i class="bi bi-calendar-x me-1"></i>Este docente no tiene bloques asignados aun.
+            </div>
+          }
+
+          <h6 class="small fw-bold text-muted mb-2">{{ editingScheduleEntryId ? 'Editar bloque' : 'Nuevo bloque' }}</h6>
+          <form [formGroup]="scheduleForm" class="d-grid gap-3">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold small">Dia</label>
+                <select class="form-select form-select-sm" formControlName="weekday">
+                  @for (d of weekdays; track d.value) {
+                    <option [value]="d.value">{{ d.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold small">Bloque horario</label>
+                <select class="form-select form-select-sm" formControlName="scheduleBlockId">
+                  @for (b of classBlocks(); track b.id) {
+                    <option [value]="b.id">{{ b.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold small">Materia</label>
+                <select class="form-select form-select-sm" formControlName="subjectId">
+                  @for (s of teacherScheduleSubjects(); track s.id) {
+                    <option [value]="s.id">{{ s.name }}</option>
+                  } @empty {
+                    <option value="" disabled>No tiene materias asignadas</option>
+                  }
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold small">Curso</label>
+                <select class="form-select form-select-sm" formControlName="courseId">
+                  @for (c of overviewCourses; track c.id) {
+                    <option [value]="c.id">{{ c.name }} {{ c.parallel }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="form-label fw-semibold small">Aula</label>
+              <input class="form-control form-control-sm" type="text" formControlName="classroom" placeholder="Aula">
+            </div>
+            <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="cancelScheduleEdit()">Cancelar</button>
+              <button class="btn btn-sm btn-primary" type="button" (click)="saveScheduleEntry(scheduleModalTeacher.id)">{{ editingScheduleEntryId ? 'Actualizar' : 'Guardar' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
   `
 })
 export class TeachersComponent implements OnInit {
@@ -481,6 +507,7 @@ export class TeachersComponent implements OnInit {
   pendingCourseSelection: Set<string> = new Set();
   editingScheduleEntryId: number | null = null;
   addingScheduleFor: number | null = null;
+  scheduleModalTeacher: AcademicTeacher | null = null;
 
   subjectModalOpen = false;
   courseModalOpen = false;
@@ -533,12 +560,14 @@ export class TeachersComponent implements OnInit {
       this.overviewSubjects = data.subjects;
       this.periods = data.periods;
     });
-    this.http.get<ScheduleOverview>(`${API_URL}/schedules/overview`).pipe(
-      catchError(() => of({ blocks: [], schedules: [], courses: [], periods: [], subjects: [], teachers: [] }))
-    ).subscribe(data => {
-      this.scheduleBlocks = data.blocks;
-      this.allSchedules = data.schedules;
-    });
+    if (this.auth.hasPermission('ACADEMIC_VIEW')) {
+      this.http.get<ScheduleOverview>(`${API_URL}/schedules/overview`).pipe(
+        catchError(() => of({ blocks: [], schedules: [], courses: [], periods: [], subjects: [], teachers: [] }))
+      ).subscribe(data => {
+        this.scheduleBlocks = data.blocks;
+        this.allSchedules = data.schedules;
+      });
+    }
   }
 
   filtered(): AcademicTeacher[] {
@@ -670,6 +699,11 @@ export class TeachersComponent implements OnInit {
     return this.scheduleBlocks.filter(b => b.blockType === 'CLASS');
   }
 
+  teacherScheduleSubjects(): Array<{ id: number; name: string; code: string; curriculumArea: string }> {
+    if (!this.scheduleModalTeacher) return [];
+    return this.overviewSubjects.filter(s => this.scheduleModalTeacher!.subjects.includes(s.name));
+  }
+
   activePeriodId(): number {
     return this.periods.find(p => p.active)?.id ?? this.periods[0]?.id ?? 0;
   }
@@ -677,9 +711,10 @@ export class TeachersComponent implements OnInit {
   startAddScheduleEntry(teacherId: number): void {
     this.editingScheduleEntryId = null;
     this.addingScheduleFor = teacherId;
+    this.scheduleModalTeacher = this.teachers.find(t => t.id === teacherId) || null;
     this.scheduleForm.reset({
       courseId: this.overviewCourses[0]?.id ?? 0,
-      subjectId: this.overviewSubjects[0]?.id ?? 0,
+      subjectId: this.teacherScheduleSubjects()[0]?.id ?? 0,
       scheduleBlockId: this.classBlocks()[0]?.id ?? 0,
       weekday: 1,
       classroom: ''
@@ -689,6 +724,7 @@ export class TeachersComponent implements OnInit {
   startEditScheduleEntry(entry: CourseScheduleItem): void {
     this.addingScheduleFor = null;
     this.editingScheduleEntryId = entry.id;
+    this.scheduleModalTeacher = this.teachers.find(t => t.id === entry.teacherId) || null;
     this.scheduleForm.setValue({
       courseId: entry.courseId,
       subjectId: entry.subjectId,
@@ -701,6 +737,7 @@ export class TeachersComponent implements OnInit {
   cancelScheduleEdit(): void {
     this.editingScheduleEntryId = null;
     this.addingScheduleFor = null;
+    this.scheduleModalTeacher = null;
     this.scheduleForm.reset({ courseId: 0, subjectId: 0, scheduleBlockId: 0, weekday: 1, classroom: '' });
   }
 
@@ -808,8 +845,11 @@ export class TeachersComponent implements OnInit {
     });
   }
 
+  saveError = '';
+
   save(): void {
     if (!this.canManageAcademic || this.form.invalid) return;
+    this.saveError = '';
     const payload = {
       ...this.form.getRawValue(),
       subjects: Array.from(this.pendingSubjectSelection),
@@ -823,7 +863,7 @@ export class TeachersComponent implements OnInit {
       : this.http.post(url, payload);
     request$.subscribe({
       next: () => { this.cancelEdit(); this.loadData(); },
-      error: () => {}
+      error: (err) => { this.saveError = err.error?.message || 'Error al guardar docente'; console.error('Teacher save error:', err); }
     });
   }
 

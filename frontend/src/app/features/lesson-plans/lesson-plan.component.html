@@ -1,91 +1,89 @@
 
     <section class="d-grid gap-4">
-      <header>
-        <span class="badge rounded-pill text-bg-primary mb-2"><i class="bi bi-journal-text me-1"></i>Leccionario diario</span>
-        <h1 class="display-6 fw-bold mb-2">Control diario de avance académico</h1>
-        <p class="text-muted mb-0">Genera la jornada desde el horario institucional y registra tema, unidad didáctica, destreza, novedades y firma del profesor por bloque.</p>
-      </header>
-
       @if (errorMessage) {
         <div class="alert alert-warning mb-0">{{ errorMessage }}</div>
       }
 
-      <div class="row g-3">
-        <div class="col-12 col-md-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <div class="fw-semibold">Curso</div>
-              <div class="text-muted small">{{ selectedCourseLabel() }}</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-md-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <div class="fw-semibold">Fecha</div>
-              <div class="text-muted small">{{ controlForm.controls.logDate.value || 'Selecciona una fecha' }}</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-md-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <div class="fw-semibold">Estado</div>
-              <div class="text-muted small">{{ dailyLog?.status || 'Sin jornada generada' }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-              <h2 class="h4 mb-1">Cabecera de jornada</h2>
-              <p class="text-muted mb-0">Selecciona curso, periodo y fecha para generar o consultar el leccionario diario.</p>
-            </div>
-            <div class="d-flex flex-wrap gap-2">
-              <button class="btn btn-sm btn-outline-primary" type="button" (click)="loadDailyLog()">Consultar jornada</button>
-              @if (canManageLessonPlans) {
-                <button class="btn btn-sm btn-primary" type="button" (click)="generateDailyLog()">Generar jornada</button>
-              }
+              <h2 class="h5 mb-0">Leccionario diario</h2>
+              <p class="text-muted small mb-0">
+                @if (isTeacher) {
+                  Tus cursos asignados. Selecciona un dia y curso para ver el leccionario.
+                } @else if (isReadOnly) {
+                  Consulta el leccionario diario de tu curso. Solo visualizacion.
+                } @else {
+                  Selecciona un curso y dia para ver o editar el leccionario diario.
+                }
+              </p>
             </div>
           </div>
 
-          <form [formGroup]="controlForm" class="row g-3">
-            <div class="col-12 col-md-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div></div>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="goToday()">Hoy</button>
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="prevWeek()">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-primary" type="button" (click)="nextWeek()">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <ul class="nav nav-tabs mb-4">
+            @for (day of weekDays; track day.date) {
+              <li class="nav-item">
+                <button class="nav-link text-center" [class.active]="selectedWeekday === day.weekday"
+                        (click)="selectDay(day.weekday)">
+                  <div class="small">{{ day.dayLabel }}</div>
+                  <div class="small fw-semibold">{{ day.numDay }}</div>
+                </button>
+              </li>
+            }
+          </ul>
+
+          @if (isTeacher) {
+            <div class="row g-3">
+              @for (course of teacherTodayCourses; track course.courseId) {
+                <div class="col-12 col-md-6 col-xl-4">
+                  <div class="card h-100 cursor-pointer" [class.border-primary]="teacherSelectedCourseId === course.courseId"
+                       [class.border-2]="teacherSelectedCourseId === course.courseId"
+                       style="cursor: pointer" (click)="selectTeacherCourse(course.courseId)">
+                    <div class="card-body">
+                      <div class="fw-semibold mb-1">{{ course.courseName }}</div>
+                      <div class="small text-muted mb-2">{{ course.logDate }}</div>
+                      <div class="d-flex flex-wrap gap-1">
+                        @for (subj of course.subjectNames; track subj) {
+                          <span class="badge rounded-pill text-bg-light">{{ subj }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              } @empty {
+                <div class="col-12">
+                  <div class="text-center text-muted py-4">
+                    <i class="bi bi-calendar-x fs-1 mb-2 d-block"></i>
+                    No tienes cursos asignados para este dia.
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (canSearchLessonPlan && !isReadOnly) {
+            <div class="mb-3">
               <label class="form-label fw-semibold">Curso</label>
-              <select class="form-select form-select-sm" formControlName="courseId">
+              <select class="form-select form-select-sm" [formControl]="searchForm.controls.courseId"
+                      (change)="searchDailyLog()">
                 @for (course of overview.courses; track course.id) {
                   <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
                 }
               </select>
             </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Periodo</label>
-              <select class="form-select form-select-sm" formControlName="periodId">
-                @for (period of overview.periods; track period.id) {
-                  <option [value]="period.id">{{ period.name }}</option>
-                }
-              </select>
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Fecha</label>
-              <input class="form-control form-control-sm" type="date" formControlName="logDate">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Dia laborado nro.</label>
-              <input class="form-control form-control-sm" type="number" formControlName="workDayNumber">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Ciudad</label>
-              <input class="form-control form-control-sm" type="text" formControlName="city" placeholder="Tulcan">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Notas generales</label>
-              <input class="form-control form-control-sm" type="text" formControlName="generalNotes" placeholder="Novedades generales de la jornada">
-            </div>
-          </form>
+          }
         </div>
       </div>
 
@@ -103,11 +101,13 @@
                 </p>
               </div>
               <div class="d-flex flex-wrap gap-2 align-items-center">
-                <span class="badge rounded-pill text-bg-light">{{ dailyLog.entries.length }} bloques</span>
-                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openSignatureQr('TEACHER_TUTOR')">QR docente tutor</button>
-                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openSignatureQr('WEEK_STUDENT')">QR semanero</button>
-                <button class="btn btn-sm btn-outline-primary" type="button" (click)="printDailyLog()">Imprimir / PDF</button>
-                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openLogQr()">QR cierre inspector</button>
+                <span class="badge rounded-pill text-bg-light">{{ displayEntries.length }} bloques</span>
+                @if (!isTeacher && !isReadOnly) {
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="openSignatureQr('TEACHER_TUTOR')">QR docente tutor</button>
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="openSignatureQr('WEEK_STUDENT')">QR semanero</button>
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="printDailyLog()">Imprimir / PDF</button>
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="openLogQr()">QR cierre inspector</button>
+                }
               </div>
             </div>
 
@@ -117,18 +117,23 @@
                   <tr>
                     <th>Hora</th>
                     <th>Asignatura</th>
-                    <th>Unidad didáctica</th>
-                    <th>Destreza con criterio</th>
-                    <th>Tema</th>
+                    @if (!isReadOnly) {
+                      <th>Unidad didactica</th>
+                      <th>Tema</th>
+                    } @else {
+                      <th>Tema</th>
+                    }
                     <th>Inasistentes</th>
-                    <th>Novedades por estudiante</th>
-                    <th>Observaciones</th>
-                    <th>Firma</th>
-                    <th></th>
+                    <th>Novedades</th>
+                    @if (!isReadOnly) {
+                      <th>Observaciones</th>
+                      <th>Firma</th>
+                      <th></th>
+                    }
                   </tr>
                 </thead>
                 <tbody>
-                  @for (entry of dailyLog.entries; track entry.id) {
+                  @for (entry of displayEntries; track entry.id) {
                     <tr>
                       <td class="align-top">
                         <div class="fw-semibold">{{ entry.scheduleLabel }}</div>
@@ -141,27 +146,25 @@
                         <div class="fw-semibold">{{ entry.subjectName || 'Sin asignatura' }}</div>
                         <div class="small text-muted">{{ entry.teacherName || 'Sin docente' }}</div>
                       </td>
-                      <td class="align-top">
-                        <textarea class="form-control form-control-sm"
-                                  rows="2"
-                                  [(ngModel)]="entry.didacticUnit"
-                                  [ngModelOptions]="{standalone: true}"
-                                  [readonly]="!canEditEntry(entry)"></textarea>
-                      </td>
-                      <td class="align-top">
-                        <textarea class="form-control form-control-sm"
-                                  rows="2"
-                                  [(ngModel)]="entry.curricularSkill"
-                                  [ngModelOptions]="{standalone: true}"
-                                  [readonly]="!canEditEntry(entry)"></textarea>
-                      </td>
-                      <td class="align-top">
-                        <textarea class="form-control form-control-sm"
-                                  rows="2"
-                                  [(ngModel)]="entry.topic"
-                                  [ngModelOptions]="{standalone: true}"
-                                  [readonly]="!canEditEntry(entry)"></textarea>
-                      </td>
+                      @if (!isReadOnly) {
+                        <td class="align-top">
+                          <textarea class="form-control form-control-sm" rows="2"
+                                    [(ngModel)]="entry.didacticUnit"
+                                    [ngModelOptions]="{standalone: true}"
+                                    [readonly]="!canEditEntry(entry)"></textarea>
+                        </td>
+                        <td class="align-top">
+                          <textarea class="form-control form-control-sm" rows="2"
+                                    [(ngModel)]="entry.topic"
+                                    [ngModelOptions]="{standalone: true}"
+                                    [readonly]="!canEditEntry(entry)"></textarea>
+                        </td>
+                      } @else {
+                        <td class="align-top">
+                          <div>{{ entry.didacticUnit || '-' }}</div>
+                          <div class="small text-muted mt-1">{{ entry.topic || '-' }}</div>
+                        </td>
+                      }
                       <td class="align-top">
                         <div class="small mb-2">
                           @if (entry.absences.length > 0) {
@@ -194,193 +197,197 @@
                           <button class="btn btn-sm btn-outline-primary" type="button" (click)="openIncidentDialog(entry)">Registrar novedades</button>
                         }
                       </td>
-                      <td class="align-top">
-                        <textarea class="form-control form-control-sm"
-                                  rows="2"
-                                  [(ngModel)]="entry.generalNotes"
-                                  [ngModelOptions]="{standalone: true}"
-                                  [readonly]="!canEditEntry(entry)"></textarea>
-                      </td>
-                      <td class="align-top">
-                        <div class="form-check form-switch border rounded p-2 signature-box">
-                          <input class="form-check-input"
-                                 type="checkbox"
-                                 [id]="'signature-' + entry.id"
-                                 [(ngModel)]="entry.signed"
-                                 [ngModelOptions]="{standalone: true}"
-                                 [disabled]="!canEditEntry(entry)">
-                          <label class="form-check-label small ms-2 fw-semibold" [for]="'signature-' + entry.id">
-                            {{ entry.signed ? 'Firmado' : 'Pendiente' }}
-                          </label>
-                        </div>
-                      </td>
-                      <td class="text-end align-top">
-                        <div class="d-grid gap-2 justify-content-end">
-                          <button class="btn btn-sm btn-outline-primary" type="button" (click)="openEntryQr(entry)">QR clase</button>
-                          @if (canEditEntry(entry)) {
-                            <button class="btn btn-sm btn-primary" type="button" (click)="saveEntry(entry)">Guardar</button>
-                          }
-                        </div>
-                      </td>
+                      @if (!isReadOnly) {
+                        <td class="align-top">
+                          <textarea class="form-control form-control-sm" rows="2"
+                                    [(ngModel)]="entry.generalNotes"
+                                    [ngModelOptions]="{standalone: true}"
+                                    [readonly]="!canEditEntry(entry)"></textarea>
+                        </td>
+                        <td class="align-top">
+                          <div class="form-check form-switch border rounded p-2 signature-box">
+                            <input class="form-check-input" type="checkbox"
+                                   [id]="'signature-' + entry.id"
+                                   [(ngModel)]="entry.signed"
+                                   [ngModelOptions]="{standalone: true}"
+                                   [disabled]="!canEditEntry(entry)">
+                            <label class="form-check-label small ms-2 fw-semibold" [for]="'signature-' + entry.id">
+                              {{ entry.signed ? 'Firmado' : 'Pendiente' }}
+                            </label>
+                          </div>
+                        </td>
+                        <td class="text-end align-top">
+                          <div class="d-grid gap-2 justify-content-end">
+                            <button class="btn btn-sm btn-outline-primary" type="button" (click)="openEntryQr(entry)">QR clase</button>
+                            @if (canEditEntry(entry)) {
+                              <button class="btn btn-sm btn-primary" type="button" (click)="saveEntry(entry)">Guardar</button>
+                            }
+                          </div>
+                        </td>
+                      } @else {
+                        <td class="align-top">
+                          <span class="badge" [class.text-bg-success]="entry.teacherSignatureStatus === 'SIGNED'" [class.text-bg-secondary]="entry.teacherSignatureStatus !== 'SIGNED'">
+                            {{ entry.teacherSignatureStatus === 'SIGNED' ? 'Firmado' : 'Pendiente' }}
+                          </span>
+                        </td>
+                      }
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="10" class="text-center text-muted py-4">No hay bloques generados para esta jornada.</td>
+                      <td [attr.colspan]="isReadOnly ? 5 : 9" class="text-center text-muted py-4">No hay bloques generados para esta jornada.</td>
                     </tr>
                   }
                 </tbody>
               </table>
             </div>
 
-            <div class="mt-4 pt-4 border-top">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  <h3 class="h5 mb-1">Cierre institucional y firmas</h3>
-                  <p class="text-muted mb-0">Seguimiento del cierre docente por bloque y cierre final del inspector.</p>
-                </div>
-                <span class="badge rounded-pill text-bg-light">{{ dailyLog.signatures.length }} firmas finales</span>
-              </div>
-
-              <div class="row g-3 mb-4">
-                <div class="col-12 col-md-6 col-xl-4">
-                  <div class="signature-summary-card final-signature-card">
-                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                      <div>
-                        <div class="small text-uppercase text-muted mb-1">Docente tutor</div>
-                        <div class="fw-semibold">
-                          {{ getSignature('TEACHER_TUTOR')?.signerName || 'Firma pendiente' }}
-                        </div>
-                      </div>
-                      <span class="badge" [class.text-bg-success]="hasSignature('TEACHER_TUTOR')" [class.text-bg-secondary]="!hasSignature('TEACHER_TUTOR')">
-                        {{ hasSignature('TEACHER_TUTOR') ? 'Firmado' : 'Pendiente' }}
-                      </span>
-                    </div>
-                    @let teacherSignature = getSignature('TEACHER_TUTOR');
-                    @if (teacherSignature) {
-                      <div class="small text-muted">{{ teacherSignature.signedAt }}</div>
-                      @if (teacherSignature.notes) {
-                        <div class="small mt-2">{{ teacherSignature.notes }}</div>
-                      }
-                    } @else {
-                      <div class="small text-muted mb-3">Esperando validacion del docente tutor del curso.</div>
-                    }
-                    <button class="btn btn-sm btn-outline-primary mt-3" type="button" (click)="openSignatureQr('TEACHER_TUTOR')">Abrir QR</button>
+            @if (!isTeacher && !isReadOnly) {
+              <div class="mt-4 pt-4 border-top">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <h3 class="h5 mb-1">Cierre institucional y firmas</h3>
+                    <p class="text-muted mb-0">Seguimiento del cierre docente por bloque y cierre final del inspector.</p>
                   </div>
+                  <span class="badge rounded-pill text-bg-light">{{ dailyLog.signatures.length }} firmas finales</span>
                 </div>
 
-                <div class="col-12 col-md-6 col-xl-4">
-                  <div class="signature-summary-card final-signature-card">
-                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                      <div>
-                        <div class="small text-uppercase text-muted mb-1">Semanero</div>
-                        <div class="fw-semibold">
-                          {{ getSignature('WEEK_STUDENT')?.signerName || 'Firma pendiente' }}
+                <div class="row g-3 mb-4">
+                  <div class="col-12 col-md-6 col-xl-4">
+                    <div class="signature-summary-card final-signature-card">
+                      <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <div>
+                          <div class="small text-uppercase text-muted mb-1">Docente tutor</div>
+                          <div class="fw-semibold">{{ getSignature('TEACHER_TUTOR')?.signerName || 'Firma pendiente' }}</div>
                         </div>
-                      </div>
-                      <span class="badge" [class.text-bg-success]="hasSignature('WEEK_STUDENT')" [class.text-bg-secondary]="!hasSignature('WEEK_STUDENT')">
-                        {{ hasSignature('WEEK_STUDENT') ? 'Firmado' : 'Pendiente' }}
-                      </span>
-                    </div>
-                    @let weekStudentSignature = getSignature('WEEK_STUDENT');
-                    @if (weekStudentSignature) {
-                      <div class="small text-muted">{{ weekStudentSignature.signedAt }}</div>
-                      @if (weekStudentSignature.notes) {
-                        <div class="small mt-2">{{ weekStudentSignature.notes }}</div>
-                      }
-                    } @else {
-                      <div class="small text-muted mb-3">Esperando validacion del estudiante semanero.</div>
-                    }
-                    <button class="btn btn-sm btn-outline-primary mt-3" type="button" (click)="openSignatureQr('WEEK_STUDENT')">Abrir QR</button>
-                  </div>
-                </div>
-
-                <div class="col-12 col-md-6 col-xl-4">
-                  <div class="signature-summary-card final-signature-card">
-                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                      <div>
-                        <div class="small text-uppercase text-muted mb-1">Inspector general</div>
-                        <div class="fw-semibold">
-                          {{ getSignature('GENERAL_INSPECTOR')?.signerName || 'Cierre pendiente' }}
-                        </div>
-                      </div>
-                      <span class="badge" [class.text-bg-success]="hasSignature('GENERAL_INSPECTOR')" [class.text-bg-secondary]="!hasSignature('GENERAL_INSPECTOR')">
-                        {{ hasSignature('GENERAL_INSPECTOR') ? 'Cerrado' : 'Pendiente' }}
-                      </span>
-                    </div>
-                    @let inspectorSignature = getSignature('GENERAL_INSPECTOR');
-                    @if (inspectorSignature) {
-                      <div class="small text-muted">{{ inspectorSignature.signedAt }}</div>
-                      @if (inspectorSignature.notes) {
-                        <div class="small mt-2">{{ inspectorSignature.notes }}</div>
-                      }
-                    } @else {
-                      <div class="small text-muted mb-2">
-                        {{ hasSignature('TEACHER_TUTOR') && hasSignature('WEEK_STUDENT')
-                          ? 'Listo para cierre final de inspector.'
-                          : 'El cierre final se habilita cuando existan firma tutor y firma semanero.' }}
-                      </div>
-                    }
-                    <button class="btn btn-sm btn-outline-primary mt-3"
-                            type="button"
-                            [disabled]="!canOpenInspectorQr()"
-                            (click)="openLogQr()">
-                      Abrir QR
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="row g-3">
-                @for (entry of dailyLog.entries; track entry.id) {
-                  @if (entry.blockType === 'CLASS') {
-                    <div class="col-12 col-md-6 col-xl-4">
-                      <div class="signature-summary-card">
-                        <div class="small text-uppercase text-muted mb-1">{{ entry.scheduleLabel }}</div>
-                        <div class="fw-semibold">{{ entry.subjectName || 'Sin asignatura' }}</div>
-                        <div class="small text-muted mb-2">{{ entry.teacherName || 'Sin docente' }}</div>
-                        <span class="badge" [class.text-bg-success]="entry.teacherSignatureStatus === 'SIGNED'" [class.text-bg-secondary]="entry.teacherSignatureStatus !== 'SIGNED'">
-                          {{ entry.teacherSignatureStatus === 'SIGNED' ? 'Clase cerrada' : 'Pendiente de cierre' }}
+                        <span class="badge" [class.text-bg-success]="hasSignature('TEACHER_TUTOR')" [class.text-bg-secondary]="!hasSignature('TEACHER_TUTOR')">
+                          {{ hasSignature('TEACHER_TUTOR') ? 'Firmado' : 'Pendiente' }}
                         </span>
-                        @if (entry.teacherClosedAt) {
-                          <div class="small text-muted mt-2">Cerrado: {{ entry.teacherClosedAt }}</div>
-                        }
                       </div>
-                    </div>
-                  }
-                }
-              </div>
-
-              <div class="row g-3 mt-1">
-                @if (dailyLog.signatures.length > 0) {
-                  @for (signature of dailyLog.signatures; track signature.id) {
-                    <div class="col-12 col-md-6 col-xl-4">
-                      <div class="signature-summary-card final-signature-card">
-                        <div class="small text-uppercase text-muted mb-1">{{ signatureLabel(signature.signatureType) }}</div>
-                        <div class="fw-semibold">{{ signature.signerName }}</div>
-                        <div class="small text-muted">{{ signature.signerRole }}</div>
-                        <div class="small text-muted mt-2">Firmado: {{ signature.signedAt }}</div>
-                        @if (signature.notes) {
-                          <div class="small mt-2">{{ signature.notes }}</div>
+                      @let teacherSignature = getSignature('TEACHER_TUTOR');
+                      @if (teacherSignature) {
+                        <div class="small text-muted">{{ teacherSignature.signedAt }}</div>
+                        @if (teacherSignature.notes) {
+                          <div class="small mt-2">{{ teacherSignature.notes }}</div>
                         }
-                      </div>
+                      } @else {
+                        <div class="small text-muted mb-3">Esperando validacion del docente tutor.</div>
+                      }
+                      <button class="btn btn-sm btn-outline-primary mt-3" type="button" (click)="openSignatureQr('TEACHER_TUTOR')">Abrir QR</button>
                     </div>
-                  }
-                } @else {
-                  <div class="col-12">
-                    <div class="alert alert-secondary mb-0">Todavia no existen firmas finales del leccionario.</div>
                   </div>
-                }
+
+                  <div class="col-12 col-md-6 col-xl-4">
+                    <div class="signature-summary-card final-signature-card">
+                      <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <div>
+                          <div class="small text-uppercase text-muted mb-1">Semanero</div>
+                          <div class="fw-semibold">{{ getSignature('WEEK_STUDENT')?.signerName || 'Firma pendiente' }}</div>
+                        </div>
+                        <span class="badge" [class.text-bg-success]="hasSignature('WEEK_STUDENT')" [class.text-bg-secondary]="!hasSignature('WEEK_STUDENT')">
+                          {{ hasSignature('WEEK_STUDENT') ? 'Firmado' : 'Pendiente' }}
+                        </span>
+                      </div>
+                      @let weekStudentSignature = getSignature('WEEK_STUDENT');
+                      @if (weekStudentSignature) {
+                        <div class="small text-muted">{{ weekStudentSignature.signedAt }}</div>
+                        @if (weekStudentSignature.notes) {
+                          <div class="small mt-2">{{ weekStudentSignature.notes }}</div>
+                        }
+                      } @else {
+                        <div class="small text-muted mb-3">Esperando validacion del semanero.</div>
+                      }
+                      <button class="btn btn-sm btn-outline-primary mt-3" type="button" (click)="openSignatureQr('WEEK_STUDENT')">Abrir QR</button>
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-6 col-xl-4">
+                    <div class="signature-summary-card final-signature-card">
+                      <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <div>
+                          <div class="small text-uppercase text-muted mb-1">Inspector general</div>
+                          <div class="fw-semibold">{{ getSignature('GENERAL_INSPECTOR')?.signerName || 'Cierre pendiente' }}</div>
+                        </div>
+                        <span class="badge" [class.text-bg-success]="hasSignature('GENERAL_INSPECTOR')" [class.text-bg-secondary]="!hasSignature('GENERAL_INSPECTOR')">
+                          {{ hasSignature('GENERAL_INSPECTOR') ? 'Cerrado' : 'Pendiente' }}
+                        </span>
+                      </div>
+                      @let inspectorSignature = getSignature('GENERAL_INSPECTOR');
+                      @if (inspectorSignature) {
+                        <div class="small text-muted">{{ inspectorSignature.signedAt }}</div>
+                        @if (inspectorSignature.notes) {
+                          <div class="small mt-2">{{ inspectorSignature.notes }}</div>
+                        }
+                      } @else {
+                        <div class="small text-muted mb-2">
+                          {{ hasSignature('TEACHER_TUTOR') && hasSignature('WEEK_STUDENT')
+                            ? 'Listo para cierre final de inspector.'
+                            : 'El cierre final se habilita cuando existan firma tutor y firma semanero.' }}
+                        </div>
+                      }
+                      <button class="btn btn-sm btn-outline-primary mt-3"
+                              type="button"
+                              [disabled]="!canOpenInspectorQr()"
+                              (click)="openLogQr()">
+                        Abrir QR
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row g-3">
+                  @for (entry of dailyLog.entries; track entry.id) {
+                    @if (entry.blockType === 'CLASS') {
+                      <div class="col-12 col-md-6 col-xl-4">
+                        <div class="signature-summary-card">
+                          <div class="small text-uppercase text-muted mb-1">{{ entry.scheduleLabel }}</div>
+                          <div class="fw-semibold">{{ entry.subjectName || 'Sin asignatura' }}</div>
+                          <div class="small text-muted mb-2">{{ entry.teacherName || 'Sin docente' }}</div>
+                          <span class="badge" [class.text-bg-success]="entry.teacherSignatureStatus === 'SIGNED'" [class.text-bg-secondary]="entry.teacherSignatureStatus !== 'SIGNED'">
+                            {{ entry.teacherSignatureStatus === 'SIGNED' ? 'Clase cerrada' : 'Pendiente de cierre' }}
+                          </span>
+                          @if (entry.teacherClosedAt) {
+                            <div class="small text-muted mt-2">Cerrado: {{ entry.teacherClosedAt }}</div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  }
+                </div>
+
+                <div class="row g-3 mt-1">
+                  @if (dailyLog.signatures.length > 0) {
+                    @for (signature of dailyLog.signatures; track signature.id) {
+                      <div class="col-12 col-md-6 col-xl-4">
+                        <div class="signature-summary-card final-signature-card">
+                          <div class="small text-uppercase text-muted mb-1">{{ signatureLabel(signature.signatureType) }}</div>
+                          <div class="fw-semibold">{{ signature.signerName }}</div>
+                          <div class="small text-muted">{{ signature.signerRole }}</div>
+                          <div class="small text-muted mt-2">Firmado: {{ signature.signedAt }}</div>
+                          @if (signature.notes) {
+                            <div class="small mt-2">{{ signature.notes }}</div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  } @else {
+                    <div class="col-12">
+                      <div class="alert alert-secondary mb-0">Todavia no existen firmas finales del leccionario.</div>
+                    </div>
+                  }
+                </div>
               </div>
-            </div>
+            }
           </div>
         </div>
       } @else {
-        <div class="card border-0 shadow-sm">
-          <div class="card-body p-4">
-            <h2 class="h4 mb-2"><i class="bi bi-calendar-plus me-2 text-primary"></i>Jornada no generada</h2>
-            <p class="text-muted mb-0">Selecciona curso y fecha, luego consulta o genera la jornada diaria desde el horario institucional.</p>
+        @if (!isTeacher && !isReadOnly) {
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 text-center">
+              <i class="bi bi-journal-text fs-1 text-muted mb-2 d-block"></i>
+              <p class="text-muted mb-0">Selecciona un curso y dia para cargar el leccionario.</p>
+            </div>
           </div>
-        </div>
+        }
       }
 
       @if (absenceDialogEntry && dailyLog) {
@@ -399,8 +406,7 @@
               @for (draft of absenceDrafts; track draft.studentId) {
                 <div class="absence-option p-3 rounded-4 border d-grid gap-3">
                   <label class="d-flex align-items-center gap-3">
-                    <input class="form-check-input"
-                           type="checkbox"
+                    <input class="form-check-input" type="checkbox"
                            [checked]="draft.selected"
                            (change)="toggleAbsenceStudent(draft.studentId, $any($event.target).checked)">
                     <span>
@@ -408,7 +414,6 @@
                       <span class="small text-muted">Cadete del curso actual</span>
                     </span>
                   </label>
-
                   @if (draft.selected) {
                     <div class="row g-2">
                       <div class="col-12 col-md-4">
@@ -424,8 +429,7 @@
                       </div>
                       <div class="col-12 col-md-8">
                         <label class="form-label small fw-semibold mb-1">Novedad especifica</label>
-                        <input class="form-control form-control-sm"
-                               type="text"
+                        <input class="form-control form-control-sm" type="text"
                                [ngModel]="draft.notes"
                                [ngModelOptions]="{standalone: true}"
                                (ngModelChange)="draft.notes = $event"
@@ -461,8 +465,7 @@
               @for (draft of incidentDrafts; track draft.studentId) {
                 <div class="absence-option p-3 rounded-4 border d-grid gap-3">
                   <label class="d-flex align-items-center gap-3">
-                    <input class="form-check-input"
-                           type="checkbox"
+                    <input class="form-check-input" type="checkbox"
                            [checked]="draft.selected"
                            (change)="toggleIncidentStudent(draft.studentId, $any($event.target).checked)">
                     <span>
@@ -470,7 +473,6 @@
                       <span class="small text-muted">Novedad individual del bloque</span>
                     </span>
                   </label>
-
                   @if (draft.selected) {
                     <div class="row g-2">
                       <div class="col-12 col-md-4">
@@ -487,8 +489,7 @@
                       </div>
                       <div class="col-12 col-md-8">
                         <label class="form-label small fw-semibold mb-1">Detalle</label>
-                        <input class="form-control form-control-sm"
-                               type="text"
+                        <input class="form-control form-control-sm" type="text"
                                [ngModel]="draft.notes"
                                [ngModelOptions]="{standalone: true}"
                                (ngModelChange)="draft.notes = $event"
@@ -536,4 +537,3 @@
         </div>
       }
     </section>
-  

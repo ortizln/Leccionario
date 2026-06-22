@@ -45,9 +45,6 @@ public class DailyLogEntry extends BaseEntity {
     private String didacticUnit;
 
     @Column(length = 300)
-    private String curricularSkill;
-
-    @Column(length = 300)
     private String topic;
 
     @Column(nullable = false, unique = true, length = 80)

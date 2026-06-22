@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
 import { API_URL } from '../../../core/api.config';
-import { AcademicCourse, AcademicStudent, ScheduleOverview } from '../../academic/academic.models';
+import { AcademicCourse, AcademicStudent } from '../../academic/academic.models';
 import { catchError, of } from 'rxjs';
 
 @Component({
@@ -47,6 +47,44 @@ import { catchError, of } from 'rxjs';
           }
         </div>
       </div>
+
+      @if (dailyLog) {
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4">
+            <h3 class="h5 mb-1">Leccionario del dia</h3>
+            <p class="text-muted mb-3">{{ dailyLog.logDate }} · {{ dailyLog.courseName }} · {{ dailyLog.status }}</p>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Bloque</th>
+                    <th>Materia</th>
+                    <th>Docente</th>
+                    <th>Tema</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (entry of dailyLog.entries; track entry.id) {
+                    @if (entry.teacherId) {
+                      <tr>
+                        <td>
+                          <div class="fw-semibold">{{ entry.scheduleLabel }}</div>
+                          <div class="small text-muted">{{ entry.startTime }} - {{ entry.endTime }}</div>
+                        </td>
+                        <td>{{ entry.subjectName || '-' }}</td>
+                        <td>{{ entry.teacherName || '-' }}</td>
+                        <td>{{ entry.topic || '-' }}</td>
+                      </tr>
+                    }
+                  } @empty {
+                    <tr><td colspan="4" class="text-center text-muted py-4">Sin leccionario registrado para hoy.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      }
 
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
@@ -114,6 +152,7 @@ export class MyCourseComponent implements OnInit {
   course: AcademicCourse | null = null;
   classmates: AcademicStudent[] = [];
   schedules: Array<{ id: number; courseId: number; courseName: string; periodId: number; periodName: string; scheduleLabel: string; subjectId: number; subjectName: string; teacherId: number; teacherName: string; weekday: number; classroom: string | null }> = [];
+  dailyLog: DailyLogItem | null = null;
 
   ngOnInit(): void {
     this.http.get<AcademicCourse>(`${API_URL}/self/course`).pipe(
@@ -127,9 +166,52 @@ export class MyCourseComponent implements OnInit {
     this.http.get<any[]>(`${API_URL}/self/schedule`).pipe(
       catchError(() => of([]))
     ).subscribe(data => this.schedules = data);
+
+    const today = new Date().toISOString().slice(0, 10);
+    this.http.get<DailyLogItem>(`${API_URL}/self/my-course-daily-log?logDate=${today}`).pipe(
+      catchError(() => of(null))
+    ).subscribe(data => this.dailyLog = data);
   }
 
   weekdayLabel(w: number): string {
     return ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'][w - 1] || '';
   }
 }
+
+type DailyLogItem = {
+  id: number;
+  courseId: number;
+  courseName: string;
+  periodId: number;
+  periodName: string;
+  institutionId: number;
+  institutionName: string;
+  workDayNumber: number | null;
+  logDate: string;
+  city: string | null;
+  generalNotes: string | null;
+  closeToken: string;
+  status: string;
+  closedAt: string | null;
+  signatures: Array<{ id: number; signerName: string; signerRole: string; signatureType: string; signedAt: string; notes: string | null }>;
+  students: Array<{ id: number; enrollmentNumber: string; fullName: string }>;
+  entries: Array<{
+    id: number;
+    scheduleBlockId: number;
+    scheduleLabel: string;
+    blockType: string;
+    startTime: string;
+    endTime: string;
+    teacherId: number | null;
+    teacherName: string | null;
+    subjectId: number | null;
+    subjectName: string | null;
+    didacticUnit: string | null;
+    topic: string | null;
+    closeToken: string;
+    teacherSignatureStatus: string;
+    teacherClosedAt: string | null;
+    specificNotes: string | null;
+    generalNotes: string | null;
+  }>;
+};

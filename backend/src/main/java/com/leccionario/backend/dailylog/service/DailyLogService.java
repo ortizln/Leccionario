@@ -103,7 +103,6 @@ public class DailyLogService {
         ensureEntryEditable(entry);
 
         entry.setDidacticUnit(trimToNull(request.didacticUnit()));
-        entry.setCurricularSkill(trimToNull(request.curricularSkill()));
         entry.setTopic(trimToNull(request.topic()));
         entry.setSpecificNotes(trimToNull(request.specificNotes()));
         entry.setGeneralNotes(trimToNull(request.generalNotes()));
@@ -504,7 +503,6 @@ public class DailyLogService {
                 entry.getSubject() != null ? entry.getSubject().getId() : null,
                 entry.getSubject() != null ? entry.getSubject().getName() : null,
                 entry.getDidacticUnit(),
-                entry.getCurricularSkill(),
                 entry.getTopic(),
                 entry.getCloseToken(),
                 entry.getTeacherSignatureStatus().name(),
@@ -552,7 +550,6 @@ public class DailyLogService {
                 entry.getSubject() != null ? entry.getSubject().getName() : null,
                 entry.getTeacher() != null ? entry.getTeacher().getUser().getFirstName() + " " + entry.getTeacher().getUser().getLastName() : null,
                 entry.getDidacticUnit(),
-                entry.getCurricularSkill(),
                 entry.getTopic(),
                 entry.getSpecificNotes(),
                 entry.getGeneralNotes(),

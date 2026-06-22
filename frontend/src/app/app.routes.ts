@@ -51,8 +51,8 @@ export const appRoutes: Routes = [
         ]
       },
       { path: 'schedules', component: ScheduleManagementComponent, canActivate: [permissionGuard], data: { permission: 'ACADEMIC_VIEW' } },
-      { path: 'my-course', component: MyCourseComponent, canActivate: [permissionGuard], data: { permission: 'STUDENT_SELF_VIEW' } },
-      { path: 'my-teaching', component: MyTeachingComponent, canActivate: [permissionGuard], data: { permission: 'TEACHER_SELF_VIEW' } },
+      { path: 'my-course', component: MyCourseComponent, canActivate: [permissionGuard], data: { permission: 'STUDENT_SELF_VIEW', denyRoles: ['ROLE_ADMINISTRADOR', 'ROLE_ADMINISTRATIVO'] } },
+      { path: 'my-teaching', component: MyTeachingComponent, canActivate: [permissionGuard], data: { permission: 'TEACHER_SELF_VIEW', denyRoles: ['ROLE_ADMINISTRADOR', 'ROLE_ADMINISTRATIVO'] } },
       { path: 'demerits', component: DemeritManagementComponent, canActivate: [permissionGuard], data: { permission: 'ACADEMIC_VIEW' } },
       { path: 'audit', component: AuditComponent, canActivate: [permissionGuard], data: { permission: 'AUDIT_VIEW' } },
       { path: 'branding', component: BrandingManagementComponent, canActivate: [permissionGuard], data: { permission: 'SETTINGS_VIEW' } }

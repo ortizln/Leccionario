@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { catchError, of } from 'rxjs';
@@ -13,14 +13,19 @@ import { AuthService } from '../../core/auth.service';
   templateUrl: './lesson-plan.component.html',
   styleUrl: './lesson-plan.component.css'
 })
-export class LessonPlanComponent {
+export class LessonPlanComponent implements OnInit {
   private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
 
+  isTeacher = this.auth.hasPermission('TEACHER_SELF_VIEW') && !this.auth.hasPermission('ACADEMIC_MANAGE');
+  isReadOnly = this.auth.hasPermission('STUDENT_SELF_VIEW') && !this.auth.hasPermission('ACADEMIC_MANAGE') && !this.auth.hasPermission('TEACHER_SELF_VIEW');
+  canSearchLessonPlan = this.auth.hasPermission('ACADEMIC_VIEW') || this.auth.hasPermission('LESSONPLAN_VIEW');
   canManageLessonPlans = this.auth.hasPermission('LESSONPLAN_MANAGE');
   errorMessage = '';
   dailyLog: DailyLogItem | null = null;
+  teacherTodayCourses: Array<{ courseId: number; courseName: string; periodId: number; logDate: string; subjectNames: string[] }> = [];
+  teacherSelectedCourseId: number | null = null;
   absenceDialogEntry: DailyLogEntryItem | null = null;
   absenceDrafts: DailyLogAbsenceDraft[] = [];
   incidentDialogEntry: DailyLogEntryItem | null = null;
@@ -30,6 +35,8 @@ export class LessonPlanComponent {
   qrDialogSubtitle = '';
   qrTargetUrl = '';
   qrDataUrl = '';
+  currentDate = this.today();
+  selectedWeekday = this.todayWeekday();
 
   overview: ScheduleOverview = {
     blocks: [],
@@ -40,59 +47,112 @@ export class LessonPlanComponent {
     teachers: []
   };
 
-  controlForm = this.fb.nonNullable.group({
+  searchForm = this.fb.nonNullable.group({
     courseId: [0, Validators.required],
-    periodId: [0, Validators.required],
-    logDate: [this.today(), Validators.required],
-    workDayNumber: [1],
-    city: ['Tulcan'],
-    generalNotes: ['']
+    logDate: [this.today(), Validators.required]
   });
 
-  constructor() {
-    this.loadOverview();
+  ngOnInit(): void {
+    if (this.isTeacher) {
+      this.loadTeacherToday();
+    } else if (this.isReadOnly) {
+      this.loadStudentDailyLog();
+    } else if (this.canSearchLessonPlan) {
+      this.loadOverview();
+    }
   }
 
-  selectedCourseLabel(): string {
-    const course = this.overview.courses.find(item => item.id === this.controlForm.controls.courseId.value);
-    return course ? `${course.name} ${course.parallel}` : 'Selecciona un curso';
+  get weekDays(): Array<{ date: string; dayLabel: string; numDay: string; weekday: number }> {
+    const current = new Date(this.currentDate + 'T12:00:00');
+    const monday = new Date(current);
+    monday.setDate(current.getDate() - ((current.getDay() + 6) % 7));
+    const labels = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return {
+        date: d.toISOString().slice(0, 10),
+        dayLabel: labels[i],
+        numDay: d.getDate().toString(),
+        weekday: i + 1
+      };
+    });
   }
 
   canEditEntry(entry: DailyLogEntryItem): boolean {
     return this.canManageLessonPlans
+      && !this.isReadOnly
       && !!this.dailyLog
       && this.dailyLog.status === 'DRAFT'
       && entry.blockType === 'CLASS'
       && entry.teacherSignatureStatus !== 'SIGNED';
   }
 
-  generateDailyLog(): void {
-    this.errorMessage = '';
-    if (this.controlForm.invalid) {
-      this.errorMessage = 'Completa curso, periodo y fecha para generar la jornada.';
-      return;
+  get displayEntries(): DailyLogEntryItem[] {
+    if (!this.dailyLog) return [];
+    if (this.isTeacher) {
+      return this.dailyLog.entries.filter(e => e.teacherId !== null);
     }
-
-    this.http.post<DailyLogItem>(`${API_URL}/daily-logs/generate`, this.controlForm.getRawValue()).subscribe({
-      next: (response) => this.dailyLog = this.mapDailyLog(response),
-      error: (error) => {
-        this.errorMessage = error?.error?.message ?? 'No se pudo generar la jornada del leccionario.';
-      }
-    });
+    return this.dailyLog.entries;
   }
 
-  loadDailyLog(): void {
+  selectDay(weekday: number): void {
+    this.selectedWeekday = weekday;
+    const day = this.weekDays.find(d => d.weekday === weekday);
+    if (day) {
+      this.currentDate = day.date;
+      if (this.isTeacher) {
+        this.loadTeacherCoursesForDate(day.date);
+      } else if (this.isReadOnly) {
+        this.loadStudentDailyLogForDate(day.date);
+      } else if (this.canSearchLessonPlan) {
+        this.searchForm.controls.logDate.setValue(day.date);
+        this.searchDailyLog();
+      }
+    }
+  }
+
+  prevWeek(): void {
+    const current = new Date(this.currentDate + 'T12:00:00');
+    current.setDate(current.getDate() - 7);
+    this.currentDate = current.toISOString().slice(0, 10);
+    this.selectedWeekday = this.getWeekdayFromDate(this.currentDate);
+    this.loadForCurrentDate();
+  }
+
+  nextWeek(): void {
+    const current = new Date(this.currentDate + 'T12:00:00');
+    current.setDate(current.getDate() + 7);
+    this.currentDate = current.toISOString().slice(0, 10);
+    this.selectedWeekday = this.getWeekdayFromDate(this.currentDate);
+    this.loadForCurrentDate();
+  }
+
+  goToday(): void {
+    this.currentDate = this.today();
+    this.selectedWeekday = this.todayWeekday();
+    this.loadForCurrentDate();
+  }
+
+  searchDailyLog(): void {
     this.errorMessage = '';
-    const { courseId, logDate } = this.controlForm.getRawValue();
+    const { courseId, logDate } = this.searchForm.getRawValue();
     if (!courseId || !logDate) {
-      this.errorMessage = 'Selecciona curso y fecha para consultar.';
+      this.errorMessage = 'Selecciona curso y fecha.';
       return;
     }
 
-    this.http.get<DailyLogItem>(`${API_URL}/daily-logs?courseId=${courseId}&logDate=${logDate}`).pipe(
+    this.http.post<DailyLogItem>(`${API_URL}/daily-logs/generate`, {
+      courseId,
+      periodId: this.overview.periods.find(p => p.active)?.id ?? this.overview.periods[0]?.id ?? 0,
+      logDate,
+      workDayNumber: null,
+      city: null,
+      generalNotes: null
+    }).pipe(
       catchError((error) => {
         this.dailyLog = null;
-        this.errorMessage = error?.error?.message ?? 'No se pudo consultar la jornada del leccionario.';
+        this.errorMessage = error?.error?.message ?? 'No se pudo cargar el leccionario.';
         return of(null);
       })
     ).subscribe((response) => {
@@ -103,13 +163,10 @@ export class LessonPlanComponent {
   }
 
   saveEntry(entry: DailyLogEntryItem): void {
-    if (!this.dailyLog) {
-      return;
-    }
+    if (!this.dailyLog) return;
 
     this.http.put<DailyLogEntryItem>(`${API_URL}/daily-logs/${this.dailyLog.id}/entries/${entry.id}`, {
       didacticUnit: entry.didacticUnit,
-      curricularSkill: entry.curricularSkill,
       topic: entry.topic,
       specificNotes: entry.specificNotes,
       generalNotes: entry.generalNotes,
@@ -122,7 +179,7 @@ export class LessonPlanComponent {
         }
       },
       error: (error) => {
-        this.errorMessage = error?.error?.message ?? 'No se pudo guardar la fila del leccionario.';
+        this.errorMessage = error?.error?.message ?? 'No se pudo guardar la entrada.';
       }
     });
   }
@@ -149,37 +206,27 @@ export class LessonPlanComponent {
 
   toggleAbsenceStudent(studentId: number, checked: boolean): void {
     const draft = this.absenceDrafts.find(item => item.studentId === studentId);
-    if (draft) {
-      draft.selected = checked;
-    }
+    if (draft) draft.selected = checked;
   }
 
   saveAbsences(): void {
-    if (!this.dailyLog || !this.absenceDialogEntry) {
-      return;
-    }
+    if (!this.dailyLog || !this.absenceDialogEntry) return;
 
     this.http.put<DailyLogEntryItem>(
       `${API_URL}/daily-logs/${this.dailyLog.id}/entries/${this.absenceDialogEntry.id}/absences`,
       {
         absences: this.absenceDrafts
           .filter(item => item.selected)
-          .map(item => ({
-            studentId: item.studentId,
-            absenceType: item.absenceType,
-            notes: item.notes || null
-          }))
+          .map(item => ({ studentId: item.studentId, absenceType: item.absenceType, notes: item.notes || null }))
       }
     ).subscribe({
       next: (saved) => {
         const index = this.dailyLog?.entries.findIndex(item => item.id === saved.id) ?? -1;
-        if (index >= 0 && this.dailyLog) {
-          this.dailyLog.entries[index] = this.mapEntry(saved);
-        }
+        if (index >= 0 && this.dailyLog) this.dailyLog.entries[index] = this.mapEntry(saved);
         this.closeAbsenceDialog();
       },
       error: (error) => {
-        this.errorMessage = error?.error?.message ?? 'No se pudo guardar la lista de inasistencias.';
+        this.errorMessage = error?.error?.message ?? 'No se pudo guardar las inasistencias.';
       }
     });
   }
@@ -206,37 +253,27 @@ export class LessonPlanComponent {
 
   toggleIncidentStudent(studentId: number, checked: boolean): void {
     const draft = this.incidentDrafts.find(item => item.studentId === studentId);
-    if (draft) {
-      draft.selected = checked;
-    }
+    if (draft) draft.selected = checked;
   }
 
   saveIncidents(): void {
-    if (!this.dailyLog || !this.incidentDialogEntry) {
-      return;
-    }
+    if (!this.dailyLog || !this.incidentDialogEntry) return;
 
     this.http.put<DailyLogEntryItem>(
       `${API_URL}/daily-logs/${this.dailyLog.id}/entries/${this.incidentDialogEntry.id}/incidents`,
       {
         incidents: this.incidentDrafts
           .filter(item => item.selected)
-          .map(item => ({
-            studentId: item.studentId,
-            category: item.category,
-            notes: item.notes
-          }))
+          .map(item => ({ studentId: item.studentId, category: item.category, notes: item.notes }))
       }
     ).subscribe({
       next: (saved) => {
         const index = this.dailyLog?.entries.findIndex(item => item.id === saved.id) ?? -1;
-        if (index >= 0 && this.dailyLog) {
-          this.dailyLog.entries[index] = this.mapEntry(saved);
-        }
+        if (index >= 0 && this.dailyLog) this.dailyLog.entries[index] = this.mapEntry(saved);
         this.closeIncidentDialog();
       },
       error: (error) => {
-        this.errorMessage = error?.error?.message ?? 'No se pudieron guardar las novedades especificas.';
+        this.errorMessage = error?.error?.message ?? 'No se pudieron guardar las novedades.';
       }
     });
   }
@@ -248,18 +285,14 @@ export class LessonPlanComponent {
   }
 
   async openLogQr(): Promise<void> {
-    if (!this.dailyLog) {
-      return;
-    }
+    if (!this.dailyLog) return;
     this.qrDialogTitle = `Cierre final · ${this.dailyLog.courseName}`;
-    this.qrDialogSubtitle = `Inspector general / responsable del curso`;
+    this.qrDialogSubtitle = 'Inspector general / responsable del curso';
     await this.openQrDialog(`/mobile/log-close/${this.dailyLog.closeToken}`);
   }
 
   async openSignatureQr(signatureType: 'TEACHER_TUTOR' | 'WEEK_STUDENT'): Promise<void> {
-    if (!this.dailyLog) {
-      return;
-    }
+    if (!this.dailyLog) return;
     this.qrDialogTitle = signatureType === 'TEACHER_TUTOR' ? 'Firma docente tutor' : 'Firma semanero';
     this.qrDialogSubtitle = `Jornada ${this.dailyLog.courseName}`;
     await this.openQrDialog(`/mobile/log-signature/${this.dailyLog.closeToken}/${signatureType}`);
@@ -273,85 +306,26 @@ export class LessonPlanComponent {
     this.qrDataUrl = '';
   }
 
-  private loadOverview(): void {
-    this.http.get<ScheduleOverview>(`${API_URL}/schedules/overview`).pipe(
-      catchError(() => {
-        this.errorMessage = 'No se pudo cargar cursos y periodos para el leccionario diario.';
-        return of({
-          blocks: [],
-          schedules: [],
-          courses: [],
-          periods: [],
-          subjects: [],
-          teachers: []
-        });
-      })
-    ).subscribe((overview) => {
-      this.overview = overview;
-      this.controlForm.patchValue({
-        courseId: overview.courses[0]?.id ?? 0,
-        periodId: overview.periods[0]?.id ?? 0
-      });
+  selectTeacherCourse(courseId: number): void {
+    this.teacherSelectedCourseId = courseId;
+    this.errorMessage = '';
+    const course = this.teacherTodayCourses.find(c => c.courseId === courseId);
+    this.http.post<DailyLogItem>(`${API_URL}/daily-logs/generate`, {
+      courseId,
+      periodId: course?.periodId ?? 0,
+      logDate: this.currentDate,
+      workDayNumber: null,
+      city: null,
+      generalNotes: null
+    }).pipe(
+      catchError(() => { this.dailyLog = null; return of(null); })
+    ).subscribe(response => {
+      if (response) this.dailyLog = this.mapDailyLog(response);
     });
   }
 
-  private mapDailyLog(log: DailyLogItem): DailyLogItem {
-    return {
-      ...log,
-      entries: log.entries.map(entry => this.mapEntry(entry))
-    };
-  }
-
-  private mapEntry(entry: DailyLogEntryItem): DailyLogEntryItem {
-    return {
-      ...entry,
-      signed: entry.teacherSignatureStatus === 'SIGNED'
-    };
-  }
-
-  absenceLabel(absenceType: string): string {
-    switch (absenceType) {
-      case 'LATE':
-        return 'Atraso';
-      case 'JUSTIFIED':
-        return 'Justificada';
-      default:
-        return 'Inasistencia';
-    }
-  }
-
-  signatureLabel(signatureType: string): string {
-    switch (signatureType) {
-      case 'GENERAL_INSPECTOR':
-        return 'Inspector general';
-      case 'TEACHER_TUTOR':
-        return 'Docente tutor';
-      case 'WEEK_STUDENT':
-        return 'Semanero';
-      default:
-        return signatureType;
-    }
-  }
-
-  hasSignature(signatureType: string): boolean {
-    return !!this.getSignature(signatureType);
-  }
-
-  getSignature(signatureType: string): DailyLogSignatureItem | undefined {
-    return this.dailyLog?.signatures.find(signature => signature.signatureType === signatureType);
-  }
-
-  canOpenInspectorQr(): boolean {
-    if (!this.dailyLog) {
-      return false;
-    }
-    return this.hasSignature('TEACHER_TUTOR') && this.hasSignature('WEEK_STUDENT') && !this.hasSignature('GENERAL_INSPECTOR');
-  }
-
   printDailyLog(): void {
-    if (!this.dailyLog) {
-      return;
-    }
+    if (!this.dailyLog) return;
 
     const printWindow = window.open('', '_blank', 'width=1200,height=900');
     if (!printWindow) {
@@ -364,7 +338,6 @@ export class LessonPlanComponent {
         <td>${entry.scheduleLabel}<br><small>${entry.startTime} - ${entry.endTime}</small></td>
         <td>${entry.subjectName ?? 'Sin asignatura'}<br><small>${entry.teacherName ?? 'Sin docente'}</small></td>
         <td>${entry.didacticUnit ?? ''}</td>
-        <td>${entry.curricularSkill ?? ''}</td>
         <td>${entry.topic ?? ''}</td>
         <td>${entry.absences.map(absence => `${absence.enrollmentNumber} ${absence.studentName} (${this.absenceLabel(absence.absenceType)})`).join('<br>') || 'Sin inasistencias'}</td>
         <td>${entry.incidents.map(incident => `${incident.enrollmentNumber} ${incident.studentName}: ${incident.category} - ${incident.notes ?? ''}`).join('<br>') || 'Sin novedades'}</td>
@@ -417,7 +390,6 @@ export class LessonPlanComponent {
                 <th>Hora</th>
                 <th>Asignatura</th>
                 <th>Unidad didactica</th>
-                <th>Destreza</th>
                 <th>Tema</th>
                 <th>Inasistencias</th>
                 <th>Novedades</th>
@@ -437,20 +409,139 @@ export class LessonPlanComponent {
     printWindow.print();
   }
 
+  signatureLabel(signatureType: string): string {
+    switch (signatureType) {
+      case 'GENERAL_INSPECTOR': return 'Inspector general';
+      case 'TEACHER_TUTOR': return 'Docente tutor';
+      case 'WEEK_STUDENT': return 'Semanero';
+      default: return signatureType;
+    }
+  }
+
+  hasSignature(signatureType: string): boolean {
+    return !!this.getSignature(signatureType);
+  }
+
+  getSignature(signatureType: string): DailyLogSignatureItem | undefined {
+    return this.dailyLog?.signatures.find(signature => signature.signatureType === signatureType);
+  }
+
+  canOpenInspectorQr(): boolean {
+    if (!this.dailyLog) return false;
+    return this.hasSignature('TEACHER_TUTOR') && this.hasSignature('WEEK_STUDENT') && !this.hasSignature('GENERAL_INSPECTOR');
+  }
+
+  absenceLabel(absenceType: string): string {
+    switch (absenceType) {
+      case 'LATE': return 'Atraso';
+      case 'JUSTIFIED': return 'Justificada';
+      default: return 'Inasistencia';
+    }
+  }
+
+  private loadForCurrentDate(): void {
+    if (this.isTeacher) {
+      this.loadTeacherCoursesForDate(this.currentDate);
+    } else if (this.isReadOnly) {
+      this.loadStudentDailyLogForDate(this.currentDate);
+    } else if (this.canSearchLessonPlan) {
+      this.searchForm.controls.logDate.setValue(this.currentDate);
+      this.searchDailyLog();
+    }
+  }
+
+  private loadTeacherCoursesForDate(date: string): void {
+    const weekday = this.getWeekdayFromDate(date);
+    this.http.get<Array<{ courseId: number; courseName: string; periodId: number; periodName: string; scheduleLabel: string; subjectName: string; weekday: number; classroom: string | null }>>(
+      `${API_URL}/self/my-teaching-schedule`
+    ).pipe(
+      catchError(() => of([]))
+    ).subscribe(schedules => {
+      const daySchedules = schedules.filter(s => s.weekday === weekday);
+      const courseMap = new Map<number, { courseId: number; courseName: string; periodId: number; logDate: string; subjectNames: Set<string> }>();
+      for (const s of daySchedules) {
+        if (!courseMap.has(s.courseId)) {
+          courseMap.set(s.courseId, { courseId: s.courseId, courseName: s.courseName, periodId: s.periodId, logDate: date, subjectNames: new Set() });
+        }
+        courseMap.get(s.courseId)!.subjectNames.add(s.subjectName);
+      }
+      this.teacherTodayCourses = Array.from(courseMap.values()).map(c => ({
+        ...c,
+        subjectNames: Array.from(c.subjectNames)
+      }));
+
+      this.dailyLog = null;
+      this.teacherSelectedCourseId = null;
+      if (this.teacherTodayCourses.length > 0) {
+        this.selectTeacherCourse(this.teacherTodayCourses[0].courseId);
+      }
+    });
+  }
+
+  private loadStudentDailyLogForDate(date: string): void {
+    this.http.get<DailyLogItem>(`${API_URL}/self/my-course-daily-log?logDate=${date}`).pipe(
+      catchError(() => of(null))
+    ).subscribe(data => {
+      if (data) {
+        this.dailyLog = this.mapDailyLog(data);
+      } else {
+        this.dailyLog = null;
+      }
+    });
+  }
+
+  private loadTeacherToday(): void {
+    this.loadTeacherCoursesForDate(this.currentDate);
+  }
+
+  private loadOverview(): void {
+    this.http.get<ScheduleOverview>(`${API_URL}/schedules/overview`).pipe(
+      catchError(() => {
+        this.errorMessage = 'No se pudo cargar cursos y periodos.';
+        return of({ blocks: [], schedules: [], courses: [], periods: [], subjects: [], teachers: [] });
+      })
+    ).subscribe((overview) => {
+      this.overview = overview;
+      this.searchForm.patchValue({
+        courseId: overview.courses[0]?.id ?? 0,
+        logDate: this.currentDate
+      });
+      if (overview.courses.length > 0) {
+        this.searchDailyLog();
+      }
+    });
+  }
+
+  private loadStudentDailyLog(): void {
+    this.loadStudentDailyLogForDate(this.currentDate);
+  }
+
+  private mapDailyLog(log: DailyLogItem): DailyLogItem {
+    return { ...log, entries: log.entries.map(entry => this.mapEntry(entry)) };
+  }
+
+  private mapEntry(entry: DailyLogEntryItem): DailyLogEntryItem {
+    return { ...entry, signed: entry.teacherSignatureStatus === 'SIGNED' };
+  }
+
   private today(): string {
     return new Date().toISOString().slice(0, 10);
   }
 
+  private todayWeekday(): number {
+    const day = new Date().getDay();
+    return day === 0 ? 1 : day;
+  }
+
+  private getWeekdayFromDate(date: string): number {
+    const d = new Date(date + 'T12:00:00');
+    const day = d.getDay();
+    return day === 0 ? 1 : day;
+  }
+
   private async openQrDialog(path: string): Promise<void> {
     this.qrTargetUrl = `${window.location.origin}${path}`;
-    this.qrDataUrl = await QRCode.toDataURL(this.qrTargetUrl, {
-      width: 280,
-      margin: 1,
-      color: {
-        dark: '#111111',
-        light: '#ffffff'
-      }
-    });
+    this.qrDataUrl = await QRCode.toDataURL(this.qrTargetUrl, { width: 280, margin: 1, color: { dark: '#111111', light: '#ffffff' } });
     this.qrDialogOpen = true;
   }
 }
@@ -496,7 +587,6 @@ type DailyLogEntryItem = {
   subjectId: number | null;
   subjectName: string | null;
   didacticUnit: string | null;
-  curricularSkill: string | null;
   topic: string | null;
   closeToken: string;
   teacherSignatureStatus: 'PENDING' | 'SIGNED';

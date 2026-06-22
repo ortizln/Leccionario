@@ -18,7 +18,6 @@ public record MobileTodayEntryResponse(
         String subjectName,
         String teacherName,
         String didacticUnit,
-        String curricularSkill,
         String topic,
         String specificNotes,
         String generalNotes,

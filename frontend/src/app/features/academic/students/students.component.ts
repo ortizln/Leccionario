@@ -12,8 +12,6 @@ type StudentRepresentative = {
   emergencyContact?: string; emergencyPhone?: string; address?: string;
 };
 
-type GradeEntry = { id: number; subjectName: string; grade: number | null; periodName: string };
-
 @Component({
   selector: 'app-academic-students',
   standalone: true,
@@ -314,75 +312,7 @@ type GradeEntry = { id: number; subjectName: string; grade: number | null; perio
                               </div>
                             </div>
                           </div>
-                          <div class="col-12 col-md-4">
-                            <div class="card border-0 shadow-sm h-100">
-                              <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                  <h3 class="h6 mb-0"><i class="bi bi-bar-chart me-2"></i>Calificaciones</h3>
-                                  @if (canManageAcademic && !editingGrades && grades.length > 0) {
-                                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="startEditGrades()">
-                                      <i class="bi bi-pencil"></i>
-                                    </button>
-                                  }
-                                </div>
-                                @if (editingGrades) {
-                                  <div class="table-responsive" style="max-height:220px">
-                                    <table class="table table-sm mb-0">
-                                      <thead>
-                                        <tr>
-                                          <th class="small">Materia</th>
-                                          <th class="small text-end">Nota</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        @for (g of grades; track g.id) {
-                                          <tr>
-                                            <td class="small">{{ g.subjectName }}</td>
-                                            <td class="small text-end">
-                                              <input class="form-control form-control-sm text-end" type="number" step="0.1" min="0" max="10"
-                                                     style="width:80px;display:inline-block"
-                                                     [value]="pendingGrades.get(g.id) ?? ''"
-                                                     (input)="setGrade(g.id, $any($event.target).value)">
-                                            </td>
-                                          </tr>
-                                        }
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                  <div class="d-flex gap-2 mt-2">
-                                    <button class="btn btn-sm btn-primary" type="button" (click)="saveGrades(student.id)">Guardar notas</button>
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEditGrades()">Cancelar</button>
-                                  </div>
-                                } @else {
-                                  @if (grades.length > 0) {
-                                    <div class="table-responsive" style="max-height:200px">
-                                      <table class="table table-sm mb-0">
-                                        <thead>
-                                          <tr>
-                                            <th class="small">Materia</th>
-                                            <th class="small text-end">Nota</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          @for (g of grades; track g.id) {
-                                            <tr>
-                                              <td class="small">{{ g.subjectName }}</td>
-                                              <td class="small text-end fw-semibold">{{ g.grade ?? '--' }}</td>
-                                            </tr>
-                                          }
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  } @else {
-                                    <div class="d-flex flex-column align-items-center gap-2 py-3">
-                                      <i class="bi bi-journal-text text-muted" style="font-size:1.5rem"></i>
-                                      <p class="text-muted small mb-0">Sin calificaciones registradas.</p>
-                                    </div>
-                                  }
-                                }
-                              </div>
-                            </div>
-                          </div>
+
                         </div>
 
                         <div class="card border-0 shadow-sm">
@@ -451,15 +381,11 @@ export class StudentsComponent implements OnInit {
   scheduleBlocks: ScheduleBlockItem[] = [];
   allSchedules: CourseScheduleItem[] = [];
   allReps: StudentRepresentative[] = [];
-  grades: GradeEntry[] = [];
-
   selectedCourseFilter = 'all';
   search = '';
   editorOpen = false;
   editingId: number | null = null;
   selectedStudentId: number | null = null;
-  editingGrades = false;
-  pendingGrades: Map<number, number | null> = new Map();
 
   repSearchOpen = false;
   repSearchTerm = '';
@@ -536,9 +462,6 @@ export class StudentsComponent implements OnInit {
 
   toggleInfo(studentId: number): void {
     this.selectedStudentId = this.selectedStudentId === studentId ? null : studentId;
-    if (this.selectedStudentId === studentId) {
-      this.loadStudentGrades(studentId);
-    }
   }
 
   studentRep(studentId: number): StudentRepresentative | undefined {
@@ -557,49 +480,6 @@ export class StudentsComponent implements OnInit {
         const bBlock = this.scheduleBlocks.find(bk => bk.label === b.scheduleLabel);
         return (aBlock?.blockOrder ?? 0) - (bBlock?.blockOrder ?? 0);
       });
-  }
-
-  loadStudentGrades(studentId: number): void {
-    this.http.get<GradeEntry[]>(`${API_URL}/academic/grades?studentId=${studentId}`).pipe(
-      catchError(() => of([]))
-    ).subscribe(data => {
-      this.grades = data;
-    });
-  }
-
-  startEditGrades(): void {
-    this.editingGrades = true;
-    this.pendingGrades = new Map(this.grades.map(g => [g.id, g.grade]));
-  }
-
-  cancelEditGrades(): void {
-    this.editingGrades = false;
-    this.pendingGrades = new Map();
-  }
-
-  setGrade(gradeId: number, value: string): void {
-    const num = parseFloat(value);
-    this.pendingGrades.set(gradeId, isNaN(num) ? null : num);
-  }
-
-  saveGrades(studentId: number): void {
-    if (!this.canManageAcademic) return;
-    const updates: Array<{ id: number; grade: number | null }> = [];
-    for (const [id, grade] of this.pendingGrades) {
-      const original = this.grades.find(g => g.id === id);
-      if (original && original.grade !== grade) {
-        updates.push({ id, grade });
-      }
-    }
-    if (updates.length === 0) { this.cancelEditGrades(); return; }
-    this.http.put(`${API_URL}/academic/grades/batch`, { studentId, grades: updates }).pipe(
-      catchError(() => of(null))
-    ).subscribe({
-      next: () => {
-        this.cancelEditGrades();
-        this.loadStudentGrades(studentId);
-      }
-    });
   }
 
   startCreate(): void {

@@ -110,6 +110,18 @@ public class AcademicController {
         return ResponseEntity.ok(academicService.updateStudent(id, request, principal.getName()));
     }
 
+    @GetMapping("/teachers")
+    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    public ResponseEntity<List<AcademicTeacherResponse>> listTeachers() {
+        return ResponseEntity.ok(academicService.listTeachers());
+    }
+
+    @GetMapping("/areas")
+    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    public ResponseEntity<List<java.util.Map<String, String>>> listAreas() {
+        return ResponseEntity.ok(academicService.listAreas());
+    }
+
     @GetMapping("/teachers/{id}")
     @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
     public ResponseEntity<AcademicTeacherResponse> getTeacher(@PathVariable Long id) {

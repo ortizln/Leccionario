@@ -35,13 +35,13 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
 
     @GetMapping("/overview")
-    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    @PreAuthorize("hasAnyAuthority('ACADEMIC_VIEW', 'LESSONPLAN_VIEW')")
     public ResponseEntity<ScheduleOverviewResponse> overview() {
         return ResponseEntity.ok(scheduleService.getOverview());
     }
 
     @GetMapping("/by-course/{courseId}")
-    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    @PreAuthorize("hasAnyAuthority('ACADEMIC_VIEW', 'TEACHER_SELF_VIEW', 'STUDENT_SELF_VIEW')")
     public ResponseEntity<List<CourseScheduleResponse>> getCourseSchedules(@PathVariable Long courseId) {
         return ResponseEntity.ok(scheduleService.getCourseSchedules(courseId));
     }

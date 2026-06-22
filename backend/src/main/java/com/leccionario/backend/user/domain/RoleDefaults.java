@@ -63,7 +63,8 @@ public final class RoleDefaults {
                     PermissionCode.AUDIT_VIEW,
                     PermissionCode.SETTINGS_VIEW);
             case ESTUDIANTE -> EnumSet.of(
-                    PermissionCode.STUDENT_SELF_VIEW);
+                    PermissionCode.STUDENT_SELF_VIEW,
+                    PermissionCode.LESSONPLAN_VIEW);
             default -> EnumSet.noneOf(PermissionCode.class);
         };
     }

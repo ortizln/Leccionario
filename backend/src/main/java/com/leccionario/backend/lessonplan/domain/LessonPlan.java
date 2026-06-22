@@ -55,9 +55,6 @@ public class LessonPlan extends BaseEntity {
     @Column(length = 1000)
     private String observations;
 
-    @Column(nullable = false, length = 250)
-    private String curricularSkill;
-
     @Column(nullable = false)
     private boolean curriculumCompleted;
 }

@@ -14,6 +14,34 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
   selector: 'app-academic-courses',
   standalone: true,
   imports: [FormsModule, ReactiveFormsModule],
+  styles: [`
+    .modal-card-lg { max-width: 960px; }
+    .schedule-form-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.75rem;
+      align-items: end;
+    }
+    .schedule-form-actions {
+      display: flex;
+      flex-direction: column;
+      justify-content: end;
+    }
+    @media (max-width: 768px) {
+      .schedule-form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .schedule-form-actions {
+        grid-column: 1 / -1;
+      }
+      .schedule-form-actions label { display: none !important; }
+    }
+    @media (max-width: 480px) {
+      .schedule-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  `],
   template: `
     <div class="card border-0 shadow-sm h-100">
       <div class="card-body p-4 d-grid gap-4">
@@ -171,7 +199,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
 
     @if (scheduleModalOpen) {
       <div class="modal-shell">
-        <div class="modal-card" style="max-width: 960px;">
+        <div class="modal-card modal-card-lg">
           <div class="d-flex justify-content-between align-items-start mb-3">
             <h5 class="mb-0">Gesti&oacute;n de horario &mdash; {{ selectedCourseName }}</h5>
             <button class="btn-close" type="button" (click)="closeScheduleModal()"></button>
@@ -184,8 +212,8 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
             </div>
           }
 
-          <div class="row g-2 align-items-end mb-3">
-            <div class="col-12 col-md-2">
+          <div class="schedule-form-grid mb-3">
+            <div class="schedule-form-field">
               <label class="form-label fw-semibold small mb-1">Periodo</label>
               <select class="form-select form-select-sm" formControlName="sPeriodId">
                 @for (p of schedulePeriods; track p.id) {
@@ -193,7 +221,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                 }
               </select>
             </div>
-            <div class="col-12 col-md-1">
+            <div class="schedule-form-field">
               <label class="form-label fw-semibold small mb-1">D&iacute;a</label>
               <select class="form-select form-select-sm" formControlName="sWeekday">
                 @for (day of scheduleWeekdays; track day.value) {
@@ -201,7 +229,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                 }
               </select>
             </div>
-            <div class="col-12 col-md-2">
+            <div class="schedule-form-field">
               <label class="form-label fw-semibold small mb-1">Bloque</label>
               <select class="form-select form-select-sm" formControlName="sBlockId">
                 @for (b of classBlocks; track b.id) {
@@ -209,15 +237,15 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                 }
               </select>
             </div>
-            <div class="col-12 col-md-2">
+            <div class="schedule-form-field">
               <label class="form-label fw-semibold small mb-1">Docente</label>
               <select class="form-select form-select-sm" formControlName="sTeacherId" (change)="onScheduleTeacherChange()">
                 @for (t of scheduleTeachers; track t.id) {
-                  <option [value]="t.id">{{ t.name }} &middot; {{ t.specialization }}</option>
+                  <option [value]="t.id">{{ t.name }}</option>
                 }
               </select>
             </div>
-            <div class="col-12 col-md-2">
+            <div class="schedule-form-field">
               <label class="form-label fw-semibold small mb-1">Materia</label>
               <select class="form-select form-select-sm" formControlName="sSubjectId">
                 @for (sub of filteredScheduleSubjects; track sub.id) {
@@ -225,15 +253,16 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                 }
               </select>
             </div>
-            <div class="col-12 col-md-1">
+            <div class="schedule-form-field">
               <label class="form-label fw-semibold small mb-1">Aula</label>
               <input class="form-control form-control-sm" type="text" formControlName="sClassroom" placeholder="Aula 1">
             </div>
-            <div class="col-12 col-md-1 d-grid">
-              <button class="btn btn-sm btn-primary" type="button" (click)="saveSchedule()" [disabled]="!canManageAcademic">Asignar</button>
-            </div>
-            <div class="col-12 col-md-1 d-grid">
-              <button class="btn btn-sm btn-outline-primary" type="button" (click)="resetScheduleForm()">Limpiar</button>
+            <div class="schedule-form-actions">
+              <label class="form-label fw-semibold small mb-1 d-none d-md-block">&nbsp;</label>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-primary" type="button" (click)="saveSchedule()" [disabled]="!canManageAcademic">Asignar</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="resetScheduleForm()">Limpiar</button>
+              </div>
             </div>
           </div>
 
@@ -471,11 +500,11 @@ export class CoursesComponent implements OnInit {
     const raw = this.scheduleForm.getRawValue();
     const payload = {
       courseId: this.selectedCourseId,
-      periodId: raw.sPeriodId,
-      scheduleBlockId: raw.sBlockId,
-      teacherId: raw.sTeacherId,
-      subjectId: raw.sSubjectId,
-      weekday: raw.sWeekday,
+      periodId: Number(raw.sPeriodId),
+      scheduleBlockId: Number(raw.sBlockId),
+      teacherId: Number(raw.sTeacherId),
+      subjectId: Number(raw.sSubjectId),
+      weekday: Number(raw.sWeekday),
       classroom: raw.sClassroom || null
     };
     this.http.post<ScheduleItem>(`${API_URL}/schedules/course-assignments`, payload).pipe(

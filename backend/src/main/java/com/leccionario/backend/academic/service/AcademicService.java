@@ -3,6 +3,7 @@ package com.leccionario.backend.academic.service;
 import com.leccionario.backend.academic.domain.Course;
 import com.leccionario.backend.academic.domain.CourseSection;
 import com.leccionario.backend.academic.domain.CourseSubLevel;
+import com.leccionario.backend.academic.domain.Subject;
 import com.leccionario.backend.academic.dto.AcademicCourseRequest;
 import com.leccionario.backend.academic.dto.AcademicCourseResponse;
 import com.leccionario.backend.academic.dto.AcademicOverviewResponse;
@@ -29,6 +30,7 @@ import com.leccionario.backend.institution.domain.Institution;
 import com.leccionario.backend.institution.repository.InstitutionRepository;
 import com.leccionario.backend.schedule.repository.CourseScheduleRepository;
 import com.leccionario.backend.user.domain.Representative;
+import com.leccionario.backend.user.domain.Role;
 import com.leccionario.backend.user.domain.RoleDefaults;
 import com.leccionario.backend.user.domain.Student;
 import com.leccionario.backend.user.domain.Teacher;
@@ -532,27 +534,49 @@ public class AcademicService {
             java.util.List<String> subjects,
             java.util.List<String> courses,
             String actor) {
-        validateTeacherUniqueness(username, email, identification);
+
+        User existingUser = userRepository.findByUsernameIgnoreCase(username.trim()).orElse(null);
+        if (existingUser == null) {
+            existingUser = userRepository.findByEmailIgnoreCase(email.trim().toLowerCase()).orElse(null);
+        }
+        if (existingUser == null) {
+            existingUser = userRepository.findByIdentification(identification.trim()).orElse(null);
+        }
 
         Institution institution = institutionRepository.findAll().stream().findFirst()
                 .orElseThrow(() -> new BusinessException("No existe una institucion configurada para registrar docentes."));
 
-        User user = new User();
-        user.setInstitution(institution);
-        user.setPassword(passwordEncoder.encode("Docente123*"));
-        user.setRoles(Set.of(roleRepository.findByName(RoleDefaults.DOCENTE)
-                .orElseThrow(() -> new BusinessException("No existe el perfil de docente configurado."))));
-        user.setUsername(username.trim());
-        user.setEmail(email.trim().toLowerCase());
-        user.setIdentification(identification.trim());
-        user.setFirstName(firstName.trim());
-        user.setLastName(lastName.trim());
-        user.setEnabled(enabled);
+        Role teacherRole = roleRepository.findByName(RoleDefaults.DOCENTE)
+                .orElseThrow(() -> new BusinessException("No existe el perfil de docente configurado."));
 
-        User savedUser = userRepository.save(user);
+        User user;
+        if (existingUser != null) {
+            existingUser.setUsername(username.trim());
+            existingUser.setEmail(email.trim().toLowerCase());
+            existingUser.setIdentification(identification.trim());
+            existingUser.setFirstName(firstName.trim());
+            existingUser.setLastName(lastName.trim());
+            existingUser.setEnabled(enabled);
+            if (!existingUser.getRoles().contains(teacherRole)) {
+                existingUser.getRoles().add(teacherRole);
+            }
+            user = userRepository.save(existingUser);
+        } else {
+            user = new User();
+            user.setInstitution(institution);
+            user.setPassword(passwordEncoder.encode("Docente123*"));
+            user.setRoles(Set.of(teacherRole));
+            user.setUsername(username.trim());
+            user.setEmail(email.trim().toLowerCase());
+            user.setIdentification(identification.trim());
+            user.setFirstName(firstName.trim());
+            user.setLastName(lastName.trim());
+            user.setEnabled(enabled);
+            user = userRepository.save(user);
+        }
 
         Teacher teacher = new Teacher();
-        teacher.setUser(savedUser);
+        teacher.setUser(user);
         teacher.setSpecialization(specialization.trim());
         if (subjects != null) {
             teacher.setSubjects(new java.util.ArrayList<>(subjects.stream().map(String::trim).toList()));
@@ -562,7 +586,7 @@ public class AcademicService {
         }
         Teacher savedTeacher = teacherRepository.save(teacher);
 
-        auditService.log(actor, "CREATE_TEACHER", "ACADEMIC", savedUser.getUsername() + " -> " + specialization.trim());
+        auditService.log(actor, "CREATE_TEACHER", "ACADEMIC", user.getUsername() + " -> " + specialization.trim());
         return savedTeacher;
     }
 
@@ -643,6 +667,22 @@ public class AcademicService {
         return teacherRepository.findAll().stream()
                 .sorted(Comparator.comparing(teacher -> teacher.getUser().getLastName() + teacher.getUser().getFirstName()))
                 .map(teacher -> toTeacherResponse(teacher, schedulesByTeacher.getOrDefault(teacher.getId(), java.util.List.of())))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<AcademicTeacherResponse> listTeachers() {
+        return teacherResponses();
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<java.util.Map<String, String>> listAreas() {
+        return subjectRepository.findAll().stream()
+                .map(Subject::getCurriculumArea)
+                .filter(area -> area != null && !area.isBlank())
+                .distinct()
+                .sorted()
+                .map(area -> java.util.Map.of("name", area))
                 .toList();
     }
 

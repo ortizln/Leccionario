@@ -50,7 +50,6 @@ public class LessonPlanService {
         entity.setActivities(request.activities());
         entity.setResources(request.resources());
         entity.setObservations(request.observations());
-        entity.setCurricularSkill(request.curricularSkill());
         entity.setCurriculumCompleted(request.curriculumCompleted());
 
         LessonPlan saved = lessonPlanRepository.save(entity);

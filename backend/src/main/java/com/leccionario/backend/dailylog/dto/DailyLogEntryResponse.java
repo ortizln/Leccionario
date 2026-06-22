@@ -12,7 +12,6 @@ public record DailyLogEntryResponse(
         Long subjectId,
         String subjectName,
         String didacticUnit,
-        String curricularSkill,
         String topic,
         String closeToken,
         String teacherSignatureStatus,

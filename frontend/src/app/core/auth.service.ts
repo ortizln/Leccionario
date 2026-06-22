@@ -58,6 +58,10 @@ export class AuthService {
     return this.roles().includes('ROLE_ADMINISTRADOR');
   }
 
+  hasRole(role: string): boolean {
+    return this.roles().includes(role);
+  }
+
   permissions(): string[] {
     return this.session()?.permissions ?? [];
   }

@@ -10,6 +10,5 @@ public record LessonPlanResponse(
         String course,
         String topic,
         String objective,
-        String curricularSkill,
         boolean curriculumCompleted) {
 }

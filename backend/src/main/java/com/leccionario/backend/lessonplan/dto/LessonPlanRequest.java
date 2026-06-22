@@ -15,6 +15,5 @@ public record LessonPlanRequest(
         @NotBlank String activities,
         @NotBlank String resources,
         String observations,
-        @NotBlank String curricularSkill,
         boolean curriculumCompleted) {
 }

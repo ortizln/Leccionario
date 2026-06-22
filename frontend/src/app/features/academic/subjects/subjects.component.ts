@@ -32,49 +32,18 @@ type Subject = { id: number; name: string; code: string; curriculumArea: string 
             <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-center">
                 <h3 class="h6 mb-0"><i class="bi bi-folder me-2"></i>Areas curriculares</h3>
-                <button class="btn btn-sm btn-outline-primary" type="button" (click)="areaEditorOpen = !areaEditorOpen">
-                  <i class="bi" [class.bi-gear]="!areaEditorOpen" [class.bi-x]="areaEditorOpen"></i>
-                  {{ areaEditorOpen ? 'Cerrar' : 'Gestionar' }}
-                </button>
+                <span class="text-muted small">Se crean automaticamente al agregar materias</span>
               </div>
-              @if (areaEditorOpen) {
-                <div class="mt-3 d-grid gap-3">
-                  <form [formGroup]="areaForm" class="row g-2" (ngSubmit)="saveArea()">
-                    <div class="col-12 col-md-6">
-                      <input class="form-control form-control-sm" type="text" formControlName="name"
-                             placeholder="Nueva area curricular">
-                    </div>
-                    <div class="col-12 col-md-3">
-                      <button class="btn btn-sm btn-primary w-100" type="submit" [disabled]="areaForm.invalid">
-                        <i class="bi bi-plus-lg me-1"></i>Agregar
-                      </button>
-                    </div>
-                  </form>
-                  <div class="d-flex flex-wrap gap-2">
-                    @for (area of areas; track area; let idx = $index) {
-                      <div class="d-flex align-items-center gap-2 border rounded px-3 py-2">
-                        @if (editingAreaIndex === idx) {
-                          <input class="form-control form-control-sm" type="text" style="width:200px"
-                                 [value]="area" #renameInput
-                                 (keyup.enter)="renameArea(idx, renameInput.value)"
-                                 (blur)="renameArea(idx, renameInput.value)">
-                        } @else {
-                          <span class="small fw-semibold">{{ area }}</span>
-                          <span class="badge text-bg-light small">{{ subjectsByArea(area).length }}</span>
-                          <button class="btn btn-sm btn-link text-muted p-0" type="button" (click)="editArea(idx)">
-                            <i class="bi bi-pencil"></i>
-                          </button>
-                          <button class="btn btn-sm btn-link text-danger p-0" type="button" (click)="deleteArea(area, idx)">
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        }
-                      </div>
-                    } @empty {
-                      <p class="text-muted small mb-0">No hay areas registradas. Las areas se crean automaticamente al asignar una materia.</p>
-                    }
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                @for (area of areas; track area) {
+                  <div class="d-flex align-items-center gap-2 border rounded px-3 py-2">
+                    <span class="small fw-semibold">{{ area }}</span>
+                    <span class="badge text-bg-light small">{{ subjectsByArea(area).length }}</span>
                   </div>
-                </div>
-              }
+                } @empty {
+                  <p class="text-muted small mb-0">No hay areas registradas. Las areas se crean automaticamente al asignar una materia.</p>
+                }
+              </div>
             </div>
           </div>
         }
@@ -236,17 +205,10 @@ export class SubjectsComponent implements OnInit {
   editorOpen = false;
   editingId: number | null = null;
   selectedSubjectId: number | null = null;
-  areaEditorOpen = false;
-  editingAreaIndex: number | null = null;
-
   form = this.fb.nonNullable.group({
     name: ['', Validators.required],
     code: ['', Validators.required],
     curriculumArea: ['', Validators.required]
-  });
-
-  areaForm = this.fb.nonNullable.group({
-    name: ['', Validators.required]
   });
 
   ngOnInit(): void {
@@ -301,75 +263,6 @@ export class SubjectsComponent implements OnInit {
 
   toggleTeacherPanel(subject: Subject): void {
     this.selectedSubjectId = this.selectedSubjectId === subject.id ? null : subject.id;
-  }
-
-  saveArea(): void {
-    if (!this.canManageAcademic || this.areaForm.invalid) return;
-    const name = this.areaForm.controls.name.value.trim();
-    if (!name || this.areas.includes(name)) return;
-    this.http.post(`${API_URL}/academic/areas`, { name }).pipe(
-      catchError(() => {
-        this.areas = [...this.areas, name].sort();
-        return of(null);
-      })
-    ).subscribe({
-      next: (res) => {
-        if (res) {
-          this.areas = [...this.areas, (res as any).name || name].sort();
-        }
-        this.areaForm.reset({ name: '' });
-      }
-    });
-  }
-
-  editArea(idx: number): void {
-    this.editingAreaIndex = idx;
-  }
-
-  renameArea(idx: number, newName: string): void {
-    const oldName = this.areas[idx];
-    if (!newName.trim() || newName === oldName) {
-      this.editingAreaIndex = null;
-      return;
-    }
-    const payload = { name: newName.trim() };
-    this.http.put(`${API_URL}/academic/areas/${encodeURIComponent(oldName)}`, payload).pipe(
-      catchError(() => {
-        this.areas[idx] = newName.trim();
-        for (const s of this.subjects) {
-          if (s.curriculumArea === oldName) {
-            s.curriculumArea = newName.trim();
-          }
-        }
-        return of(null);
-      })
-    ).subscribe({
-      next: () => {
-        this.areas[idx] = newName.trim();
-        for (const s of this.subjects) {
-          if (s.curriculumArea === oldName) {
-            s.curriculumArea = newName.trim();
-          }
-        }
-        this.editingAreaIndex = null;
-      }
-    });
-  }
-
-  deleteArea(area: string, idx: number): void {
-    if (!this.canManageAcademic) return;
-    const count = this.subjectsByArea(area).length;
-    if (count > 0 && !confirm(`El area "${area}" tiene ${count} materia(s). ¿Eliminar de todas formas?`)) return;
-    this.http.delete(`${API_URL}/academic/areas/${encodeURIComponent(area)}`).pipe(
-      catchError(() => {
-        this.areas.splice(idx, 1);
-        return of(null);
-      })
-    ).subscribe({
-      next: () => {
-        this.areas.splice(idx, 1);
-      }
-    });
   }
 
   startCreate(): void {

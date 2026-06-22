@@ -13,5 +13,7 @@ public record CourseScheduleResponse(
         Long teacherId,
         String teacherName,
         short weekday,
+        String startTime,
+        String endTime,
         String classroom) {
 }

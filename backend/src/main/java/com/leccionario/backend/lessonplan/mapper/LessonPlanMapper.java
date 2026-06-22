@@ -16,7 +16,6 @@ public class LessonPlanMapper {
                 entity.getCourse().getName() + " " + entity.getCourse().getParallel(),
                 entity.getTopic(),
                 entity.getObjective(),
-                entity.getCurricularSkill(),
                 entity.isCurriculumCompleted());
     }
 }

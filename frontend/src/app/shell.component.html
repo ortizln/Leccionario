@@ -34,12 +34,12 @@
             <a class="nav-link app-nav-link" routerLink="/app" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
               <i class="bi bi-speedometer2 me-2"></i>Dashboard
             </a>
-            @if (auth.hasPermission('STUDENT_SELF_VIEW')) {
+            @if (auth.hasPermission('STUDENT_SELF_VIEW') && !auth.isAdmin()) {
               <a class="nav-link app-nav-link" routerLink="/app/my-course" routerLinkActive="active">
                 <i class="bi bi-mortarboard me-2"></i>Mi curso
               </a>
             }
-            @if (auth.hasPermission('TEACHER_SELF_VIEW')) {
+            @if (auth.hasPermission('TEACHER_SELF_VIEW') && !auth.isAdmin() && !auth.hasRole('ROLE_ADMINISTRATIVO')) {
               <a class="nav-link app-nav-link" routerLink="/app/my-teaching" routerLinkActive="active">
                 <i class="bi bi-person-workspace me-2"></i>Mi carga academica
               </a>

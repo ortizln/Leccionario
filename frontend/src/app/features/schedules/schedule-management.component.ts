@@ -189,7 +189,16 @@ export class ScheduleManagementComponent {
       return;
     }
 
-    const payload = this.scheduleForm.getRawValue();
+    const raw = this.scheduleForm.getRawValue();
+    const payload = {
+      courseId: Number(raw.courseId),
+      periodId: Number(raw.periodId),
+      scheduleBlockId: Number(raw.scheduleBlockId),
+      subjectId: Number(raw.subjectId),
+      teacherId: Number(raw.teacherId),
+      weekday: Number(raw.weekday),
+      classroom: raw.classroom || null
+    };
     const request$ = this.editingScheduleId
       ? this.http.put(`${API_URL}/schedules/course-assignments/${this.editingScheduleId}`, payload)
       : this.http.post(`${API_URL}/schedules/course-assignments`, payload);

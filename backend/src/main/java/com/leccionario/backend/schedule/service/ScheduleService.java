@@ -446,6 +446,8 @@ public class ScheduleService {
                 schedule.getTeacher().getId(),
                 schedule.getTeacher().getUser().getFirstName() + " " + schedule.getTeacher().getUser().getLastName(),
                 schedule.getWeekday(),
+                schedule.getScheduleBlock().getStartTime() != null ? schedule.getScheduleBlock().getStartTime().toString() : "",
+                schedule.getScheduleBlock().getEndTime() != null ? schedule.getScheduleBlock().getEndTime().toString() : "",
                 schedule.getClassroom());
     }
 }

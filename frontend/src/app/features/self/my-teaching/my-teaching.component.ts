@@ -1,78 +1,248 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { API_URL } from '../../../core/api.config';
+import { AuthService } from '../../../core/auth.service';
 import { AcademicStudent } from '../../academic/academic.models';
 import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-my-teaching',
   standalone: true,
+  imports: [FormsModule],
   template: `
     <div class="d-grid gap-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-          <h2 class="h4 mb-1">Mi carga academica</h2>
-          <p class="text-muted mb-0">Horarios y estudiantes asignados.</p>
-        </div>
-      </div>
+      @if (errorMessage) {
+        <div class="alert alert-warning mb-0">{{ errorMessage }}</div>
+      }
 
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <h3 class="h5 mb-3">Mi horario de clases</h3>
-          <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
-              <thead>
-                <tr>
-                  <th>Dia</th>
-                  <th>Bloque</th>
-                  <th>Curso</th>
-                  <th>Materia</th>
-                  <th>Aula</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (s of schedules; track s.id) {
-                  <tr>
-                    <td>{{ weekdayLabel(s.weekday) }}</td>
-                    <td>{{ s.scheduleLabel }}</td>
-                    <td>{{ s.courseName }}</td>
-                    <td>{{ s.subjectName }}</td>
-                    <td>{{ s.classroom || '-' }}</td>
-                  </tr>
-                } @empty {
-                  <tr><td colspan="5" class="text-center text-muted py-4">Sin horario asignado.</td></tr>
-                }
-              </tbody>
-            </table>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h2 class="h5 mb-0">Mi carga academica</h2>
+              <p class="text-muted small mb-0">
+                Periodo {{ journal?.periodName || '...' }} · Horarios y leccionario por dia.
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-          <h3 class="h5 mb-3">Mis estudiantes</h3>
-          <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
-              <thead>
-                <tr>
-                  <th>Matricula</th>
-                  <th>Nombres</th>
-                  <th>Curso</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (s of students; track s.id) {
-                  <tr>
-                    <td>{{ s.enrollmentNumber }}</td>
-                    <td>{{ s.fullName }}</td>
-                    <td>{{ s.courseName }}</td>
-                  </tr>
-                } @empty {
-                  <tr><td colspan="3" class="text-center text-muted py-4">Sin estudiantes asignados.</td></tr>
-                }
-              </tbody>
-            </table>
-          </div>
+          <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+              <button class="nav-link" [class.active]="activeTab === 'cursos'" (click)="activeTab = 'cursos'">
+                <i class="bi bi-book me-1"></i>Cursos
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" [class.active]="activeTab === 'leccionario'" (click)="activeTab = 'leccionario'">
+                <i class="bi bi-journal-text me-1"></i>Leccionario
+              </button>
+            </li>
+          </ul>
+
+          @if (activeTab === 'cursos') {
+            <div class="row g-3 mb-4">
+              @for (course of courses; track course.courseId) {
+                <div class="col-12 col-md-6 col-xl-4">
+                  <div class="card h-100" [class.border-primary]="selectedCourseId === course.courseId"
+                       [class.border-2]="selectedCourseId === course.courseId"
+                       style="cursor: pointer" (click)="selectCourse(course.courseId)">
+                    <div class="card-body">
+                      <div class="fw-semibold mb-1">{{ course.courseName }} {{ course.parallel }}</div>
+                      <div class="small text-muted mb-2">
+                        {{ course.level }} · {{ course.scheduleCount }} bloques
+                      </div>
+                      <div class="d-flex flex-wrap gap-1">
+                        @for (subj of course.subjectNames; track subj) {
+                          <span class="badge rounded-pill text-bg-light">{{ subj }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              } @empty {
+                <div class="col-12">
+                  <div class="text-center text-muted py-4">
+                    <i class="bi bi-calendar-x fs-1 mb-2 d-block"></i>
+                    No tienes cursos asignados.
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (selectedCourseId) {
+              <div class="row g-4">
+                <div class="col-12 col-lg-6">
+                  <h3 class="h5 mb-3">Horario del curso</h3>
+                  <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                      <thead>
+                        <tr>
+                          <th>Dia</th>
+                          <th>Bloque</th>
+                          <th>Materia</th>
+                          <th>Aula</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (entry of courseSchedule; track entry.id) {
+                          <tr>
+                            <td class="align-top">{{ weekdayLabel(entry.weekday) }}</td>
+                            <td class="align-top">
+                              <div class="fw-semibold">{{ entry.scheduleLabel }}</div>
+                              <div class="small text-muted">{{ entry.startTime }} - {{ entry.endTime }}</div>
+                            </td>
+                            <td class="align-top">{{ entry.subjectName }}</td>
+                            <td class="align-top">{{ entry.classroom || '-' }}</td>
+                          </tr>
+                        } @empty {
+                          <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                              Sin horario registrado para este curso.
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                  <h3 class="h5 mb-3">Estudiantes del curso ({{ courseStudents.length }})</h3>
+                  <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                      <thead>
+                        <tr>
+                          <th>Matricula</th>
+                          <th>Nombres</th>
+                          <th>Identificacion</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (s of courseStudents; track s.id) {
+                          <tr>
+                            <td>{{ s.enrollmentNumber }}</td>
+                            <td>{{ s.fullName }}</td>
+                            <td>{{ s.identification }}</td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="3" class="text-center text-muted py-4">Sin estudiantes en este curso.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            }
+          }
+
+          @if (activeTab === 'leccionario') {
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div></div>
+              <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="goToday()">Hoy</button>
+                <button class="btn btn-sm btn-outline-primary" type="button" (click)="prevWeek()">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-primary" type="button" (click)="nextWeek()">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <ul class="nav nav-tabs mb-4">
+              @for (day of weekDays; track day.date) {
+                <li class="nav-item">
+                  <button class="nav-link text-center" [class.active]="selectedWeekday === day.weekday"
+                          (click)="selectDay(day.weekday)">
+                    <div class="small">{{ day.dayLabel }}</div>
+                    <div class="small fw-semibold">{{ day.numDay }}</div>
+                  </button>
+                </li>
+              }
+            </ul>
+
+            @if (selectedDay(); as day) {
+              <div class="mb-3 text-muted small">
+                {{ day.logDate }} · {{ day.entries.length }} bloques
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>Bloque</th>
+                      <th>Curso</th>
+                      <th>Materia</th>
+                      <th>Unidad didactica</th>
+                      <th>Tema</th>
+                      <th>Estado</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (entry of day.entries; track entry.entryId) {
+                      <tr>
+                        <td class="align-top">
+                          <div class="fw-semibold">{{ entry.scheduleLabel }}</div>
+                          <div class="small text-muted">{{ entry.startTime }} - {{ entry.endTime }}</div>
+                        </td>
+                        <td class="align-top">{{ entry.courseName }}</td>
+                        <td class="align-top">{{ entry.subjectName }}</td>
+                        <td class="align-top">
+                          @if (editingEntryId === entry.entryId) {
+                            <textarea class="form-control form-control-sm" rows="2"
+                                      [(ngModel)]="entry.didacticUnit"
+                                      placeholder="Unidad didactica"></textarea>
+                          } @else {
+                            <span>{{ entry.didacticUnit || '-' }}</span>
+                          }
+                        </td>
+                        <td class="align-top">
+                          @if (editingEntryId === entry.entryId) {
+                            <textarea class="form-control form-control-sm" rows="2"
+                                      [(ngModel)]="entry.topic"
+                                      placeholder="Tema"></textarea>
+                          } @else {
+                            <span>{{ entry.topic || '-' }}</span>
+                          }
+                        </td>
+                        <td class="align-top">
+                          <span class="badge" [class.text-bg-success]="entry.teacherSignatureStatus === 'SIGNED'"
+                                [class.text-bg-secondary]="entry.teacherSignatureStatus !== 'SIGNED'">
+                            {{ entry.teacherSignatureStatus === 'SIGNED' ? 'Firmado' : 'Pendiente' }}
+                          </span>
+                        </td>
+                        <td class="text-end align-top">
+                          @if (editingEntryId === entry.entryId) {
+                            <div class="d-grid gap-1">
+                              <button class="btn btn-sm btn-primary" (click)="saveEntry(entry)">Guardar</button>
+                              <button class="btn btn-sm btn-outline-secondary" (click)="editingEntryId = null">Cancelar</button>
+                            </div>
+                          } @else {
+                            <button class="btn btn-sm btn-outline-primary"
+                                    [disabled]="entry.teacherSignatureStatus === 'SIGNED'"
+                                    (click)="editingEntryId = entry.entryId">
+                              Editar
+                            </button>
+                          }
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                          Sin clases programadas para este dia.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <div class="text-center text-muted py-4">
+                Selecciona un dia para ver el leccionario.
+              </div>
+            }
+          }
         </div>
       </div>
     </div>
@@ -80,21 +250,220 @@ import { catchError, of } from 'rxjs';
 })
 export class MyTeachingComponent implements OnInit {
   private http = inject(HttpClient);
+  private auth = inject(AuthService);
 
+  canManage = this.auth.hasPermission('LESSONPLAN_MANAGE');
+  errorMessage = '';
+  activeTab: 'cursos' | 'leccionario' = 'cursos';
   students: AcademicStudent[] = [];
-  schedules: Array<{ id: number; courseId: number; courseName: string; periodId: number; periodName: string; scheduleLabel: string; subjectId: number; subjectName: string; teacherId: number; teacherName: string; weekday: number; classroom: string | null }> = [];
+  courses: TeacherCourse[] = [];
+  selectedCourseId: number | null = null;
+  courseSchedule: CourseScheduleEntry[] = [];
+  courseStudents: AcademicStudent[] = [];
+  journal: WeeklyJournalResponse | null = null;
+  selectedWeekday = this.todayWeekday();
+  editingEntryId: number | null = null;
+  currentDate = this.today();
+  weekOffset = 0;
 
   ngOnInit(): void {
-    this.http.get<AcademicStudent[]>(`${API_URL}/self/my-students`).pipe(
-      catchError(() => of([]))
-    ).subscribe(data => this.students = data);
-
-    this.http.get<any[]>(`${API_URL}/self/my-teaching-schedule`).pipe(
-      catchError(() => of([]))
-    ).subscribe(data => this.schedules = data);
+    this.loadCourses();
+    this.loadJournal();
   }
 
-  weekdayLabel(w: number): string {
-    return ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'][w - 1] || '';
+  get weekDays(): Array<{ date: string; dayLabel: string; numDay: string; weekday: number }> {
+    const current = new Date(this.currentDate + 'T12:00:00');
+    const monday = new Date(current);
+    monday.setDate(current.getDate() - ((current.getDay() + 6) % 7));
+    const labels = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return {
+        date: d.toISOString().slice(0, 10),
+        dayLabel: labels[i],
+        numDay: d.getDate().toString(),
+        weekday: i + 1
+      };
+    });
+  }
+
+  selectedDay(): WeeklyJournalDayResponse | undefined {
+    return this.journal?.days.find(d => d.weekday === this.selectedWeekday);
+  }
+
+  selectDay(weekday: number): void {
+    this.selectedWeekday = weekday;
+  }
+
+  selectCourse(courseId: number): void {
+    this.selectedCourseId = courseId;
+    this.loadCourseSchedule(courseId);
+    this.loadCourseStudents(courseId);
+  }
+
+  prevWeek(): void {
+    this.weekOffset--;
+    this.updateCurrentDateFromOffset();
+    this.loadJournal();
+  }
+
+  nextWeek(): void {
+    this.weekOffset++;
+    this.updateCurrentDateFromOffset();
+    this.loadJournal();
+  }
+
+  goToday(): void {
+    this.weekOffset = 0;
+    this.currentDate = this.today();
+    this.selectedWeekday = this.todayWeekday();
+    this.loadJournal();
+  }
+
+  weekdayLabel(weekday: number): string {
+    const labels = ['', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
+    return labels[weekday] || '';
+  }
+
+  saveEntry(entry: JournalEntry): void {
+    this.http.put(`${API_URL}/daily-logs/${entry.dailyLogId}/entries/${entry.entryId}`, {
+      didacticUnit: entry.didacticUnit,
+      topic: entry.topic,
+      specificNotes: entry.specificNotes,
+      generalNotes: entry.generalNotes,
+      signed: entry.teacherSignatureStatus === 'SIGNED'
+    }).subscribe({
+      next: () => {
+        this.editingEntryId = null;
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message ?? 'No se pudo guardar la entrada.';
+      }
+    });
+  }
+
+  private loadCourses(): void {
+    this.http.get<TeacherCourse[]>(`${API_URL}/self/my-courses`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => {
+      this.courses = data;
+      if (data.length > 0) {
+        this.selectCourse(data[0].courseId);
+      }
+    });
+  }
+
+  private loadCourseSchedule(courseId: number): void {
+    this.http.get<CourseScheduleEntry[]>(`${API_URL}/schedules/by-course/${courseId}`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => this.courseSchedule = data);
+  }
+
+  private loadCourseStudents(courseId: number): void {
+    this.http.get<AcademicStudent[]>(`${API_URL}/self/my-courses/${courseId}/students`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => this.courseStudents = data);
+  }
+
+  private loadJournal(): void {
+    this.http.get<WeeklyJournalResponse>(`${API_URL}/self/my-weekly-journal?weekOffset=${this.weekOffset}`).pipe(
+      catchError(() => {
+        this.errorMessage = 'No se pudo cargar el leccionario semanal.';
+        return of(null);
+      })
+    ).subscribe(data => {
+      this.journal = data;
+      if (data?.days) {
+        const todayWeekday = this.todayWeekday();
+        const todayEntry = data.days.find(d => d.weekday === todayWeekday && d.entries.length > 0);
+        if (todayEntry) {
+          this.selectedWeekday = todayWeekday;
+        } else {
+          const firstWithEntries = data.days.find(d => d.entries.length > 0);
+          if (firstWithEntries) {
+            this.selectedWeekday = firstWithEntries.weekday;
+          }
+        }
+      }
+    });
+  }
+
+  private updateCurrentDateFromOffset(): void {
+    const today = new Date();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - ((today.getDay() + 6) % 7) + this.weekOffset * 7);
+    this.currentDate = monday.toISOString().slice(0, 10);
+  }
+
+  private today(): string {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  private todayWeekday(): number {
+    const day = new Date().getDay();
+    return day === 0 ? 1 : day;
   }
 }
+
+type TeacherCourse = {
+  courseId: number;
+  courseName: string;
+  parallel: string;
+  level: string;
+  section: string | null;
+  subLevel: string | null;
+  grade: number | null;
+  subjectNames: string[];
+  scheduleCount: number;
+};
+
+type CourseScheduleEntry = {
+  id: number;
+  courseId: number;
+  courseName: string;
+  periodId: number;
+  periodName: string;
+  scheduleBlockId: number;
+  scheduleLabel: string;
+  subjectId: number;
+  subjectName: string;
+  teacherId: number;
+  teacherName: string;
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  classroom: string | null;
+};
+
+type WeeklyJournalResponse = {
+  teacherName: string;
+  periodName: string;
+  weekStart: string;
+  days: WeeklyJournalDayResponse[];
+};
+
+type WeeklyJournalDayResponse = {
+  weekday: number;
+  weekdayLabel: string;
+  logDate: string;
+  entries: JournalEntry[];
+};
+
+type JournalEntry = {
+  dailyLogId: number;
+  entryId: number;
+  courseName: string;
+  scheduleLabel: string;
+  startTime: string;
+  endTime: string;
+  subjectName: string;
+  teacherName: string;
+  blockType: string;
+  didacticUnit: string | null;
+  topic: string | null;
+  specificNotes: string | null;
+  generalNotes: string | null;
+  teacherSignatureStatus: string;
+  closeToken: string;
+};

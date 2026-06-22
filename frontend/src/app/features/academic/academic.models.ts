@@ -83,6 +83,8 @@ export type CourseScheduleItem = {
   teacherId: number;
   teacherName: string;
   weekday: number;
+  startTime: string;
+  endTime: string;
   classroom: string | null;
 };
 
