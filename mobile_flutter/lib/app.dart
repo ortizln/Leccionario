@@ -8,6 +8,7 @@ import 'features/auth/login_page.dart';
 import 'features/daily_log/daily_log_repository.dart';
 import 'features/daily_log/today_page.dart';
 import 'features/settings/settings_page.dart';
+import 'features/teacher/teacher_entry.dart';
 
 class LeccionarioMobileApp extends StatefulWidget {
   const LeccionarioMobileApp({super.key});
@@ -22,6 +23,7 @@ class _LeccionarioMobileAppState extends State<LeccionarioMobileApp> {
   late final DailyLogRepository _dailyLogRepository;
   bool _ready = false;
   bool _loggedIn = false;
+  bool _isTeacher = false;
   int _themeIndex = 0;
   String? _initError;
 
@@ -50,6 +52,7 @@ class _LeccionarioMobileAppState extends State<LeccionarioMobileApp> {
       final session = await _authRepository.readSession();
       setState(() {
         _loggedIn = session != null;
+        _isTeacher = session?.primaryRole == 'ROLE_DOCENTE';
         _ready = true;
         _initError = null;
       });
@@ -162,15 +165,24 @@ class _LeccionarioMobileAppState extends State<LeccionarioMobileApp> {
       ],
       theme: AppConfig.themeData(_themeIndex),
       home: _loggedIn
-          ? TodayPage(
-              authRepository: _authRepository,
-              dailyLogRepository: _dailyLogRepository,
-              onLogout: () async {
-                await _authRepository.logout();
-                setState(() => _loggedIn = false);
-              },
-              onOpenSettings: _openSettings,
-            )
+          ? _isTeacher
+              ? TeacherEntryPoint(
+                  authRepository: _authRepository,
+                  onLogout: () async {
+                    await _authRepository.logout();
+                    setState(() { _loggedIn = false; _isTeacher = false; });
+                  },
+                  onOpenSettings: _openSettings,
+                )
+              : TodayPage(
+                  authRepository: _authRepository,
+                  dailyLogRepository: _dailyLogRepository,
+                  onLogout: () async {
+                    await _authRepository.logout();
+                    setState(() => _loggedIn = false);
+                  },
+                  onOpenSettings: _openSettings,
+                )
           : LoginPage(
               authRepository: _authRepository,
               onLoggedIn: () => setState(() => _loggedIn = true),
