@@ -212,7 +212,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
             </div>
           }
 
-          <div class="schedule-form-grid mb-3">
+          <form [formGroup]="scheduleForm" class="schedule-form-grid mb-3">
             <div class="schedule-form-field">
               <label class="form-label fw-semibold small mb-1">Periodo</label>
               <select class="form-select form-select-sm" formControlName="sPeriodId">
@@ -264,7 +264,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                 <button class="btn btn-sm btn-outline-secondary" type="button" (click)="resetScheduleForm()">Limpiar</button>
               </div>
             </div>
-          </div>
+          </form>
 
           @if (courseSchedules.length > 0) {
             <div class="table-responsive">
