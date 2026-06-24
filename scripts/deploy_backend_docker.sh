@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 IMAGE_NAME="${IMAGE_NAME:-leccionario-backend:latest}"
 CONTAINER_NAME="${CONTAINER_NAME:-leccionario-backend}"
@@ -21,25 +21,22 @@ if docker ps -a --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
   docker rm -f "${CONTAINER_NAME}"
 fi
 
-RUN_ARGS=(
-  run -d
-  --name "${CONTAINER_NAME}"
-  --restart unless-stopped
-  -p "${HOST_PORT}:${CONTAINER_PORT}"
-  -e "SPRING_DATASOURCE_URL=${DB_URL}"
-  -e "SPRING_DATASOURCE_USERNAME=${DB_USERNAME}"
-  -e "SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}"
-  -e "SECURITY_JWT_SECRET=${JWT_SECRET}"
-)
-
-if [[ -n "${SPRING_PROFILES_ACTIVE}" ]]; then
-  RUN_ARGS+=(-e "SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}")
+EXTRA_ARGS=""
+if [ -n "${SPRING_PROFILES_ACTIVE}" ]; then
+  EXTRA_ARGS="-e SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}"
 fi
 
-RUN_ARGS+=("${IMAGE_NAME}")
-
 echo "[backend] Iniciando contenedor ${CONTAINER_NAME}"
-docker "${RUN_ARGS[@]}"
+docker run -d \
+  --name "${CONTAINER_NAME}" \
+  --restart unless-stopped \
+  -p "${HOST_PORT}:${CONTAINER_PORT}" \
+  -e "SPRING_DATASOURCE_URL=${DB_URL}" \
+  -e "SPRING_DATASOURCE_USERNAME=${DB_USERNAME}" \
+  -e "SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}" \
+  -e "SECURITY_JWT_SECRET=${JWT_SECRET}" \
+  ${EXTRA_ARGS} \
+  "${IMAGE_NAME}"
 
 echo "[backend] Despliegue completado"
 docker ps --filter "name=${CONTAINER_NAME}"

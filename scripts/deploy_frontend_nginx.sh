@@ -1,14 +1,13 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 FRONTEND_DIR="${ROOT_DIR}/frontend"
 DIST_DIR="${FRONTEND_DIR}/dist/leccionario-frontend/browser"
 
 WEB_ROOT="${WEB_ROOT:-/var/www/leccionario}"
 NGINX_CONF_PATH="${NGINX_CONF_PATH:-/etc/nginx/sites-enabled/leccionario.conf}"
 BACKEND_UPSTREAM="${BACKEND_UPSTREAM:-127.0.0.1:8080}"
-FAMILY_FINANCE_UPSTREAM="${FAMILY_FINANCE_UPSTREAM:-127.0.0.1:5000}"
 NGINX_RELOAD_CMD="${NGINX_RELOAD_CMD:-systemctl reload nginx}"
 
 echo "[frontend] Instalando dependencias"
@@ -81,8 +80,7 @@ server {
 }
 NGINX_EOF
 
-# Reemplazar upstream del backend si se proporciono via variable
-if [[ "${BACKEND_UPSTREAM}" != "127.0.0.1:8080" ]]; then
+if [ "${BACKEND_UPSTREAM}" != "127.0.0.1:8080" ]; then
     sed -i "s|127.0.0.1:8080|${BACKEND_UPSTREAM}|g" "${NGINX_CONF_PATH}"
 fi
 
