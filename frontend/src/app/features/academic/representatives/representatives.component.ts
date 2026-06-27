@@ -59,58 +59,63 @@ export type StudentRepresentative = {
         </div>
 
         @if (editorOpen) {
-          <form [formGroup]="form" class="row g-3 p-3 rounded-4 editor-panel">
-            <div class="col-12">
-              <h3 class="h6 mb-0">{{ editingId ? 'Editar representante' : 'Nuevo representante' }}</h3>
+          <div class="modal-shell" (click)="cancelEdit()">
+            <div class="modal-card" style="max-width:680px" (click)="$event.stopPropagation()">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="h6 mb-0"><i class="bi bi-people me-2"></i>{{ editingId ? 'Editar representante' : 'Nuevo representante' }}</h3>
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEdit()"><i class="bi bi-x-lg"></i></button>
+              </div>
+              <form [formGroup]="form" class="row g-3">
+                <div class="col-12">
+                  <label class="form-label fw-semibold small">Estudiante</label>
+                  <select class="form-select form-select-sm" formControlName="studentId">
+                    @for (student of filteredStudents; track student.id) {
+                      <option [value]="student.id">{{ student.enrollmentNumber }} · {{ student.fullName }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold small">Nombre completo</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="fullName" placeholder="Nombres y apellidos">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Parentesco</label>
+                  <select class="form-select form-select-sm" formControlName="relationship">
+                    <option value="PADRE">Padre</option>
+                    <option value="MADRE">Madre</option>
+                    <option value="TUTOR">Tutor legal</option>
+                    <option value="ABUELO">Abuelo(a)</option>
+                    <option value="HERMANO">Hermano(a)</option>
+                    <option value="OTRO">Otro familiar</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Telefono</label>
+                  <input class="form-control form-control-sm" type="tel" formControlName="phone" placeholder="0999999999">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Correo</label>
+                  <input class="form-control form-control-sm" type="email" formControlName="email" placeholder="correo@ejemplo.com">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold small">Direccion</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="address" placeholder="Direccion completa">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold small">Contacto emergencia</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="emergencyContact" placeholder="Nombre">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold small">Telefono emergencia</label>
+                  <input class="form-control form-control-sm" type="tel" formControlName="emergencyPhone" placeholder="Telefono">
+                </div>
+                <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                  <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEdit()">Cancelar</button>
+                  <button class="btn btn-sm btn-primary" type="button" (click)="save()"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                </div>
+              </form>
             </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Estudiante</label>
-              <select class="form-select form-select-sm" formControlName="studentId">
-                @for (student of filteredStudents; track student.id) {
-                  <option [value]="student.id">{{ student.enrollmentNumber }} · {{ student.fullName }}</option>
-                }
-              </select>
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Nombre completo del representante</label>
-              <input class="form-control form-control-sm" type="text" formControlName="fullName" placeholder="Nombres y apellidos">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Parentesco</label>
-              <select class="form-select form-select-sm" formControlName="relationship">
-                <option value="PADRE">Padre</option>
-                <option value="MADRE">Madre</option>
-                <option value="TUTOR">Tutor legal</option>
-                <option value="ABUELO">Abuelo(a)</option>
-                <option value="HERMANO">Hermano(a)</option>
-                <option value="OTRO">Otro familiar</option>
-              </select>
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Telefono</label>
-              <input class="form-control form-control-sm" type="tel" formControlName="phone" placeholder="0999999999">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Correo electronico</label>
-              <input class="form-control form-control-sm" type="email" formControlName="email" placeholder="correo@ejemplo.com">
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-semibold">Direccion domiciliaria</label>
-              <input class="form-control form-control-sm" type="text" formControlName="address" placeholder="Direccion completa">
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Contacto de emergencia</label>
-              <input class="form-control form-control-sm" type="text" formControlName="emergencyContact" placeholder="Nombre de contacto alterno">
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Telefono de emergencia</label>
-              <input class="form-control form-control-sm" type="tel" formControlName="emergencyPhone" placeholder="Telefono alterno">
-            </div>
-            <div class="col-12 d-flex justify-content-end gap-2">
-              <button class="btn btn-sm btn-outline-primary" type="button" (click)="cancelEdit()">Cancelar</button>
-              <button class="btn btn-sm btn-primary" type="button" (click)="save()">Guardar representante</button>
-            </div>
-          </form>
+          </div>
         }
 
         <div class="table-responsive">

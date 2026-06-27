@@ -58,14 +58,18 @@
 
           @if (activeView === 'users') {
             @if (usersMode === 'form') {
-              <app-add-user
-                [mode]="editingUser ? 'edit' : 'create'"
-                [user]="editingUser"
-                [roles]="roles"
-                [institutions]="institutions"
-                (save)="saveUser($event)"
-                (cancel)="closeUserForm()">
-              </app-add-user>
+              <div class="modal-shell" (click)="closeUserForm()">
+                <div class="modal-card" style="max-width:720px" (click)="$event.stopPropagation()">
+                  <app-add-user
+                    [mode]="editingUser ? 'edit' : 'create'"
+                    [user]="editingUser"
+                    [roles]="roles"
+                    [institutions]="institutions"
+                    (save)="saveUser($event)"
+                    (cancel)="closeUserForm()">
+                  </app-add-user>
+                </div>
+              </div>
             } @else {
               <div class="card border-0 shadow-sm users-panel">
                 <div class="card-body p-4">

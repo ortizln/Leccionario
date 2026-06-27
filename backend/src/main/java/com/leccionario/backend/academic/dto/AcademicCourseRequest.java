@@ -9,5 +9,9 @@ public record AcademicCourseRequest(
         String section,
         String subLevel,
         Integer grade,
-        Long weekStudentId) {
+        Long weekStudentId,
+        Long academicYearId,
+        Long schoolDayId,
+        Long schoolModalityId,
+        Integer capacity) {
 }

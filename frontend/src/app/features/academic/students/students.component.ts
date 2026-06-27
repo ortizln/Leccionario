@@ -131,86 +131,88 @@ type StudentRepresentative = {
         }
 
         @if (editorOpen) {
-          <form [formGroup]="form" class="row g-3 p-3 rounded-4 editor-panel">
-            <div class="col-12">
-              <h3 class="h6 mb-0">{{ editingId ? 'Editar estudiante' : 'Nuevo estudiante' }}</h3>
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Usuario</label>
-              <input class="form-control form-control-sm" type="text" formControlName="username">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Correo</label>
-              <input class="form-control form-control-sm" type="email" formControlName="email">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Identificacion</label>
-              <input class="form-control form-control-sm" type="text" formControlName="identification">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Nombres</label>
-              <input class="form-control form-control-sm" type="text" formControlName="firstName">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Apellidos</label>
-              <input class="form-control form-control-sm" type="text" formControlName="lastName">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">N° de carnet / Matricula</label>
-              <input class="form-control form-control-sm" type="text" formControlName="enrollmentNumber" placeholder="Opcional — numero de identificacion estudiantil">
-              <small class="text-muted">Opcional. Numero de libreta o carnet del estudiante.</small>
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Fecha de nacimiento</label>
-              <input class="form-control form-control-sm" type="date" formControlName="birthDate">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Genero</label>
-              <select class="form-select form-select-sm" formControlName="gender">
-                <option value="">Seleccionar...</option>
-                <option value="M">Masculino</option>
-                <option value="F">Femenino</option>
-                <option value="OTRO">Otro</option>
-              </select>
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Curso</label>
-              <select class="form-select form-select-sm" formControlName="courseId">
-                @for (course of courses; track course.id) {
-                  <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
-                }
-              </select>
-            </div>
-            <div class="col-12 col-md-6 d-flex align-items-end">
-              <div class="form-check form-switch border rounded px-3 py-2 w-100">
-                <input class="form-check-input" id="student-enabled" type="checkbox" formControlName="enabled">
-                <label class="form-check-label ms-2 fw-semibold" for="student-enabled">Estudiante habilitado</label>
+          <div class="modal-shell" (click)="cancelEdit()">
+            <div class="modal-card" style="max-width:720px" (click)="$event.stopPropagation()">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="h6 mb-0"><i class="bi bi-person-plus me-2"></i>{{ editingId ? 'Editar estudiante' : 'Nuevo estudiante' }}</h3>
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEdit()"><i class="bi bi-x-lg"></i></button>
               </div>
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-semibold">Representante</label>
-              <div class="d-flex gap-2 align-items-center">
-                @if (selectedRep) {
-                  <span class="badge rounded-pill text-bg-light d-flex align-items-center gap-2 py-2 px-3">
-                    <i class="bi bi-person-check text-primary"></i>
-                    <span>{{ selectedRep.fullName }} · {{ selectedRep.phone }}</span>
-                    <button class="btn btn-sm btn-link text-danger p-0 ms-1" type="button" (click)="clearRep()" title="Quitar representante">
-                      <i class="bi bi-x-lg"></i>
+              <form [formGroup]="form" class="row g-3">
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Usuario</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="username">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Correo</label>
+                  <input class="form-control form-control-sm" type="email" formControlName="email">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Identificacion</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="identification">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Nombres</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="firstName">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Apellidos</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="lastName">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Matricula</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="enrollmentNumber" placeholder="Opcional">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Fecha nacimiento</label>
+                  <input class="form-control form-control-sm" type="date" formControlName="birthDate">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Genero</label>
+                  <select class="form-select form-select-sm" formControlName="gender">
+                    <option value="">Seleccionar...</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                    <option value="OTRO">Otro</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Curso</label>
+                  <select class="form-select form-select-sm" formControlName="courseId">
+                    @for (course of courses; track course.id) {
+                      <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="col-12 col-md-6 d-flex align-items-end">
+                  <div class="form-check form-switch border rounded px-3 py-2 w-100">
+                    <input class="form-check-input" id="student-enabled" type="checkbox" formControlName="enabled">
+                    <label class="form-check-label ms-2 fw-semibold small" for="student-enabled">Habilitado</label>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold small">Representante</label>
+                  <div class="d-flex gap-2 align-items-center">
+                    @if (selectedRep) {
+                      <span class="badge rounded-pill text-bg-light d-flex align-items-center gap-2 py-2 px-3">
+                        <i class="bi bi-person-check text-primary"></i>
+                        <span>{{ selectedRep.fullName }} · {{ selectedRep.phone }}</span>
+                        <button class="btn btn-sm btn-link text-danger p-0 ms-1" type="button" (click)="clearRep()" title="Quitar"><i class="bi bi-x-lg"></i></button>
+                      </span>
+                    } @else {
+                      <span class="text-muted small me-2">Sin representante</span>
+                    }
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="openRepSearch()">
+                      <i class="bi bi-search me-1"></i>{{ selectedRep ? 'Cambiar' : 'Buscar' }}
                     </button>
-                  </span>
-                } @else {
-                  <span class="text-muted small me-2">Sin representante asignado</span>
-                }
-                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openRepSearch()">
-                  <i class="bi bi-search me-1"></i>{{ selectedRep ? 'Cambiar' : 'Buscar representante' }}
-                </button>
-              </div>
+                  </div>
+                </div>
+                <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                  <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEdit()">Cancelar</button>
+                  <button class="btn btn-sm btn-primary" type="button" (click)="save()"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                </div>
+              </form>
             </div>
-            <div class="col-12 d-flex justify-content-end gap-2">
-              <button class="btn btn-sm btn-outline-primary" type="button" (click)="cancelEdit()">Cancelar</button>
-              <button class="btn btn-sm btn-primary" type="button" (click)="save()">Guardar estudiante</button>
-            </div>
-          </form>
+          </div>
         }
 
         <div class="table-responsive">

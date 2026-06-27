@@ -49,32 +49,37 @@ type Subject = { id: number; name: string; code: string; curriculumArea: string 
         }
 
         @if (editorOpen) {
-          <form [formGroup]="form" class="row g-3 p-3 rounded-4 editor-panel">
-            <div class="col-12">
-              <h3 class="h6 mb-0">{{ editingId ? 'Editar materia' : 'Nueva materia' }}</h3>
+          <div class="modal-shell" (click)="cancelEdit()">
+            <div class="modal-card" style="max-width:560px" (click)="$event.stopPropagation()">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="h6 mb-0"><i class="bi bi-book me-2"></i>{{ editingId ? 'Editar materia' : 'Nueva materia' }}</h3>
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEdit()"><i class="bi bi-x-lg"></i></button>
+              </div>
+              <form [formGroup]="form" class="row g-3">
+                <div class="col-12">
+                  <label class="form-label fw-semibold small">Nombre de la materia</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="name" placeholder="Lengua y Literatura">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold small">Codigo</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="code" placeholder="LL-01">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold small">Area curricular</label>
+                  <select class="form-select form-select-sm" formControlName="curriculumArea">
+                    <option value="">Selecciona un area...</option>
+                    @for (area of areas; track area) {
+                      <option [value]="area">{{ area }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                  <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEdit()">Cancelar</button>
+                  <button class="btn btn-sm btn-primary" type="button" (click)="save()"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                </div>
+              </form>
             </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Nombre de la materia</label>
-              <input class="form-control form-control-sm" type="text" formControlName="name" placeholder="Lengua y Literatura">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Codigo</label>
-              <input class="form-control form-control-sm" type="text" formControlName="code" placeholder="LL-01">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Area curricular</label>
-              <select class="form-select form-select-sm" formControlName="curriculumArea">
-                <option value="">Selecciona un area...</option>
-                @for (area of areas; track area) {
-                  <option [value]="area">{{ area }}</option>
-                }
-              </select>
-            </div>
-            <div class="col-12 d-flex justify-content-end gap-2">
-              <button class="btn btn-sm btn-outline-primary" type="button" (click)="cancelEdit()">Cancelar</button>
-              <button class="btn btn-sm btn-primary" type="button" (click)="save()">Guardar materia</button>
-            </div>
-          </form>
+          </div>
         }
 
         @for (group of groupedSubjects(); track group.area) {

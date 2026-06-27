@@ -4,7 +4,7 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { catchError, of } from 'rxjs';
 import { API_URL } from '../../../core/api.config';
 import { AuthService } from '../../../core/auth.service';
-import { AcademicCourse, AcademicStudent, AcademicOverview, ImportSummaryResult, WeekStudentAssignment } from '../academic.models';
+import { AcademicCourse, AcademicStudent, AcademicOverview, AcademicYearItem, ImportSummaryResult, SchoolDayItem, SchoolModalityItem, WeekStudentAssignment } from '../academic.models';
 
 interface ScheduleBlockItem { id: number; label: string; startTime: string; endTime: string; blockOrder: number; blockType: string; active: boolean; }
 interface ScheduleOverviewData { blocks: ScheduleBlockItem[]; periods: Array<{ id: number; name: string; startDate: string; endDate: string; active: boolean }>; subjects: Array<{ id: number; name: string; code: string; curriculumArea: string }>; teachers: Array<{ id: number; name: string; specialization: string; subjectIds: number[] }>; }
@@ -26,6 +26,16 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
       display: flex;
       flex-direction: column;
       justify-content: end;
+    }
+    .auto-name-preview {
+      background: var(--app-bg);
+      border: 1px dashed var(--bs-border-color);
+      border-radius: 0.375rem;
+      padding: 0.5rem 0.75rem;
+      font-weight: 600;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
     }
     @media (max-width: 768px) {
       .schedule-form-grid {
@@ -72,89 +82,87 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
         </div>
 
         @if (editorOpen) {
-          <form [formGroup]="form" class="row g-3 p-3 rounded-4 editor-panel">
-            <div class="col-12">
-              <h3 class="h6 mb-0">{{ editingId ? 'Editar curso' : 'Nuevo curso' }}</h3>
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Seccion</label>
-              <select class="form-select form-select-sm" formControlName="section" (change)="onSectionChange()">
-                <option [ngValue]="null">Seleccionar seccion...</option>
-                <option value="EGB">EGB</option>
-                <option value="BACHILLERATO">Bachillerato</option>
-              </select>
-            </div>
-            <div class="col-12 col-md-3">
-              <label class="form-label fw-semibold">Grado</label>
-              <select class="form-select form-select-sm" formControlName="grade" (change)="onGradeChange()">
-                <option [ngValue]="null">Seleccionar...</option>
-                @for (g of gradeOptions; track g) {
-                  <option [ngValue]="g">{{ g }}</option>
-                }
-              </select>
-            </div>
-            <div class="col-12 col-md-3">
-              <label class="form-label fw-semibold">Paralelo</label>
-              <input class="form-control form-control-sm text-uppercase" type="text" formControlName="parallel" placeholder="A">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Curso</label>
-              <input class="form-control form-control-sm" type="text" formControlName="name" placeholder="Primero BGU">
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Subnivel educativo</label>
-              <input class="form-control form-control-sm" type="text" [value]="subLevelLabel()" readonly>
-            </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Nomenclatura actual</label>
-              <input class="form-control form-control-sm" type="text" formControlName="level" readonly>
-            </div>
-            @if (oldSystemName(); as old) {
-              <div class="col-12">
-                <small class="text-muted fst-italic">Sistema antiguo: {{ old }}</small>
+          <div class="modal-shell" (click)="cancelEdit()">
+            <div class="modal-card modal-card-lg" (click)="$event.stopPropagation()">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="h6 mb-0"><i class="bi bi-mortarboard me-2"></i>{{ editingId ? 'Editar curso' : 'Nuevo curso' }}</h3>
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEdit()"><i class="bi bi-x-lg"></i></button>
               </div>
-            }
-            <div class="col-12">
-              <label class="form-label fw-semibold">Semanero del curso</label>
-              <select class="form-select form-select-sm" formControlName="weekStudentId">
-                <option [ngValue]="null">Sin semanero asignado</option>
-                @for (student of courseStudentOptions(); track student.id) {
-                  <option [ngValue]="student.id">{{ student.enrollmentNumber }} · {{ student.fullName }}</option>
-                }
-              </select>
-              <div class="form-text">Solo puedes elegir entre estudiantes del curso seleccionado.</div>
-            </div>
-            @if (assignments.length > 0) {
-              <div class="col-12">
-                <hr>
-                <h4 class="h6 mb-2">Historial de semaneros</h4>
-                <div class="table-responsive">
-                  <table class="table table-sm table-borderless mb-0">
-                    <thead>
-                      <tr class="small text-muted">
-                        <th>Estudiante</th>
-                        <th>Desde</th>
-                        <th>Hasta</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (a of assignments; track a.id) {
-                        <tr>
-                          <td class="small">{{ a.enrollmentNumber }} · {{ a.studentName }}</td>
-                          <td class="small">{{ a.startDate }}</td>
-                          <td class="small">{{ a.endDate || 'Actual' }}</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
+              @if (saveError) {
+                <div class="alert alert-danger py-2 small mb-3">{{ saveError }}</div>
+              }
+              <form [formGroup]="form" class="row g-3">
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">A&ntilde;o Lectivo</label>
+                  <select class="form-select form-select-sm" formControlName="academicYearId">
+                    <option [ngValue]="null">Seleccionar...</option>
+                    @for (y of academicYears; track y.id) {
+                      <option [ngValue]="y.id">{{ y.year }}</option>
+                    }
+                  </select>
                 </div>
-              </div>
-            }
-            <div class="col-12 d-flex justify-content-end gap-2">
-              <button class="btn btn-sm btn-outline-primary" type="button" (click)="cancelEdit()">Cancelar</button>
-              <button class="btn btn-sm btn-primary" type="button" (click)="save()">Guardar curso</button>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Jornada</label>
+                  <select class="form-select form-select-sm" formControlName="schoolDayId">
+                    <option [ngValue]="null">Seleccionar...</option>
+                    @for (d of schoolDays; track d.id) {
+                      <option [ngValue]="d.id">{{ d.name }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Modalidad</label>
+                  <select class="form-select form-select-sm" formControlName="schoolModalityId">
+                    <option [ngValue]="null">Seleccionar...</option>
+                    @for (m of schoolModalities; track m.id) {
+                      <option [ngValue]="m.id">{{ m.name }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Subnivel Educativo</label>
+                  <select class="form-select form-select-sm" formControlName="subLevel" (change)="onSubLevelChange()">
+                    <option [ngValue]="null">Seleccionar...</option>
+                    <option value="PREPARATORIA">Basica Preparatoria</option>
+                    <option value="ELEMENTAL">Basica Elemental</option>
+                    <option value="MEDIA">Basica Media</option>
+                    <option value="SUPERIOR">Basica Superior</option>
+                    <option value="BGU">Bachillerato General Unificado</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-2">
+                  <label class="form-label fw-semibold small">Grado</label>
+                  <select class="form-select form-select-sm" formControlName="grade" (change)="onGradeChange()">
+                    <option [ngValue]="null">...</option>
+                    @for (g of gradeOptions; track g) {
+                      <option [ngValue]="g">{{ gradeLabel(g) }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="col-12 col-md-2">
+                  <label class="form-label fw-semibold small">Paralelo</label>
+                  <input class="form-control form-control-sm text-uppercase" type="text" formControlName="parallel" placeholder="A">
+                </div>
+                <div class="col-12 col-md-2">
+                  <label class="form-label fw-semibold small">Capacidad</label>
+                  <input class="form-control form-control-sm" type="number" formControlName="capacity" placeholder="40" min="1">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold small">Nombre del Curso (auto-generado)</label>
+                  <div class="auto-name-preview">{{ autoName() || 'Complete grado y paralelo...' }}</div>
+                </div>
+                @if (oldSystemName(); as old) {
+                  <div class="col-12">
+                    <small class="text-muted fst-italic">Sistema antiguo: {{ old }}</small>
+                  </div>
+                }
+                <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                  <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEdit()">Cancelar</button>
+                  <button class="btn btn-sm btn-primary" type="button" (click)="save()"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                </div>
+              </form>
             </div>
-          </form>
+          </div>
         }
 
         <div class="table-responsive">
@@ -163,10 +171,11 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
               <tr>
                 <th>Curso</th>
                 <th>Paralelo</th>
-                <th>Seccion</th>
                 <th>Subnivel</th>
                 <th>Grado</th>
-                <th>Semanero</th>
+                <th>A&ntilde;o</th>
+                <th>Jornada</th>
+                <th>Modalidad</th>
                 <th class="text-end"></th>
               </tr>
             </thead>
@@ -175,19 +184,34 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                 <tr>
                   <td>{{ course.name }}</td>
                   <td>{{ course.parallel }}</td>
-                  <td>{{ course.section || '-' }}</td>
-                  <td>{{ course.subLevel || '-' }}</td>
-                  <td>{{ course.grade ?? '-' }}</td>
-                  <td>{{ course.weekStudentName || 'Sin semanero' }}</td>
+                  <td>{{ subLevelDisplay(course.subLevel) }}</td>
+                  <td>{{ course.grade != null ? gradeLabel(course.grade) : '-' }}</td>
+                  <td>{{ course.academicYear ?? '-' }}</td>
+                  <td>{{ course.schoolDayName ?? '-' }}</td>
+                  <td>{{ course.schoolModalityName ?? '-' }}</td>
                   <td class="text-end">
                     @if (canManageAcademic) {
-                      <button class="btn btn-sm btn-outline-primary me-1" type="button" (click)="edit(course)">Editar</button>
-                      <button class="btn btn-sm btn-outline-primary" type="button" (click)="openScheduleModal(course)">Horario</button>
+                      <details class="action-menu row-action-menu">
+                        <summary class="btn btn-sm btn-outline-primary">
+                          <i class="bi bi-three-dots"></i>
+                        </summary>
+                        <div class="action-menu-panel">
+                          <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="edit(course)">
+                            <i class="bi bi-pencil-square me-2"></i>Editar
+                          </button>
+                          <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="openScheduleModal(course)">
+                            <i class="bi bi-calendar-week me-2"></i>Horario
+                          </button>
+                          <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="openCourseStudents(course)">
+                            <i class="bi bi-people me-2"></i>Estudiantes
+                          </button>
+                        </div>
+                      </details>
                     }
                   </td>
                 </tr>
               } @empty {
-                <tr><td colspan="7" class="text-center text-muted py-4">Sin cursos registrados.</td></tr>
+                <tr><td colspan="8" class="text-center text-muted py-4">Sin cursos registrados.</td></tr>
               }
             </tbody>
           </table>
@@ -309,6 +333,54 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
         </div>
       </div>
     }
+
+    @if (courseStudentsModalOpen) {
+      <div class="modal-shell" (click)="closeCourseStudents()">
+        <div class="modal-card" style="max-width:700px" (click)="$event.stopPropagation()">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0"><i class="bi bi-people me-2"></i>Estudiantes &mdash; {{ courseStudentsCourseName }}</h5>
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="closeCourseStudents()"><i class="bi bi-x-lg"></i></button>
+          </div>
+          @if (courseStudents.length === 0) {
+            <p class="text-muted small text-center py-4 mb-0">No hay estudiantes matriculados en este curso.</p>
+          } @else {
+            <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+              <table class="table table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Matricula</th>
+                    <th>Estudiante</th>
+                    <th>Usuario</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (student of courseStudents; track student.id) {
+                    <tr>
+                      <td class="small">{{ student.enrollmentNumber }}</td>
+                      <td>
+                        <div class="fw-semibold small">{{ student.fullName }}</div>
+                        <div class="small text-muted">{{ student.identification }}</div>
+                      </td>
+                      <td class="small">{{ student.username }}</td>
+                      <td>
+                        <span class="badge" [class.text-bg-success]="student.enabled" [class.text-bg-secondary]="!student.enabled">
+                          {{ student.enabled ? 'Activo' : 'Inactivo' }}
+                        </span>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="text-muted small text-end mt-2">{{ courseStudents.length }} estudiante(s)</div>
+          }
+          <div class="d-flex justify-content-end mt-3">
+            <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeCourseStudents()">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class CoursesComponent implements OnInit {
@@ -324,64 +396,97 @@ export class CoursesComponent implements OnInit {
   editorOpen = false;
   editingId: number | null = null;
 
+  academicYears: AcademicYearItem[] = [];
+  schoolDays: SchoolDayItem[] = [];
+  schoolModalities: SchoolModalityItem[] = [];
+
   gradeOptions: number[] = [];
 
   form = this.fb.nonNullable.group({
-    name: ['', Validators.required],
+    academicYearId: [null as number | null, Validators.required],
+    schoolDayId: [null as number | null],
+    schoolModalityId: [null as number | null],
+    subLevel: [null as string | null, Validators.required],
+    grade: [null as number | null, Validators.required],
     parallel: ['', Validators.required],
-    level: ['', Validators.required],
-    section: [null as string | null],
-    subLevel: [null as string | null],
-    grade: [null as number | null],
+    level: [''],
+    name: [''],
+    capacity: [null as number | null],
     weekStudentId: [null as number | null]
   });
 
-  onSectionChange(): void {
-    const section = this.form.controls.section.value;
-    if (section === 'EGB') {
-      this.gradeOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    } else if (section === 'BACHILLERATO') {
-      this.gradeOptions = [1, 2, 3];
-    } else {
+  saveError = '';
+
+  onSubLevelChange(): void {
+    const subLevel = this.form.controls.subLevel.value;
+    if (!subLevel) {
       this.gradeOptions = [];
+    } else {
+      this.gradeOptions = this.getGradesForSubLevel(subLevel);
     }
     this.form.controls.grade.reset(null);
-    this.form.controls.subLevel.reset(null);
-  }
-
-  onGradeChange(): void {
-    const section = this.form.controls.section.value;
-    const grade = this.form.controls.grade.value;
-    if (!section || grade == null) {
-      this.form.controls.subLevel.reset(null);
-    } else if (section === 'EGB') {
-      if (grade === 1) this.form.controls.subLevel.setValue('PREPARATORIA');
-      else if (grade >= 2 && grade <= 4) this.form.controls.subLevel.setValue('ELEMENTAL');
-      else if (grade >= 5 && grade <= 7) this.form.controls.subLevel.setValue('MEDIA');
-      else if (grade >= 8 && grade <= 10) this.form.controls.subLevel.setValue('SUPERIOR');
-    } else if (section === 'BACHILLERATO') {
-      if (grade >= 1 && grade <= 3) this.form.controls.subLevel.setValue('BGU');
-    }
     this.updateNomenclatura();
   }
 
+  onGradeChange(): void {
+    this.updateNomenclatura();
+  }
+
+  private getGradesForSubLevel(subLevel: string): number[] {
+    switch (subLevel) {
+      case 'PREPARATORIA': return [1];
+      case 'ELEMENTAL': return [2, 3, 4];
+      case 'MEDIA': return [5, 6, 7];
+      case 'SUPERIOR': return [8, 9, 10];
+      case 'BGU': return [1, 2, 3];
+      default: return [];
+    }
+  }
+
   private updateNomenclatura(): void {
-    const section = this.form.controls.section.value;
     const subLevel = this.form.controls.subLevel.value;
     const grade = this.form.controls.grade.value;
-    const parts: string[] = [];
-    if (grade != null) parts.push(grade + '.\u00BA');
-    if (subLevel) {
-      if (subLevel === 'BGU') parts.push('Curso de Bachillerato');
-      else parts.push('Grado de EGB');
+    if (!subLevel || grade == null) {
+      this.form.controls.level.setValue('');
+      return;
     }
-    if (section) parts.push(section === 'EGB' ? 'EGB' : 'Bachillerato');
+    const parts: string[] = [];
+    parts.push(grade + '.\u00BA');
+    if (subLevel === 'BGU') parts.push('Curso de Bachillerato');
+    else parts.push('Grado de EGB');
+    const section = (subLevel === 'BGU') ? 'BACHILLERATO' : 'EGB';
+    parts.push(section === 'EGB' ? 'EGB' : 'Bachillerato');
     this.form.controls.level.setValue(parts.join(' ') || '');
   }
 
-  subLevelLabel(): string {
+  autoName(): string {
+    const grade = this.form.controls.grade.value;
+    const parallel = this.form.controls.parallel.value;
     const subLevel = this.form.controls.subLevel.value;
-    if (!subLevel) return '';
+    if (grade == null || !parallel || !subLevel) return '';
+    const gradeName = this.gradeLabel(grade);
+    const suffix = subLevel === 'BGU' ? ' BGU' : ' EGB';
+    return gradeName + suffix + ' "' + parallel.trim().toUpperCase() + '"';
+  }
+
+  gradeLabel(grade: number): string {
+    switch (grade) {
+      case 1: return 'Primero';
+      case 2: return 'Segundo';
+      case 3: return 'Tercero';
+      case 4: return 'Cuarto';
+      case 5: return 'Quinto';
+      case 6: return 'Sexto';
+      case 7: return 'Septimo';
+      case 8: return 'Octavo';
+      case 9: return 'Noveno';
+      case 10: return 'Decimo';
+      default: return grade + '. Grado';
+    }
+  }
+
+  subLevelDisplay(subLevel: string | null): string {
+    if (!subLevel) return '-';
     switch (subLevel) {
       case 'PREPARATORIA': return 'Basica Preparatoria';
       case 'ELEMENTAL': return 'Basica Elemental';
@@ -393,13 +498,13 @@ export class CoursesComponent implements OnInit {
   }
 
   oldSystemName(): string | null {
-    const section = this.form.controls.section.value;
+    const subLevel = this.form.controls.subLevel.value;
     const grade = this.form.controls.grade.value;
-    if (!section || grade == null) return null;
-    if (section === 'EGB') {
-      if (grade === 1) return 'Jardin de infantes (5 anos)';
-      if (grade >= 2 && grade <= 4) return '2.\u00BA Grado a 4.\u00BA Grado';
-      if (grade >= 5 && grade <= 7) return '5.\u00BA Grado a 7.\u00BA Grado';
+    if (!subLevel || grade == null) return null;
+    if (subLevel === 'PREPARATORIA') return 'Jardin de infantes (5 anos)';
+    if (subLevel === 'ELEMENTAL') return '2.\u00BA Grado a 4.\u00BA Grado';
+    if (subLevel === 'MEDIA') return '5.\u00BA Grado a 7.\u00BA Grado';
+    if (subLevel === 'SUPERIOR') {
       if (grade === 8) return '1.\u00BA Curso (8.\u00BA ano)';
       if (grade === 9) return '2.\u00BA Curso (9.\u00BA ano)';
       if (grade === 10) return '3.\u00BA Curso (10.\u00BA ano)';
@@ -431,6 +536,10 @@ export class CoursesComponent implements OnInit {
     sSubjectId: [0],
     sClassroom: ['']
   });
+
+  courseStudentsModalOpen = false;
+  courseStudentsCourseName = '';
+  courseStudents: AcademicStudent[] = [];
 
   get classBlocks(): ScheduleBlockItem[] {
     return this.scheduleBlocks.filter(b => b.blockType === 'CLASS' && b.active);
@@ -473,6 +582,18 @@ export class CoursesComponent implements OnInit {
     this.selectedCourseName = '';
     this.courseSchedules = [];
     this.scheduleError = '';
+  }
+
+  openCourseStudents(course: AcademicCourse): void {
+    this.courseStudentsCourseName = course.name + ' ' + course.parallel;
+    this.courseStudents = this.students.filter(s => s.courseId === course.id);
+    this.courseStudentsModalOpen = true;
+  }
+
+  closeCourseStudents(): void {
+    this.courseStudentsModalOpen = false;
+    this.courseStudentsCourseName = '';
+    this.courseStudents = [];
   }
 
   resetScheduleForm(): void {
@@ -540,6 +661,7 @@ export class CoursesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadData();
+    this.loadCatalogs();
   }
 
   loadData(): void {
@@ -551,6 +673,20 @@ export class CoursesComponent implements OnInit {
     });
   }
 
+  loadCatalogs(): void {
+    this.http.get<AcademicYearItem[]>(`${API_URL}/academic/catalogs/academic-years`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => this.academicYears = data);
+
+    this.http.get<SchoolDayItem[]>(`${API_URL}/academic/catalogs/school-days`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => this.schoolDays = data);
+
+    this.http.get<SchoolModalityItem[]>(`${API_URL}/academic/catalogs/school-modalities`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => this.schoolModalities = data);
+  }
+
   courseStudentOptions(): AcademicStudent[] {
     if (this.editingId == null) return [];
     return this.students.filter(s => s.courseId === this.editingId);
@@ -559,33 +695,56 @@ export class CoursesComponent implements OnInit {
   startCreate(): void {
     this.editingId = null;
     this.editorOpen = true;
+    this.saveError = '';
     this.gradeOptions = [];
     this.assignments = [];
-    this.form.reset({ name: '', parallel: '', level: '', section: null, subLevel: null, grade: null, weekStudentId: null });
+    this.form.reset({
+      academicYearId: null,
+      schoolDayId: null,
+      schoolModalityId: null,
+      subLevel: null,
+      grade: null,
+      parallel: '',
+      level: '',
+      name: '',
+      capacity: null,
+      weekStudentId: null
+    });
   }
 
   edit(course: AcademicCourse): void {
     this.editingId = course.id;
     this.editorOpen = true;
     this.gradeOptions = [];
-    this.form.reset({ name: '', parallel: '', level: '', section: null, subLevel: null, grade: null, weekStudentId: null });
-    const section = course.section ?? null;
-    if (section) {
-      this.form.controls.section.setValue(section);
-      this.onSectionChange();
+    this.form.reset({
+      academicYearId: null,
+      schoolDayId: null,
+      schoolModalityId: null,
+      subLevel: null,
+      grade: null,
+      parallel: '',
+      level: '',
+      name: '',
+      capacity: null,
+      weekStudentId: null
+    });
+    const subLevel = course.subLevel ?? null;
+    if (subLevel) {
+      this.form.controls.subLevel.setValue(subLevel);
+      this.gradeOptions = this.getGradesForSubLevel(subLevel);
     }
     this.form.patchValue({
-      name: course.name,
+      academicYearId: course.academicYearId ?? null,
+      schoolDayId: course.schoolDayId ?? null,
+      schoolModalityId: course.schoolModalityId ?? null,
+      subLevel,
+      grade: course.grade ?? null,
       parallel: course.parallel,
       level: course.level,
-      section,
-      subLevel: course.subLevel ?? null,
-      grade: course.grade ?? null,
+      capacity: course.capacity ?? null,
       weekStudentId: course.weekStudentId ?? null
     });
-    if (course.grade != null) {
-      this.onGradeChange();
-    }
+    this.updateNomenclatura();
     this.loadAssignments(course.id);
   }
 
@@ -600,16 +759,38 @@ export class CoursesComponent implements OnInit {
     this.editingId = null;
     this.gradeOptions = [];
     this.assignments = [];
-    this.form.reset({ name: '', parallel: '', level: '', section: null, subLevel: null, grade: null, weekStudentId: null });
+    this.form.reset({
+      academicYearId: null,
+      schoolDayId: null,
+      schoolModalityId: null,
+      subLevel: null,
+      grade: null,
+      parallel: '',
+      level: '',
+      name: '',
+      capacity: null,
+      weekStudentId: null
+    });
   }
 
   save(): void {
     if (!this.canManageAcademic || this.form.invalid) {
       return;
     }
+    this.saveError = '';
+    const raw = this.form.getRawValue();
     const request = {
-      ...this.form.getRawValue(),
-      parallel: this.form.controls.parallel.value.toUpperCase()
+      name: this.autoName() || raw.name || '',
+      parallel: raw.parallel.toUpperCase(),
+      level: raw.level || '',
+      section: raw.subLevel === 'BGU' ? 'BACHILLERATO' : (raw.subLevel ? 'EGB' : null),
+      subLevel: raw.subLevel,
+      grade: raw.grade,
+      weekStudentId: raw.weekStudentId,
+      academicYearId: raw.academicYearId,
+      schoolDayId: raw.schoolDayId,
+      schoolModalityId: raw.schoolModalityId,
+      capacity: raw.capacity
     };
     const url = this.editingId
       ? `${API_URL}/academic/courses/${this.editingId}`
@@ -623,7 +804,9 @@ export class CoursesComponent implements OnInit {
         this.cancelEdit();
         this.loadData();
       },
-      error: () => {}
+      error: (err) => {
+        this.saveError = err?.error?.message ?? 'No se pudo guardar el curso.';
+      }
     });
   }
 
@@ -658,13 +841,14 @@ export class CoursesComponent implements OnInit {
       <tr>
         <td>${course.name}</td>
         <td>${course.parallel}</td>
-        <td>${course.section || '-'}</td>
-        <td>${course.subLevel || '-'}</td>
-        <td>${course.grade ?? '-'}</td>
-        <td>${course.weekStudentName || 'Sin semanero'}</td>
+        <td>${this.subLevelDisplay(course.subLevel)}</td>
+        <td>${course.grade != null ? this.gradeLabel(course.grade) : '-'}</td>
+        <td>${course.academicYear ?? '-'}</td>
+        <td>${course.schoolDayName ?? '-'}</td>
+        <td>${course.schoolModalityName ?? '-'}</td>
       </tr>
     `).join('');
-    this.exportHtmlTable('cursos-leccionario.xls', ['Curso', 'Paralelo', 'Seccion', 'Subnivel', 'Grado', 'Semanero'], rows);
+    this.exportHtmlTable('cursos-leccionario.xls', ['Curso', 'Paralelo', 'Subnivel', 'Grado', 'Año', 'Jornada', 'Modalidad'], rows);
   }
 
   private downloadBlob(blob: Blob, fileName: string): void {

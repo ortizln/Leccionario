@@ -9,8 +9,14 @@ import com.leccionario.backend.academic.dto.AcademicSubjectRequest;
 import com.leccionario.backend.academic.dto.AcademicSubjectResponse;
 import com.leccionario.backend.academic.dto.AcademicTeacherRequest;
 import com.leccionario.backend.academic.dto.AcademicTeacherResponse;
+import com.leccionario.backend.academic.dto.AcademicYearRequest;
+import com.leccionario.backend.academic.dto.AcademicYearResponse;
 import com.leccionario.backend.academic.dto.RepresentativeRequest;
 import com.leccionario.backend.academic.dto.RepresentativeResponse;
+import com.leccionario.backend.academic.dto.SchoolDayRequest;
+import com.leccionario.backend.academic.dto.SchoolDayResponse;
+import com.leccionario.backend.academic.dto.SchoolModalityRequest;
+import com.leccionario.backend.academic.dto.SchoolModalityResponse;
 import com.leccionario.backend.academic.dto.WeekStudentAssignmentResponse;
 import com.leccionario.backend.common.excel.ImportSummaryResponse;
 import com.leccionario.backend.academic.service.AcademicService;
@@ -212,6 +218,75 @@ public class AcademicController {
     public ResponseEntity<List<WeekStudentAssignmentResponse>> getWeekStudentAssignments(
             @PathVariable Long courseId) {
         return ResponseEntity.ok(academicService.getWeekStudentAssignments(courseId));
+    }
+
+    @GetMapping("/catalogs/academic-years")
+    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    public ResponseEntity<List<AcademicYearResponse>> listAcademicYears() {
+        return ResponseEntity.ok(academicService.listAcademicYears());
+    }
+
+    @GetMapping("/catalogs/school-days")
+    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    public ResponseEntity<List<SchoolDayResponse>> listSchoolDays() {
+        return ResponseEntity.ok(academicService.listSchoolDays());
+    }
+
+    @GetMapping("/catalogs/school-modalities")
+    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    public ResponseEntity<List<SchoolModalityResponse>> listSchoolModalities() {
+        return ResponseEntity.ok(academicService.listSchoolModalities());
+    }
+
+    @PostMapping("/catalogs/academic-years")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<AcademicYearResponse> createAcademicYear(
+            @Valid @RequestBody AcademicYearRequest request,
+            Principal principal) {
+        return ResponseEntity.ok(academicService.createAcademicYear(request, principal.getName()));
+    }
+
+    @PutMapping("/catalogs/academic-years/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<AcademicYearResponse> updateAcademicYear(
+            @PathVariable Long id,
+            @Valid @RequestBody AcademicYearRequest request,
+            Principal principal) {
+        return ResponseEntity.ok(academicService.updateAcademicYear(id, request, principal.getName()));
+    }
+
+    @PostMapping("/catalogs/school-days")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<SchoolDayResponse> createSchoolDay(
+            @Valid @RequestBody SchoolDayRequest request,
+            Principal principal) {
+        return ResponseEntity.ok(academicService.createSchoolDay(request, principal.getName()));
+    }
+
+    @PutMapping("/catalogs/school-days/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<SchoolDayResponse> updateSchoolDay(
+            @PathVariable Long id,
+            @Valid @RequestBody SchoolDayRequest request,
+            Principal principal) {
+        return ResponseEntity.ok(academicService.updateSchoolDay(id, request, principal.getName()));
+    }
+
+    @PostMapping("/catalogs/school-modalities")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<SchoolModalityResponse> createSchoolModality(
+            @Valid @RequestBody SchoolModalityRequest request,
+            Principal principal) {
+        return ResponseEntity.ok(academicService.createSchoolModality(request, principal.getName()));
+    }
+
+    @PutMapping("/catalogs/school-modalities/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<SchoolModalityResponse> updateSchoolModality(
+            @PathVariable Long id,
+            @Valid @RequestBody SchoolModalityRequest request,
+            Principal principal) {
+        return ResponseEntity.ok(academicService.updateSchoolModality(id, request, principal.getName()));
     }
 
 }

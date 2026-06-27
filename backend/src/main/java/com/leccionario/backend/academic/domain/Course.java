@@ -10,13 +10,16 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "courses")
+@Table(name = "courses", uniqueConstraints = @UniqueConstraint(
+        columnNames = {"grade", "parallel", "academic_year_id"},
+        name = "uk_course_grade_parallel_year"))
 public class Course extends BaseEntity {
 
     @Column(nullable = false, length = 100)
@@ -41,4 +44,18 @@ public class Course extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "week_student_id")
     private Student weekStudent;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "academic_year_id")
+    private AcademicYear academicYear;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "school_day_id")
+    private SchoolDay schoolDay;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "school_modality_id")
+    private SchoolModality schoolModality;
+
+    private Integer capacity;
 }

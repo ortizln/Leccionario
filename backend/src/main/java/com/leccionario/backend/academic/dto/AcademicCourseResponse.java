@@ -9,5 +9,12 @@ public record AcademicCourseResponse(
         String subLevel,
         Integer grade,
         Long weekStudentId,
-        String weekStudentName) {
+        String weekStudentName,
+        Long academicYearId,
+        Integer academicYear,
+        Long schoolDayId,
+        String schoolDayName,
+        Long schoolModalityId,
+        String schoolModalityName,
+        Integer capacity) {
 }

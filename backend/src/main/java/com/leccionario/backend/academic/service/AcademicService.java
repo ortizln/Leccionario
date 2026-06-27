@@ -1,8 +1,11 @@
 package com.leccionario.backend.academic.service;
 
+import com.leccionario.backend.academic.domain.AcademicYear;
 import com.leccionario.backend.academic.domain.Course;
 import com.leccionario.backend.academic.domain.CourseSection;
 import com.leccionario.backend.academic.domain.CourseSubLevel;
+import com.leccionario.backend.academic.domain.SchoolDay;
+import com.leccionario.backend.academic.domain.SchoolModality;
 import com.leccionario.backend.academic.domain.Subject;
 import com.leccionario.backend.academic.dto.AcademicCourseRequest;
 import com.leccionario.backend.academic.dto.AcademicCourseResponse;
@@ -14,12 +17,21 @@ import com.leccionario.backend.academic.dto.AcademicSubjectResponse;
 import com.leccionario.backend.academic.dto.AcademicSubjectRequest;
 import com.leccionario.backend.academic.dto.AcademicTeacherRequest;
 import com.leccionario.backend.academic.dto.AcademicTeacherResponse;
+import com.leccionario.backend.academic.dto.AcademicYearRequest;
+import com.leccionario.backend.academic.dto.AcademicYearResponse;
 import com.leccionario.backend.academic.dto.RepresentativeRequest;
 import com.leccionario.backend.academic.dto.RepresentativeResponse;
+import com.leccionario.backend.academic.dto.SchoolDayRequest;
+import com.leccionario.backend.academic.dto.SchoolDayResponse;
+import com.leccionario.backend.academic.dto.SchoolModalityRequest;
+import com.leccionario.backend.academic.dto.SchoolModalityResponse;
 import com.leccionario.backend.academic.dto.WeekStudentAssignmentResponse;
 import com.leccionario.backend.academic.domain.WeekStudentAssignment;
 import com.leccionario.backend.academic.repository.AcademicPeriodRepository;
+import com.leccionario.backend.academic.repository.AcademicYearRepository;
 import com.leccionario.backend.academic.repository.CourseRepository;
+import com.leccionario.backend.academic.repository.SchoolDayRepository;
+import com.leccionario.backend.academic.repository.SchoolModalityRepository;
 import com.leccionario.backend.academic.repository.SubjectRepository;
 import com.leccionario.backend.academic.repository.WeekStudentAssignmentRepository;
 import com.leccionario.backend.audit.service.AuditService;
@@ -60,6 +72,9 @@ public class AcademicService {
     private final CourseRepository courseRepository;
     private final SubjectRepository subjectRepository;
     private final AcademicPeriodRepository academicPeriodRepository;
+    private final AcademicYearRepository academicYearRepository;
+    private final SchoolDayRepository schoolDayRepository;
+    private final SchoolModalityRepository schoolModalityRepository;
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -98,6 +113,7 @@ public class AcademicService {
 
     @Transactional
     public AcademicCourseResponse createCourse(AcademicCourseRequest request, String username) {
+        validateCourseUniqueness(request, null);
         Course course = new Course();
         applyCourse(course, request);
         Course saved = courseRepository.save(course);
@@ -112,6 +128,7 @@ public class AcademicService {
     public AcademicCourseResponse updateCourse(Long id, AcademicCourseRequest request, String username) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("El curso seleccionado no existe."));
+        validateCourseUniqueness(request, course.getId());
         Long previousWeekStudentId = course.getWeekStudent() != null ? course.getWeekStudent().getId() : null;
         applyCourse(course, request);
         Course saved = courseRepository.save(course);
@@ -401,7 +418,11 @@ public class AcademicService {
                         resolveWeekStudentId(
                                 ExcelSupport.getString(row, 0),
                                 ExcelSupport.getString(row, 1),
-                                ExcelSupport.getString(row, 3))),
+                                ExcelSupport.getString(row, 3)),
+                        null,
+                        null,
+                        null,
+                        null),
                         actor);
                 imported++;
             } catch (Exception exception) {
@@ -508,7 +529,6 @@ public class AcademicService {
     }
 
     private void applyCourse(Course course, AcademicCourseRequest request) {
-        course.setName(request.name().trim());
         course.setParallel(request.parallel().trim().toUpperCase());
         course.setLevel(request.level().trim());
         if (request.section() != null) {
@@ -520,6 +540,22 @@ public class AcademicService {
         if (request.grade() != null) {
             course.setGrade(request.grade());
         }
+        if (request.academicYearId() != null) {
+            course.setAcademicYear(academicYearRepository.findById(request.academicYearId())
+                    .orElse(null));
+        } else {
+            course.setAcademicYear(academicYearRepository.findByActiveTrue().orElse(null));
+        }
+        if (request.schoolDayId() != null) {
+            course.setSchoolDay(schoolDayRepository.findById(request.schoolDayId())
+                    .orElse(null));
+        }
+        if (request.schoolModalityId() != null) {
+            course.setSchoolModality(schoolModalityRepository.findById(request.schoolModalityId())
+                    .orElse(null));
+        }
+        course.setCapacity(request.capacity());
+        course.setName(generateCourseName(course.getGrade(), course.getParallel()));
         course.setWeekStudent(resolveWeekStudent(request.weekStudentId(), course));
     }
 
@@ -700,7 +736,14 @@ public class AcademicService {
                         ? course.getWeekStudent().getEnrollmentNumber() + " - "
                                 + course.getWeekStudent().getUser().getFirstName() + " "
                                 + course.getWeekStudent().getUser().getLastName()
-                        : null);
+                        : null,
+                course.getAcademicYear() != null ? course.getAcademicYear().getId() : null,
+                course.getAcademicYear() != null ? course.getAcademicYear().getYear() : null,
+                course.getSchoolDay() != null ? course.getSchoolDay().getId() : null,
+                course.getSchoolDay() != null ? course.getSchoolDay().getName() : null,
+                course.getSchoolModality() != null ? course.getSchoolModality().getId() : null,
+                course.getSchoolModality() != null ? course.getSchoolModality().getName() : null,
+                course.getCapacity());
     }
 
     private void createAssignment(Course course, Student student, java.time.LocalDate startDate) {
@@ -892,5 +935,162 @@ public class AcademicService {
                 schedules.size(),
                 java.util.List.copyOf(subjects),
                 java.util.List.copyOf(courses));
+    }
+
+    @Transactional(readOnly = true)
+    public List<AcademicYearResponse> listAcademicYears() {
+        return academicYearRepository.findAll().stream()
+                .sorted(Comparator.comparingInt(AcademicYear::getYear).reversed())
+                .map(y -> new AcademicYearResponse(y.getId(), y.getYear(), y.isActive()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SchoolDayResponse> listSchoolDays() {
+        return schoolDayRepository.findAll().stream()
+                .filter(SchoolDay::isActive)
+                .sorted(Comparator.comparing(SchoolDay::getName))
+                .map(d -> new SchoolDayResponse(d.getId(), d.getName(), d.isActive()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SchoolModalityResponse> listSchoolModalities() {
+        return schoolModalityRepository.findAll().stream()
+                .filter(SchoolModality::isActive)
+                .sorted(Comparator.comparing(SchoolModality::getName))
+                .map(m -> new SchoolModalityResponse(m.getId(), m.getName(), m.isActive()))
+                .toList();
+    }
+
+    @Transactional
+    public AcademicYearResponse createAcademicYear(AcademicYearRequest request, String username) {
+        academicYearRepository.findByYear(request.year()).ifPresent(y -> {
+            throw new BusinessException("Ya existe un ano lectivo registrado para el ano " + request.year() + ".");
+        });
+        AcademicYear entity = new AcademicYear();
+        entity.setYear(request.year());
+        entity.setActive(request.active());
+        AcademicYear saved = academicYearRepository.save(entity);
+        auditService.log(username, "CREATE_ACADEMIC_YEAR", "ACADEMIC", String.valueOf(saved.getYear()));
+        return new AcademicYearResponse(saved.getId(), saved.getYear(), saved.isActive());
+    }
+
+    @Transactional
+    public AcademicYearResponse updateAcademicYear(Long id, AcademicYearRequest request, String username) {
+        AcademicYear entity = academicYearRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Ano lectivo no encontrado."));
+        if (entity.getYear() != request.year()
+                && academicYearRepository.findByYear(request.year()).isPresent()) {
+            throw new BusinessException("Ya existe un ano lectivo registrado para el ano " + request.year() + ".");
+        }
+        entity.setYear(request.year());
+        entity.setActive(request.active());
+        AcademicYear saved = academicYearRepository.save(entity);
+        auditService.log(username, "UPDATE_ACADEMIC_YEAR", "ACADEMIC", String.valueOf(saved.getYear()));
+        return new AcademicYearResponse(saved.getId(), saved.getYear(), saved.isActive());
+    }
+
+    @Transactional
+    public SchoolDayResponse createSchoolDay(SchoolDayRequest request, String username) {
+        schoolDayRepository.findByNameIgnoreCase(request.name().trim()).ifPresent(d -> {
+            throw new BusinessException("Ya existe una jornada con ese nombre.");
+        });
+        SchoolDay entity = new SchoolDay();
+        entity.setName(request.name().trim());
+        entity.setActive(request.active());
+        SchoolDay saved = schoolDayRepository.save(entity);
+        auditService.log(username, "CREATE_SCHOOL_DAY", "ACADEMIC", saved.getName());
+        return new SchoolDayResponse(saved.getId(), saved.getName(), saved.isActive());
+    }
+
+    @Transactional
+    public SchoolDayResponse updateSchoolDay(Long id, SchoolDayRequest request, String username) {
+        SchoolDay entity = schoolDayRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Jornada no encontrada."));
+        if (!entity.getName().equalsIgnoreCase(request.name().trim())
+                && schoolDayRepository.findByNameIgnoreCase(request.name().trim()).isPresent()) {
+            throw new BusinessException("Ya existe una jornada con ese nombre.");
+        }
+        entity.setName(request.name().trim());
+        entity.setActive(request.active());
+        SchoolDay saved = schoolDayRepository.save(entity);
+        auditService.log(username, "UPDATE_SCHOOL_DAY", "ACADEMIC", saved.getName());
+        return new SchoolDayResponse(saved.getId(), saved.getName(), saved.isActive());
+    }
+
+    @Transactional
+    public SchoolModalityResponse createSchoolModality(SchoolModalityRequest request, String username) {
+        schoolModalityRepository.findByNameIgnoreCase(request.name().trim()).ifPresent(m -> {
+            throw new BusinessException("Ya existe una modalidad con ese nombre.");
+        });
+        SchoolModality entity = new SchoolModality();
+        entity.setName(request.name().trim());
+        entity.setActive(request.active());
+        SchoolModality saved = schoolModalityRepository.save(entity);
+        auditService.log(username, "CREATE_SCHOOL_MODALITY", "ACADEMIC", saved.getName());
+        return new SchoolModalityResponse(saved.getId(), saved.getName(), saved.isActive());
+    }
+
+    @Transactional
+    public SchoolModalityResponse updateSchoolModality(Long id, SchoolModalityRequest request, String username) {
+        SchoolModality entity = schoolModalityRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Modalidad no encontrada."));
+        if (!entity.getName().equalsIgnoreCase(request.name().trim())
+                && schoolModalityRepository.findByNameIgnoreCase(request.name().trim()).isPresent()) {
+            throw new BusinessException("Ya existe una modalidad con ese nombre.");
+        }
+        entity.setName(request.name().trim());
+        entity.setActive(request.active());
+        SchoolModality saved = schoolModalityRepository.save(entity);
+        auditService.log(username, "UPDATE_SCHOOL_MODALITY", "ACADEMIC", saved.getName());
+        return new SchoolModalityResponse(saved.getId(), saved.getName(), saved.isActive());
+    }
+
+    private void validateCourseUniqueness(AcademicCourseRequest request, Long currentCourseId) {
+        if (request.grade() == null || request.subLevel() == null) {
+            return;
+        }
+        boolean exists = courseRepository.findAll().stream()
+                .filter(c -> !c.getId().equals(currentCourseId))
+                .anyMatch(c -> c.getGrade() != null
+                        && c.getGrade().equals(request.grade())
+                        && c.getParallel().equalsIgnoreCase(request.parallel().trim())
+                        && c.getSubLevel() != null
+                        && c.getSubLevel().name().equalsIgnoreCase(request.subLevel().trim()));
+        if (exists) {
+            throw new BusinessException("Ya existe un curso con ese subnivel, grado y paralelo. No se permiten duplicados.");
+        }
+        boolean existsWithoutSubLevel = courseRepository.findAll().stream()
+                .filter(c -> !c.getId().equals(currentCourseId))
+                .anyMatch(c -> c.getGrade() != null
+                        && c.getGrade().equals(request.grade())
+                        && c.getParallel().equalsIgnoreCase(request.parallel().trim())
+                        && c.getSubLevel() == null);
+        if (existsWithoutSubLevel) {
+            throw new BusinessException("Ya existe un curso con ese grado y paralelo (sin subnivel asignado). Edite el curso existente primero.");
+        }
+    }
+
+    private String generateCourseName(Integer grade, String parallel) {
+        if (grade == null || parallel == null || parallel.isBlank()) {
+            return "";
+        }
+        String gradeName;
+        switch (grade) {
+            case 1 -> gradeName = "Primero";
+            case 2 -> gradeName = "Segundo";
+            case 3 -> gradeName = "Tercero";
+            case 4 -> gradeName = "Cuarto";
+            case 5 -> gradeName = "Quinto";
+            case 6 -> gradeName = "Sexto";
+            case 7 -> gradeName = "Septimo";
+            case 8 -> gradeName = "Octavo";
+            case 9 -> gradeName = "Noveno";
+            case 10 -> gradeName = "Decimo";
+            default -> gradeName = grade + ". Grado";
+        }
+        String suffix = grade <= 10 ? " EGB" : " BGU";
+        return gradeName + suffix + " \"" + parallel.trim().toUpperCase() + "\"";
     }
 }

@@ -16,6 +16,13 @@ export type AcademicCourse = {
   grade: number | null;
   weekStudentId: number | null;
   weekStudentName: string | null;
+  academicYearId: number | null;
+  academicYear: number | null;
+  schoolDayId: number | null;
+  schoolDayName: string | null;
+  schoolModalityId: number | null;
+  schoolModalityName: string | null;
+  capacity: number | null;
 };
 
 export type AcademicStudent = {
@@ -105,4 +112,22 @@ export type ImportSummaryResult = {
   failed: number;
   message: string;
   errors: string[];
+};
+
+export type AcademicYearItem = {
+  id: number;
+  year: number;
+  active: boolean;
+};
+
+export type SchoolDayItem = {
+  id: number;
+  name: string;
+  active: boolean;
+};
+
+export type SchoolModalityItem = {
+  id: number;
+  name: string;
+  active: boolean;
 };

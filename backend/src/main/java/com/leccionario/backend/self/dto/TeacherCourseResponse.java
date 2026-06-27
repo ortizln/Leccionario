@@ -11,5 +11,12 @@ public record TeacherCourseResponse(
     String subLevel,
     Integer grade,
     List<String> subjectNames,
-    int scheduleCount
+    int scheduleCount,
+    Long academicYearId,
+    Integer academicYear,
+    Long schoolDayId,
+    String schoolDayName,
+    Long schoolModalityId,
+    String schoolModalityName,
+    Integer capacity
 ) {}

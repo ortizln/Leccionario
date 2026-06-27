@@ -18,6 +18,7 @@ import { StudentsComponent } from './features/academic/students/students.compone
 import { TeachersComponent } from './features/academic/teachers/teachers.component';
 import { SubjectsComponent } from './features/academic/subjects/subjects.component';
 import { RepresentativesComponent } from './features/academic/representatives/representatives.component';
+import { CatalogsComponent } from './features/academic/catalogs/catalogs.component';
 import { MyCourseComponent } from './features/self/my-course/my-course.component';
 import { MyTeachingComponent } from './features/self/my-teaching/my-teaching.component';
 
@@ -47,7 +48,8 @@ export const appRoutes: Routes = [
           { path: 'students', component: StudentsComponent },
           { path: 'teachers', component: TeachersComponent },
           { path: 'subjects', component: SubjectsComponent },
-          { path: 'representatives', component: RepresentativesComponent }
+          { path: 'representatives', component: RepresentativesComponent },
+          { path: 'catalogs', component: CatalogsComponent }
         ]
       },
       { path: 'schedules', component: ScheduleManagementComponent, canActivate: [permissionGuard], data: { permission: 'ACADEMIC_VIEW' } },

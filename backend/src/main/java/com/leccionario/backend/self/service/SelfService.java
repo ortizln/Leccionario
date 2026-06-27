@@ -88,7 +88,14 @@ public class SelfService {
                         ? course.getWeekStudent().getEnrollmentNumber() + " - "
                                 + course.getWeekStudent().getUser().getFirstName() + " "
                                 + course.getWeekStudent().getUser().getLastName()
-                        : null);
+                        : null,
+                course.getAcademicYear() != null ? course.getAcademicYear().getId() : null,
+                course.getAcademicYear() != null ? course.getAcademicYear().getYear() : null,
+                course.getSchoolDay() != null ? course.getSchoolDay().getId() : null,
+                course.getSchoolDay() != null ? course.getSchoolDay().getName() : null,
+                course.getSchoolModality() != null ? course.getSchoolModality().getId() : null,
+                course.getSchoolModality() != null ? course.getSchoolModality().getName() : null,
+                course.getCapacity());
     }
 
     @Transactional(readOnly = true)
@@ -167,7 +174,14 @@ public class SelfService {
                     course.getSubLevel() != null ? course.getSubLevel().name() : null,
                     course.getGrade(),
                     subjects,
-                    courseSchedules.size());
+                    courseSchedules.size(),
+                    course.getAcademicYear() != null ? course.getAcademicYear().getId() : null,
+                    course.getAcademicYear() != null ? course.getAcademicYear().getYear() : null,
+                    course.getSchoolDay() != null ? course.getSchoolDay().getId() : null,
+                    course.getSchoolDay() != null ? course.getSchoolDay().getName() : null,
+                    course.getSchoolModality() != null ? course.getSchoolModality().getId() : null,
+                    course.getSchoolModality() != null ? course.getSchoolModality().getName() : null,
+                    course.getCapacity());
         }).toList();
     }
 

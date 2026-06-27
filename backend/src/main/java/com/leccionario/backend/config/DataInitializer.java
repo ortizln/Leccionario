@@ -1,10 +1,17 @@
 package com.leccionario.backend.config;
 
 import com.leccionario.backend.academic.domain.AcademicPeriod;
+import com.leccionario.backend.academic.domain.AcademicYear;
 import com.leccionario.backend.academic.domain.Course;
+import com.leccionario.backend.academic.domain.CourseSubLevel;
+import com.leccionario.backend.academic.domain.SchoolDay;
+import com.leccionario.backend.academic.domain.SchoolModality;
 import com.leccionario.backend.academic.domain.Subject;
 import com.leccionario.backend.academic.repository.AcademicPeriodRepository;
+import com.leccionario.backend.academic.repository.AcademicYearRepository;
 import com.leccionario.backend.academic.repository.CourseRepository;
+import com.leccionario.backend.academic.repository.SchoolDayRepository;
+import com.leccionario.backend.academic.repository.SchoolModalityRepository;
 import com.leccionario.backend.academic.repository.SubjectRepository;
 import com.leccionario.backend.demerit.domain.Demerit;
 import com.leccionario.backend.demerit.repository.DemeritRepository;
@@ -42,8 +49,11 @@ public class DataInitializer implements CommandLineRunner {
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
     private final AcademicPeriodRepository academicPeriodRepository;
+    private final AcademicYearRepository academicYearRepository;
     private final CourseRepository courseRepository;
     private final SubjectRepository subjectRepository;
+    private final SchoolDayRepository schoolDayRepository;
+    private final SchoolModalityRepository schoolModalityRepository;
     private final DemeritRepository demeritRepository;
     private final ScheduleBlockRepository scheduleBlockRepository;
     private final CourseScheduleRepository courseScheduleRepository;
@@ -119,23 +129,63 @@ public class DataInitializer implements CommandLineRunner {
             academicPeriodRepository.save(period);
         }
 
+        seedSchoolDays();
+        seedSchoolModalities();
+
+        AcademicYear currentYear = academicYearRepository.findByActiveTrue()
+                .orElseGet(() -> {
+                    AcademicYear year = new AcademicYear();
+                    year.setYear(java.time.Year.now().getValue());
+                    year.setActive(true);
+                    return academicYearRepository.save(year);
+                });
+
+        SchoolDay defaultDay = schoolDayRepository.findAll().stream().filter(SchoolDay::isActive).findFirst().orElse(null);
+        SchoolModality defaultModality = schoolModalityRepository.findAll().stream().filter(SchoolModality::isActive).findFirst().orElse(null);
+
+        courseRepository.findAll().stream()
+                .filter(c -> c.getAcademicYear() == null)
+                .forEach(c -> {
+                    c.setAcademicYear(currentYear);
+                    if (c.getSchoolDay() == null && defaultDay != null) c.setSchoolDay(defaultDay);
+                    if (c.getSchoolModality() == null && defaultModality != null) c.setSchoolModality(defaultModality);
+                    if (c.getSubLevel() == null && c.getGrade() != null) {
+                        c.setSubLevel(resolveSubLevel(c.getGrade()));
+                    }
+                    if (c.getSection() == null && c.getSubLevel() != null) {
+                        c.setSection(c.getSubLevel() == com.leccionario.backend.academic.domain.CourseSubLevel.BGU
+                                ? com.leccionario.backend.academic.domain.CourseSection.BACHILLERATO
+                                : com.leccionario.backend.academic.domain.CourseSection.EGB);
+                    }
+                    courseRepository.save(c);
+                });
+
         if (courseRepository.findAll().isEmpty()) {
             Course first = new Course();
-            first.setName("Primero BGU");
+            first.setName("Primero BGU \"A\"");
             first.setParallel("A");
             first.setLevel("Bachillerato");
+            first.setSection(com.leccionario.backend.academic.domain.CourseSection.BACHILLERATO);
+            first.setSubLevel(CourseSubLevel.BGU);
+            first.setGrade(1);
             courseRepository.save(first);
 
             Course second = new Course();
-            second.setName("Segundo BGU");
+            second.setName("Segundo BGU \"B\"");
             second.setParallel("B");
             second.setLevel("Bachillerato");
+            second.setSection(com.leccionario.backend.academic.domain.CourseSection.BACHILLERATO);
+            second.setSubLevel(CourseSubLevel.BGU);
+            second.setGrade(2);
             courseRepository.save(second);
 
             Course third = new Course();
-            third.setName("Octavo EGB");
+            third.setName("Octavo EGB \"C\"");
             third.setParallel("C");
             third.setLevel("Basica Superior");
+            third.setSection(com.leccionario.backend.academic.domain.CourseSection.EGB);
+            third.setSubLevel(CourseSubLevel.SUPERIOR);
+            third.setGrade(8);
             courseRepository.save(third);
         }
 
@@ -302,5 +352,44 @@ public class DataInitializer implements CommandLineRunner {
             demerit.setActive(true);
             return demeritRepository.save(demerit);
         });
+    }
+
+    private void seedSchoolDays() {
+        seedSchoolDay("Matutino");
+        seedSchoolDay("Vespertino");
+    }
+
+    private void seedSchoolDay(String name) {
+        schoolDayRepository.findByNameIgnoreCase(name).orElseGet(() -> {
+            SchoolDay day = new SchoolDay();
+            day.setName(name);
+            day.setActive(true);
+            return schoolDayRepository.save(day);
+        });
+    }
+
+    private void seedSchoolModalities() {
+        seedSchoolModality("Presencial");
+        seedSchoolModality("Virtual");
+        seedSchoolModality("Hibrida");
+    }
+
+    private void seedSchoolModality(String name) {
+        schoolModalityRepository.findByNameIgnoreCase(name).orElseGet(() -> {
+            SchoolModality modality = new SchoolModality();
+            modality.setName(name);
+            modality.setActive(true);
+            return schoolModalityRepository.save(modality);
+        });
+    }
+
+    private CourseSubLevel resolveSubLevel(int grade) {
+        return switch (grade) {
+            case 1 -> CourseSubLevel.PREPARATORIA;
+            case 2, 3, 4 -> CourseSubLevel.ELEMENTAL;
+            case 5, 6, 7 -> CourseSubLevel.MEDIA;
+            case 8, 9, 10 -> CourseSubLevel.SUPERIOR;
+            default -> CourseSubLevel.BGU;
+        };
     }
 }
