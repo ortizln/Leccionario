@@ -6,5 +6,6 @@ public record ScheduleTeacherOptionResponse(
         Long id,
         String name,
         String specialization,
-        List<Long> subjectIds) {
+        List<Long> subjectIds,
+        List<String> courseNames) {
 }

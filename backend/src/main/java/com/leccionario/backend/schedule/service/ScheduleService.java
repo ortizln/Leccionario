@@ -99,16 +99,21 @@ public class ScheduleService {
                 teacherRepository.findAll().stream()
                         .sorted(Comparator.comparing(teacher -> teacher.getUser().getLastName() + teacher.getUser().getFirstName()))
                         .map(teacher -> {
-                            List<Long> subjectIds = courseScheduleRepository.findByTeacherIdOrderByWeekdayAscScheduleBlock_BlockOrderAsc(teacher.getId())
-                                    .stream()
+                            List<CourseSchedule> teacherSchedules = courseScheduleRepository.findByTeacherIdOrderByWeekdayAscScheduleBlock_BlockOrderAsc(teacher.getId());
+                            List<Long> subjectIds = teacherSchedules.stream()
                                     .map(s -> s.getSubject().getId())
                                     .distinct()
                                     .toList();
+                            java.util.Set<String> courseNames = new java.util.LinkedHashSet<>(teacher.getCourses());
+                            teacherSchedules.stream()
+                                    .map(s -> s.getCourse().getName() + " " + s.getCourse().getParallel())
+                                    .forEach(courseNames::add);
                             return new ScheduleTeacherOptionResponse(
                                     teacher.getId(),
                                     teacher.getUser().getFirstName() + " " + teacher.getUser().getLastName(),
                                     teacher.getSpecialization(),
-                                    subjectIds);
+                                    subjectIds,
+                                    java.util.List.copyOf(courseNames));
                         })
                         .toList());
     }
@@ -169,8 +174,9 @@ public class ScheduleService {
     public void deleteSchedule(Long id, String actor) {
         CourseSchedule schedule = courseScheduleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado"));
-        courseScheduleRepository.delete(schedule);
-        auditService.log(actor, "DELETE", "SCHEDULE", "Horario eliminado: " + schedule.getCourse().getName());
+        String courseName = schedule.getCourse().getName();
+        courseScheduleRepository.deleteByIdDirect(id);
+        auditService.log(actor, "DELETE", "SCHEDULE", "Horario eliminado: " + courseName);
     }
 
     @Transactional(readOnly = true)
@@ -360,10 +366,14 @@ public class ScheduleService {
                     .anyMatch(name -> name.equalsIgnoreCase(course.getName() + " " + course.getParallel())
                             || name.equalsIgnoreCase(course.getName()));
             if (!courseAssigned) {
-                throw new BusinessException("El curso " + course.getName() + " " + course.getParallel()
-                        + " no esta asignado al docente " + teacher.getUser().getFirstName()
-                        + " " + teacher.getUser().getLastName()
-                        + ". Asigne el curso al docente primero desde Gestion academica > Docentes.");
+                boolean inSchedules = courseScheduleRepository.existsByTeacherIdAndCourseId(
+                        teacher.getId(), course.getId());
+                if (!inSchedules) {
+                    throw new BusinessException("El curso " + course.getName() + " " + course.getParallel()
+                            + " no esta asignado al docente " + teacher.getUser().getFirstName()
+                            + " " + teacher.getUser().getLastName()
+                            + ". Asigne el curso al docente primero desde Gestion academica > Docentes.");
+                }
             }
         }
 

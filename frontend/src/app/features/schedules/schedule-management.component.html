@@ -333,7 +333,7 @@
           <form [formGroup]="scheduleForm" class="row g-3">
             <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Curso</label>
-              <select class="form-select form-select-sm" formControlName="courseId">
+              <select class="form-select form-select-sm" formControlName="courseId" (change)="onCourseChange()">
                 @for (course of overview.courses; track course.id) {
                   <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
                 }
@@ -348,14 +348,6 @@
               </select>
             </div>
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Bloque</label>
-              <select class="form-select form-select-sm" formControlName="scheduleBlockId">
-                @for (block of classBlocks; track block.id) {
-                  <option [value]="block.id">{{ block.label }}</option>
-                }
-              </select>
-            </div>
-            <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Dia</label>
               <select class="form-select form-select-sm" formControlName="weekday">
                 @for (day of weekdays; track day.value) {
@@ -364,10 +356,20 @@
               </select>
             </div>
             <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Bloque</label>
+              <select class="form-select form-select-sm" formControlName="scheduleBlockId">
+                @for (block of classBlocks; track block.id) {
+                  <option [value]="block.id">{{ block.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Docente</label>
               <select class="form-select form-select-sm" formControlName="teacherId" (change)="onTeacherChange()">
-                @for (teacher of overview.teachers; track teacher.id) {
+                @for (teacher of filteredTeachers; track teacher.id) {
                   <option [value]="teacher.id">{{ teacher.name }} &middot; {{ teacher.specialization }}</option>
+                } @empty {
+                  <option value="0" disabled>No hay docentes asignados a este curso</option>
                 }
               </select>
             </div>
@@ -376,6 +378,8 @@
               <select class="form-select form-select-sm" formControlName="subjectId">
                 @for (subject of filteredSubjects; track subject.id) {
                   <option [value]="subject.id">{{ subject.name }}</option>
+                } @empty {
+                  <option value="0" disabled>Seleccione un docente</option>
                 }
               </select>
             </div>
@@ -383,9 +387,25 @@
               <label class="form-label fw-semibold">Aula</label>
               <input class="form-control form-control-sm" type="text" formControlName="classroom" placeholder="Aula 1">
             </div>
+            @if (teacherConflictMessage) {
+              <div class="col-12">
+                <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-0 small">
+                  <i class="bi bi-exclamation-triangle"></i>
+                  <span>{{ teacherConflictMessage }}</span>
+                </div>
+              </div>
+            }
+            @if (scheduleError) {
+              <div class="col-12">
+                <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-0 small">
+                  <i class="bi bi-exclamation-triangle"></i>
+                  <span>{{ scheduleError }}</span>
+                </div>
+              </div>
+            }
             <div class="col-12 d-flex justify-content-end gap-2">
               <button class="btn btn-sm btn-outline-primary" type="button" (click)="scheduleModalOpen = false">Cancelar</button>
-              <button class="btn btn-sm btn-primary" type="button" (click)="saveSchedule()">
+              <button class="btn btn-sm btn-primary" type="button" (click)="saveSchedule()" [disabled]="!!teacherConflictMessage">
                 {{ editingScheduleId ? 'Guardar asignacion' : 'Crear asignacion' }}
               </button>
             </div>

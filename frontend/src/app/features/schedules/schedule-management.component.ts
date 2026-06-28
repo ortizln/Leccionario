@@ -108,6 +108,8 @@ export class ScheduleManagementComponent {
     classroom: ['']
   });
 
+  scheduleError = '';
+
   constructor() {
     this.loadOverview();
   }
@@ -129,18 +131,60 @@ export class ScheduleManagementComponent {
 
   get filteredSubjects() {
     const subjects = this.overview?.subjects ?? [];
-    const teachers = this.overview?.teachers ?? [];
     const teacherId = this.scheduleForm.controls.teacherId.value;
     if (!teacherId) return subjects;
+    const teachers = this.overview?.teachers ?? [];
     const teacher = teachers.find(t => t.id === teacherId);
     if (!teacher || !teacher.subjectIds || teacher.subjectIds.length === 0) return subjects;
     return subjects.filter(s => teacher.subjectIds.includes(s.id));
   }
 
+  get filteredTeachers() {
+    const teachers = this.overview?.teachers ?? [];
+    const courseId = Number(this.scheduleForm.controls.courseId.value);
+    if (!courseId) return teachers;
+    const course = this.overview.courses.find(c => c.id === courseId);
+    if (!course) return teachers;
+    const courseLabel = course.name + ' ' + course.parallel;
+    return teachers.filter(t => t.courseNames.some(cn => cn.toLowerCase().trim() === courseLabel.toLowerCase().trim()));
+  }
+
+  get teacherConflictMessage(): string {
+    const teacherId = Number(this.scheduleForm.controls.teacherId.value);
+    const blockId = Number(this.scheduleForm.controls.scheduleBlockId.value);
+    const weekday = Number(this.scheduleForm.controls.weekday.value);
+    const periodId = Number(this.scheduleForm.controls.periodId.value);
+    const editingId = this.editingScheduleId;
+    if (!teacherId || !blockId || !weekday || !periodId) return '';
+    const conflict = this.overview.schedules.find(s =>
+      s.teacherId === teacherId
+      && s.scheduleBlockId === blockId
+      && s.weekday === weekday
+      && s.periodId === periodId
+      && s.id !== editingId
+    );
+    if (!conflict) return '';
+    return `El docente ya tiene bloque asignado el ${this.weekdayLabel(weekday)} en ${conflict.scheduleLabel} para el curso ${conflict.courseName}.`;
+  }
+
+  onCourseChange(): void {
+    const teachers = this.filteredTeachers;
+    const currentTeacher = Number(this.scheduleForm.controls.teacherId.value);
+    if (teachers.length > 0 && !teachers.some(t => t.id === currentTeacher)) {
+      this.scheduleForm.controls.teacherId.setValue(teachers[0].id);
+      this.onTeacherChange();
+    } else if (teachers.length === 0) {
+      this.scheduleForm.controls.teacherId.setValue(0);
+      this.scheduleForm.controls.subjectId.setValue(0);
+    }
+  }
+
   onTeacherChange(): void {
     const subjects = this.filteredSubjects;
     const current = this.scheduleForm.controls.subjectId.value;
-    if (subjects.length > 0 && !subjects.some(s => s.id === current)) {
+    if (subjects.length === 1) {
+      this.scheduleForm.controls.subjectId.setValue(subjects[0].id);
+    } else if (subjects.length > 0 && !subjects.some(s => s.id === current)) {
       this.scheduleForm.controls.subjectId.setValue(subjects[0].id);
     }
   }
@@ -174,6 +218,7 @@ export class ScheduleManagementComponent {
 
   editSchedule(schedule: CourseScheduleItem): void {
     this.editingScheduleId = schedule.id;
+    this.scheduleError = '';
     this.scheduleForm.setValue({
       courseId: schedule.courseId,
       periodId: schedule.periodId,
@@ -200,6 +245,7 @@ export class ScheduleManagementComponent {
 
   resetScheduleForm(): void {
     this.editingScheduleId = null;
+    this.scheduleError = '';
     this.scheduleForm.reset({
       courseId: this.overview.courses[0]?.id ?? 0,
       periodId: this.overview.periods[0]?.id ?? 0,
@@ -230,9 +276,10 @@ export class ScheduleManagementComponent {
   }
 
   saveSchedule(): void {
-    if (!this.canManageSchedules || this.scheduleForm.invalid) {
+    if (!this.canManageSchedules || this.scheduleForm.invalid || this.teacherConflictMessage) {
       return;
     }
+    this.scheduleError = '';
 
     const raw = this.scheduleForm.getRawValue();
     const payload = {
@@ -248,10 +295,16 @@ export class ScheduleManagementComponent {
       ? this.http.put(`${API_URL}/schedules/course-assignments/${this.editingScheduleId}`, payload)
       : this.http.post(`${API_URL}/schedules/course-assignments`, payload);
 
-    request$.subscribe({
-      next: () => this.loadOverview(() => this.resetScheduleForm()),
-      error: (error) => {
-        this.errorMessage = error?.error?.message ?? 'No se pudo guardar la asignacion del horario.';
+    request$.pipe(
+      catchError((error) => {
+        this.scheduleError = error?.error?.message ?? 'No se pudo guardar la asignacion del horario.';
+        return of(null);
+      })
+    ).subscribe({
+      next: (result) => {
+        if (result !== null) {
+          this.loadOverview(() => this.resetScheduleForm());
+        }
       }
     });
   }
@@ -363,7 +416,7 @@ type ScheduleOverview = {
   courses: Array<{ id: number; name: string; parallel: string; level: string; section: string | null; subLevel: string | null; grade: number | null }>;
   periods: Array<{ id: number; name: string; startDate: string; endDate: string; active: boolean }>;
   subjects: Array<{ id: number; name: string; code: string; curriculumArea: string }>;
-  teachers: Array<{ id: number; name: string; specialization: string; subjectIds: number[] }>;
+  teachers: Array<{ id: number; name: string; specialization: string; subjectIds: number[]; courseNames: string[] }>;
 };
 
 type ScheduleBlockItem = {

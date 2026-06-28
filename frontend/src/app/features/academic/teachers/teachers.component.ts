@@ -95,11 +95,12 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
     @if (detailTeacher) {
       <div class="modal-shell" (click)="closeTeacherDetail()">
         <div class="modal-card modal-card-lg" style="max-width:720px" (click)="$event.stopPropagation()">
+          @let dt = detailTeacher;
           <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
             <div>
               <span class="badge rounded-pill text-bg-primary mb-2"><i class="bi bi-person-badge me-1"></i>Ficha del docente</span>
-              <h2 class="h4 mb-0">{{ detailTeacher.fullName }}</h2>
-              <div class="text-muted small">{{ detailTeacher.specialization || 'Sin especialidad' }} &middot; {{ detailTeacher.weeklyBlocks }} bloques/semana</div>
+              <h2 class="h4 mb-0">{{ dt.fullName }}</h2>
+              <div class="text-muted small">{{ dt.specialization || 'Sin especialidad' }} &middot; {{ dt.weeklyBlocks }} bloques/semana</div>
             </div>
             <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeTeacherDetail()"><i class="bi bi-x-lg"></i></button>
           </div>
@@ -133,22 +134,22 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h3 class="h6 mb-0">Informacion personal</h3>
                   @if (canManageAcademic) {
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeTeacherDetail(); editTeacher(detailTeacher)"><i class="bi bi-pencil me-1"></i>Editar</button>
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="editTeacher(dt)"><i class="bi bi-pencil me-1"></i>Editar</button>
                   }
                 </div>
                 <dl class="row mb-0 small">
                   <dt class="col-4 col-md-3 text-muted">Nombres</dt>
-                  <dd class="col-8 col-md-9 mb-1">{{ detailTeacher.firstName }} {{ detailTeacher.lastName }}</dd>
+                  <dd class="col-8 col-md-9 mb-1">{{ dt.firstName }} {{ dt.lastName }}</dd>
                   <dt class="col-4 col-md-3 text-muted">Usuario</dt>
-                  <dd class="col-8 col-md-9 mb-1">{{ detailTeacher.username }}</dd>
+                  <dd class="col-8 col-md-9 mb-1">{{ dt.username }}</dd>
                   <dt class="col-4 col-md-3 text-muted">Correo</dt>
-                  <dd class="col-8 col-md-9 mb-1">{{ detailTeacher.username }}&#64;educacion.gob.ec</dd>
+                  <dd class="col-8 col-md-9 mb-1">{{ dt.username }}&#64;educacion.gob.ec</dd>
                   <dt class="col-4 col-md-3 text-muted">Especialidad</dt>
-                  <dd class="col-8 col-md-9 mb-1">{{ detailTeacher.specialization || 'Sin especialidad' }}</dd>
+                  <dd class="col-8 col-md-9 mb-1">{{ dt.specialization || 'Sin especialidad' }}</dd>
                   <dt class="col-4 col-md-3 text-muted">Estado</dt>
                   <dd class="col-8 col-md-9 mb-1">
-                    <span class="badge rounded-pill" [class.text-bg-success]="detailTeacher.enabled" [class.text-bg-secondary]="!detailTeacher.enabled">
-                      {{ detailTeacher.enabled ? 'Activo' : 'Inactivo' }}
+                    <span class="badge rounded-pill" [class.text-bg-success]="dt.enabled" [class.text-bg-secondary]="!dt.enabled">
+                      {{ dt.enabled ? 'Activo' : 'Inactivo' }}
                     </span>
                   </dd>
                 </dl>
@@ -162,14 +163,14 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h3 class="h6 mb-0"><i class="bi bi-book me-2"></i>Materias asignadas</h3>
                   @if (canManageAcademic) {
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeTeacherDetail(); editTeacher(detailTeacher)">
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="editTeacher(dt)">
                       <i class="bi bi-pencil me-1"></i>Editar
                     </button>
                   }
                 </div>
-                @if (detailTeacher.subjects.length > 0) {
+                @if (dt.subjects.length > 0) {
                   <div class="d-flex flex-wrap gap-2">
-                    @for (subj of detailTeacher.subjects; track subj) {
+                    @for (subj of dt.subjects; track subj) {
                       <span class="badge rounded-pill text-bg-light">{{ subj }}</span>
                     }
                   </div>
@@ -189,14 +190,14 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h3 class="h6 mb-0"><i class="bi bi-mortarboard me-2"></i>Cursos asignados</h3>
                   @if (canManageAcademic) {
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeTeacherDetail(); editTeacher(detailTeacher)">
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="editTeacher(dt)">
                       <i class="bi bi-pencil me-1"></i>Editar
                     </button>
                   }
                 </div>
-                @if (detailTeacher.courses.length > 0) {
+                @if (dt.courses.length > 0) {
                   <div class="d-flex flex-wrap gap-2">
-                    @for (course of detailTeacher.courses; track course) {
+                    @for (course of dt.courses; track course) {
                       <span class="badge rounded-pill text-bg-light">{{ course }}</span>
                     }
                   </div>
@@ -216,12 +217,12 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h3 class="h6 mb-0"><i class="bi bi-calendar-week me-2"></i>Horario semanal</h3>
                   @if (canManageAcademic) {
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="startAddScheduleEntry(detailTeacher.id)">
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="startAddScheduleEntry(dt.id)">
                       <i class="bi bi-plus-circle me-1"></i>Agregar bloque
                     </button>
                   }
                 </div>
-                @if (teacherSchedule(detailTeacher.id).length === 0) {
+                @if (teacherSchedule(dt.id).length === 0) {
                   <div class="text-center py-4">
                     <i class="bi bi-calendar-x text-muted" style="font-size:2rem"></i>
                     <p class="text-muted small mt-2 mb-0">Sin horario asignado.</p>
@@ -229,7 +230,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                 } @else {
                   <ul class="nav nav-tabs nav-tabs-sm mb-3">
                     @for (day of weekdays; track day.value) {
-                      @if (teacherScheduleByDay(detailTeacher.id, day.value).length > 0) {
+                      @if (teacherScheduleByDay(dt.id, day.value).length > 0) {
                         <li class="nav-item">
                           <button class="nav-link" [class.active]="selectedScheduleDay === day.value" type="button" (click)="selectedScheduleDay = day.value">
                             {{ day.shortLabel }}
@@ -238,7 +239,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                       }
                     }
                   </ul>
-                  @let dayEntries = teacherScheduleByDay(detailTeacher.id, selectedScheduleDay);
+                  @let dayEntries = teacherScheduleByDay(dt.id, selectedScheduleDay);
                   @if (dayEntries.length > 0) {
                     <div class="table-responsive">
                       <table class="table table-xs table-hover align-middle mb-0">
@@ -407,27 +408,49 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
 
     @if (courseModalOpen) {
       <div class="modal-shell">
-        <div class="modal-card" style="max-width: 520px;">
+        <div class="modal-card" style="max-width: 680px;">
           <div class="d-flex justify-content-between align-items-start mb-3">
-            <h5 class="mb-0">Cursos asignados</h5>
+            <h5 class="mb-0">Asignacion de cursos</h5>
             <button class="btn-close" type="button" (click)="courseModalOpen = false"></button>
           </div>
-          <div class="mb-2">
+          <div class="mb-3">
             <input class="form-control form-control-sm" type="search" placeholder="Buscar curso..."
                    [value]="courseSearch" (input)="courseSearch = $any($event.target).value">
           </div>
-          <div class="d-grid gap-1" style="max-height: 320px; overflow-y: auto;">
-            @for (course of filteredCourseOptions; track course) {
-              <label class="d-flex align-items-center gap-2 px-2 py-1 rounded-2 small" style="cursor:pointer"
-                     [class.bg-primary]="courseTempSelection.has(course)" [class.text-white]="courseTempSelection.has(course)"
-                     [class.bg-light]="!courseTempSelection.has(course)"
-                     (click)="toggleCourseTemp(course)">
-                <input class="form-check-input m-0" type="checkbox" [checked]="courseTempSelection.has(course)">
-                {{ course }}
-              </label>
-            } @empty {
-              <p class="text-muted small text-center py-3 mb-0">No hay cursos disponibles.</p>
-            }
+          <div class="row g-3" style="max-height: 400px; overflow-y: auto;">
+            <div class="col-6">
+              <div class="small fw-semibold text-muted mb-2">
+                <i class="bi bi-check-circle me-1 text-success"></i>Asignados ({{ courseTempSelection.size }})
+              </div>
+              <div class="d-grid gap-1">
+                @for (course of filteredAssignedCourses(); track course) {
+                  <div class="d-flex align-items-center gap-2 px-2 py-1 rounded-2 small bg-success-subtle border border-success-subtle"
+                       style="cursor:pointer" (click)="toggleCourseTemp(course)">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    <span class="flex-grow-1">{{ course }}</span>
+                    <i class="bi bi-x-lg text-danger small"></i>
+                  </div>
+                } @empty {
+                  <p class="text-muted small text-center py-3 mb-0">Sin cursos asignados.</p>
+                }
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="small fw-semibold text-muted mb-2">
+                <i class="bi bi-plus-circle me-1 text-primary"></i>Disponibles ({{ filteredAvailableCourses().length }})
+              </div>
+              <div class="d-grid gap-1">
+                @for (course of filteredAvailableCourses(); track course) {
+                  <div class="d-flex align-items-center gap-2 px-2 py-1 rounded-2 small bg-light"
+                       style="cursor:pointer" (click)="toggleCourseTemp(course)">
+                    <i class="bi bi-plus-circle text-primary"></i>
+                    <span class="flex-grow-1">{{ course }}</span>
+                  </div>
+                } @empty {
+                  <p class="text-muted small text-center py-3 mb-0">No hay cursos pendientes.</p>
+                }
+              </div>
+            </div>
           </div>
           <div class="d-flex justify-content-end gap-2 mt-3">
             <button class="btn btn-sm btn-outline-primary" type="button" (click)="courseModalOpen = false">Cancelar</button>
@@ -488,6 +511,12 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
           }
 
           <h6 class="small fw-bold text-muted mb-2">{{ editingScheduleEntryId ? 'Editar bloque' : 'Nuevo bloque' }}</h6>
+          @if (scheduleError) {
+            <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-2 small">
+              <i class="bi bi-exclamation-triangle"></i>
+              <span>{{ scheduleError }}</span>
+            </div>
+          }
           <form [formGroup]="scheduleForm" class="d-grid gap-3">
             <div class="row g-3">
               <div class="col-12 col-md-6">
@@ -588,6 +617,8 @@ export class TeachersComponent implements OnInit {
     weekday: [1, Validators.required],
     classroom: ['']
   });
+
+  scheduleError = '';
 
   readonly weekdays = [
     { value: 1, label: 'Lunes', shortLabel: 'Lun' },
@@ -721,6 +752,24 @@ export class TeachersComponent implements OnInit {
     return list;
   }
 
+  filteredAssignedCourses(): string[] {
+    let list = Array.from(this.courseTempSelection);
+    const q = this.courseSearch.toLowerCase().trim();
+    if (q) {
+      list = list.filter(c => c.toLowerCase().includes(q));
+    }
+    return list;
+  }
+
+  filteredAvailableCourses(): string[] {
+    const q = this.courseSearch.toLowerCase().trim();
+    let list = this.allCourseNames.filter(c => !this.courseTempSelection.has(c));
+    if (q) {
+      list = list.filter(c => c.toLowerCase().includes(q));
+    }
+    return list;
+  }
+
   onAreaChange(): void {
     this.subjectSearch = '';
     this.pendingSubjectSelection.clear();
@@ -791,6 +840,7 @@ export class TeachersComponent implements OnInit {
     this.editingScheduleEntryId = null;
     this.addingScheduleFor = teacherId;
     this.scheduleModalTeacher = this.teachers.find(t => t.id === teacherId) || null;
+    this.scheduleError = '';
     this.scheduleForm.reset({
       courseId: this.teacherScheduleCourses()[0]?.id ?? 0,
       subjectId: this.teacherScheduleSubjects()[0]?.id ?? 0,
@@ -804,6 +854,7 @@ export class TeachersComponent implements OnInit {
     this.addingScheduleFor = null;
     this.editingScheduleEntryId = entry.id;
     this.scheduleModalTeacher = this.teachers.find(t => t.id === entry.teacherId) || null;
+    this.scheduleError = '';
     this.scheduleForm.setValue({
       courseId: entry.courseId,
       subjectId: entry.subjectId,
@@ -822,6 +873,7 @@ export class TeachersComponent implements OnInit {
 
   saveScheduleEntry(teacherId: number): void {
     if (!this.canManageAcademic || this.scheduleForm.invalid) return;
+    this.scheduleError = '';
     const payload = {
       ...this.scheduleForm.getRawValue(),
       teacherId,
@@ -834,13 +886,20 @@ export class TeachersComponent implements OnInit {
       ? this.http.put(url, payload)
       : this.http.post(url, payload);
 
-    request$.pipe(catchError(() => of(null))).subscribe({
-      next: () => {
-        const savedDay = this.scheduleForm.getRawValue().weekday;
-        this.cancelScheduleEdit();
-        this.loadData();
-        this.selectedScheduleDay = savedDay;
-        this.detailTab = 'horario';
+    request$.pipe(
+      catchError((error) => {
+        this.scheduleError = error?.error?.message || 'No se pudo guardar el bloque horario.';
+        return of(null);
+      })
+    ).subscribe({
+      next: (result) => {
+        if (result !== null) {
+          const savedDay = this.scheduleForm.getRawValue().weekday;
+          this.cancelScheduleEdit();
+          this.loadData();
+          this.selectedScheduleDay = savedDay;
+          this.detailTab = 'horario';
+        }
       }
     });
   }
