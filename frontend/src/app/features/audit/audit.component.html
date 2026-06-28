@@ -7,7 +7,7 @@
       </header>
 
       <div class="card border-0 shadow-sm">
-        <div class="card-body">
+        <div class="card-body p-4">
           <div class="row g-3 mb-4">
             <div class="col-12 col-md-4">
               <input class="form-control form-control-sm" type="text" placeholder="Buscar por usuario" [(ngModel)]="usernameFilter">
@@ -26,18 +26,48 @@
           </div>
 
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-xs table-hover align-middle mb-0">
               <thead>
                 <tr>
-                  <th>Fecha</th>
-                  <th>Usuario</th>
-                  <th>Modulo</th>
-                  <th>Accion</th>
-                  <th>Detalle</th>
+                  <th>
+                    <div class="d-flex align-items-center gap-1">
+                      <span appSortableHeader label="Fecha" [dir]="sortColumn('createdAt')" (toggle)="onSort('createdAt')"></span>
+                      <span appFilterDropdown label="Fecha" [options]="filterOpts('createdAt')" [selected]="getFilter('createdAt')"
+                            [activeCount]="getFilter('createdAt').size" (toggle)="onFilter('createdAt', $event)" (clear)="onClearFilter('createdAt')"></span>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="d-flex align-items-center gap-1">
+                      <span appSortableHeader label="Usuario" [dir]="sortColumn('username')" (toggle)="onSort('username')"></span>
+                      <span appFilterDropdown label="Usuario" [options]="filterOpts('username')" [selected]="getFilter('username')"
+                            [activeCount]="getFilter('username').size" (toggle)="onFilter('username', $event)" (clear)="onClearFilter('username')"></span>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="d-flex align-items-center gap-1">
+                      <span appSortableHeader label="Modulo" [dir]="sortColumn('module')" (toggle)="onSort('module')"></span>
+                      <span appFilterDropdown label="Modulo" [options]="filterOpts('module')" [selected]="getFilter('module')"
+                            [activeCount]="getFilter('module').size" (toggle)="onFilter('module', $event)" (clear)="onClearFilter('module')"></span>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="d-flex align-items-center gap-1">
+                      <span appSortableHeader label="Accion" [dir]="sortColumn('action')" (toggle)="onSort('action')"></span>
+                      <span appFilterDropdown label="Accion" [options]="filterOpts('action')" [selected]="getFilter('action')"
+                            [activeCount]="getFilter('action').size" (toggle)="onFilter('action', $event)" (clear)="onClearFilter('action')"></span>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="d-flex align-items-center gap-1">
+                      <span appSortableHeader label="Detalle" [dir]="sortColumn('details')" (toggle)="onSort('details')"></span>
+                      <span appFilterDropdown label="Detalle" [options]="filterOpts('details')" [selected]="getFilter('details')"
+                            [activeCount]="getFilter('details').size" (toggle)="onFilter('details', $event)" (clear)="onClearFilter('details')"></span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                @for (item of logs$ | async; track item.id) {
+                @for (item of displayedLogs; track item.id) {
                   <tr>
                     <td>{{ item.createdAt | date:'yyyy-MM-dd HH:mm' }}</td>
                     <td>{{ item.username }}</td>

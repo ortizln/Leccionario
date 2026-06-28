@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/auth.service';
 import { BrandingService } from './core/branding.service';
@@ -9,20 +9,34 @@ import { BrandingService } from './core/branding.service';
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './shell.component.html'
 })
-export class ShellComponent {
+export class ShellComponent implements OnInit {
   protected auth = inject(AuthService);
   protected brandingService = inject(BrandingService);
   private router = inject(Router);
 
   protected academicMenuOpen = false;
+  sidebarCollapsed = false;
 
   constructor() {
     this.brandingService.syncAuthenticatedBranding();
     this.academicMenuOpen = this.router.url.startsWith('/app/academic/');
   }
 
+  ngOnInit(): void {
+    this.sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (this.sidebarCollapsed) {
+      document.body.classList.add('sidebar-collapsed');
+    }
+  }
+
   protected toggleAcademicMenu(): void {
     this.academicMenuOpen = !this.academicMenuOpen;
+  }
+
+  toggleSidebar(): void {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+    localStorage.setItem('sidebarCollapsed', String(this.sidebarCollapsed));
+    document.body.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
   }
 
   protected displayName(): string {

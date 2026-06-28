@@ -1,10 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, of } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { API_URL } from '../../../core/api.config';
 import { AuthService } from '../../../core/auth.service';
 import { AcademicCourse, AcademicStudent, AcademicOverview } from '../academic.models';
+import { SortableHeaderComponent } from '../../../shared/sortable-header.component';
+import { FilterDropdownComponent } from '../../../shared/filter-dropdown.component';
+import { SortState, FilterState, applySort, applyFilters, getFilterOptions, toggleFilter, clearFilter, SortDir } from '../../../shared/table-utils';
 
 export type StudentRepresentative = {
   id: number;
@@ -23,7 +26,7 @@ export type StudentRepresentative = {
 @Component({
   selector: 'app-academic-representatives',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule, SortableHeaderComponent, FilterDropdownComponent],
   template: `
     <div class="card border-0 shadow-sm h-100">
       <div class="card-body p-4 d-grid gap-4">
@@ -119,20 +122,56 @@ export type StudentRepresentative = {
         }
 
         <div class="table-responsive">
-          <table class="table table-striped align-middle mb-0">
+          <table class="table table-xs table-striped align-middle mb-0">
             <thead>
               <tr>
-                <th>Estudiante</th>
-                <th>Representante</th>
-                <th>Parentesco</th>
-                <th>Telefono</th>
-                <th>Email</th>
-                <th>Emergencia</th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Estudiante" [dir]="sortColumn('studentName')" (toggle)="onSort('studentName')"></span>
+                    <span appFilterDropdown label="Estudiante" [options]="filterOpts('studentName')" [selected]="getFilter('studentName')"
+                          [activeCount]="getFilter('studentName').size" (toggle)="onFilter('studentName', $event)" (clear)="onClearFilter('studentName')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Representante" [dir]="sortColumn('fullName')" (toggle)="onSort('fullName')"></span>
+                    <span appFilterDropdown label="Representante" [options]="filterOpts('fullName')" [selected]="getFilter('fullName')"
+                          [activeCount]="getFilter('fullName').size" (toggle)="onFilter('fullName', $event)" (clear)="onClearFilter('fullName')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Parentesco" [dir]="sortColumn('relationship')" (toggle)="onSort('relationship')"></span>
+                    <span appFilterDropdown label="Parentesco" [options]="filterOpts('relationship')" [selected]="getFilter('relationship')"
+                          [activeCount]="getFilter('relationship').size" (toggle)="onFilter('relationship', $event)" (clear)="onClearFilter('relationship')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Telefono" [dir]="sortColumn('phone')" (toggle)="onSort('phone')"></span>
+                    <span appFilterDropdown label="Telefono" [options]="filterOpts('phone')" [selected]="getFilter('phone')"
+                          [activeCount]="getFilter('phone').size" (toggle)="onFilter('phone', $event)" (clear)="onClearFilter('phone')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Email" [dir]="sortColumn('email')" (toggle)="onSort('email')"></span>
+                    <span appFilterDropdown label="Email" [options]="filterOpts('email')" [selected]="getFilter('email')"
+                          [activeCount]="getFilter('email').size" (toggle)="onFilter('email', $event)" (clear)="onClearFilter('email')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Emergencia" [dir]="sortColumn('emergencyContact')" (toggle)="onSort('emergencyContact')"></span>
+                    <span appFilterDropdown label="Emergencia" [options]="filterOpts('emergencyContact')" [selected]="getFilter('emergencyContact')"
+                          [activeCount]="getFilter('emergencyContact').size" (toggle)="onFilter('emergencyContact', $event)" (clear)="onClearFilter('emergencyContact')"></span>
+                  </div>
+                </th>
                 <th class="text-end"></th>
               </tr>
             </thead>
             <tbody>
-              @for (rep of filtered(); track rep.id) {
+              @for (rep of displayedRepresentatives; track rep.id) {
                 <tr>
                   <td>
                     <div class="fw-semibold small">{{ rep.enrollmentNumber }}</div>
@@ -182,6 +221,26 @@ export class RepresentativesComponent implements OnInit {
   editorOpen = false;
   editingId: number | null = null;
 
+  sort: SortState | null = null;
+  filters: FilterState = {};
+  displayedRepresentatives: StudentRepresentative[] = [];
+
+  sortColumn(col: string): SortDir { return this.sort?.column === col ? this.sort.dir : null; }
+  onSort(col: string): void {
+    const dir: SortDir = this.sort?.column === col
+      ? (this.sort.dir === 'asc' ? 'desc' : this.sort.dir === 'desc' ? null : 'asc')
+      : 'asc';
+    this.sort = dir ? { column: col, dir } : null;
+    this.refreshDisplayed();
+  }
+  filterOpts(col: string): string[] { return getFilterOptions(this.representatives, col); }
+  getFilter(col: string): Set<string> { return this.filters[col] ?? new Set(); }
+  onFilter(col: string, val: string): void { this.filters = toggleFilter(this.filters, col, val); this.refreshDisplayed(); }
+  onClearFilter(col: string): void { this.filters = clearFilter(this.filters, col); this.refreshDisplayed(); }
+  refreshDisplayed(): void {
+    this.displayedRepresentatives = applyFilters(applySort(this.representatives, this.sort), this.filters);
+  }
+
   form = this.fb.nonNullable.group({
     studentId: [0, Validators.required],
     fullName: ['', Validators.required],
@@ -230,16 +289,14 @@ export class RepresentativesComponent implements OnInit {
   }
 
   load(): void {
-    this.http.get<StudentRepresentative[]>(`${API_URL}/academic/representatives`).pipe(
-      catchError(() => of([]))
-    ).subscribe(data => {
-      this.representatives = data;
-    });
-    this.http.get<AcademicOverview>(`${API_URL}/academic/overview`).pipe(
-      catchError(() => of({ courses: [], subjects: [], periods: [], students: [], teachers: [] }))
-    ).subscribe(data => {
-      this.courses = data.courses;
-      this.students = data.students;
+    forkJoin({
+      representatives: this.http.get<StudentRepresentative[]>(`${API_URL}/academic/representatives`).pipe(catchError(() => of([]))),
+      overview: this.http.get<AcademicOverview>(`${API_URL}/academic/overview`).pipe(catchError(() => of({ courses: [], subjects: [], periods: [], students: [], teachers: [] })))
+    }).subscribe(({ representatives, overview }) => {
+      this.representatives = representatives;
+      this.courses = overview.courses;
+      this.students = overview.students;
+      this.refreshDisplayed();
     });
   }
 

@@ -11,6 +11,7 @@ import com.leccionario.backend.common.excel.ExcelSupport;
 import com.leccionario.backend.common.excel.ImportSummaryResponse;
 import com.leccionario.backend.common.exception.BusinessException;
 import com.leccionario.backend.common.exception.ResourceNotFoundException;
+import com.leccionario.backend.academic.domain.Course;
 import com.leccionario.backend.schedule.domain.CourseSchedule;
 import com.leccionario.backend.schedule.domain.ScheduleBlock;
 import com.leccionario.backend.schedule.domain.Weekday;
@@ -22,6 +23,7 @@ import com.leccionario.backend.schedule.dto.ScheduleOverviewResponse;
 import com.leccionario.backend.schedule.dto.ScheduleTeacherOptionResponse;
 import com.leccionario.backend.schedule.repository.CourseScheduleRepository;
 import com.leccionario.backend.schedule.repository.ScheduleBlockRepository;
+import com.leccionario.backend.user.domain.Teacher;
 import com.leccionario.backend.user.repository.TeacherRepository;
 import java.util.Comparator;
 import java.util.List;
@@ -347,6 +349,24 @@ public class ScheduleService {
     }
 
     private void validateScheduleAssignment(CourseScheduleRequest request, Long currentScheduleId) {
+        Teacher teacher = teacherRepository.findById(request.teacherId())
+                .orElseThrow(() -> new ResourceNotFoundException("Docente no encontrado"));
+
+        Course course = courseRepository.findById(request.courseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado"));
+
+        if (!teacher.getCourses().isEmpty()) {
+            boolean courseAssigned = teacher.getCourses().stream()
+                    .anyMatch(name -> name.equalsIgnoreCase(course.getName() + " " + course.getParallel())
+                            || name.equalsIgnoreCase(course.getName()));
+            if (!courseAssigned) {
+                throw new BusinessException("El curso " + course.getName() + " " + course.getParallel()
+                        + " no esta asignado al docente " + teacher.getUser().getFirstName()
+                        + " " + teacher.getUser().getLastName()
+                        + ". Asigne el curso al docente primero desde Gestion academica > Docentes.");
+            }
+        }
+
         boolean courseConflict = currentScheduleId == null
                 ? courseScheduleRepository.existsByCourseIdAndPeriodIdAndScheduleBlockIdAndWeekday(
                         request.courseId(),

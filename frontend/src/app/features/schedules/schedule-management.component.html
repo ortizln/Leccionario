@@ -146,7 +146,7 @@
             </div>
 
             <div class="d-flex gap-2 mb-3">
-              <select class="form-select form-select-sm" [(ngModel)]="scheduleCourseFilter">
+              <select class="form-select form-select-sm" [(ngModel)]="scheduleCourseFilter" (ngModelChange)="refreshDisplayed()">
                 <option value="">Todos los cursos</option>
                 @for (course of overview.courses; track course.id) {
                   <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
@@ -155,20 +155,56 @@
             </div>
 
             <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
+              <table class="table table-xs table-hover align-middle mb-0">
                 <thead>
                   <tr>
-                    <th>Dia</th>
-                    <th>Bloque</th>
-                    <th>Curso</th>
-                    <th>Materia</th>
-                    <th>Docente</th>
-                    <th>Aula</th>
+                    <th>
+                      <div class="d-flex align-items-center gap-1">
+                        <span appSortableHeader label="Dia" [dir]="sortColumn('weekday')" (toggle)="onSort('weekday')"></span>
+                        <span appFilterDropdown label="Dia" [options]="weekdayLabelFilter()" [selected]="getWeekdayFilter()"
+                              [activeCount]="getWeekdayFilterCount()" (toggle)="onWeekdayFilter($event)" (clear)="onClearWeekdayFilter()"></span>
+                      </div>
+                    </th>
+                    <th>
+                      <div class="d-flex align-items-center gap-1">
+                        <span appSortableHeader label="Bloque" [dir]="sortColumn('scheduleLabel')" (toggle)="onSort('scheduleLabel')"></span>
+                        <span appFilterDropdown label="Bloque" [options]="filterOpts('scheduleLabel')" [selected]="getFilter('scheduleLabel')"
+                              [activeCount]="getFilter('scheduleLabel').size" (toggle)="onFilter('scheduleLabel', $event)" (clear)="onClearFilter('scheduleLabel')"></span>
+                      </div>
+                    </th>
+                    <th>
+                      <div class="d-flex align-items-center gap-1">
+                        <span appSortableHeader label="Curso" [dir]="sortColumn('courseName')" (toggle)="onSort('courseName')"></span>
+                        <span appFilterDropdown label="Curso" [options]="filterOpts('courseName')" [selected]="getFilter('courseName')"
+                              [activeCount]="getFilter('courseName').size" (toggle)="onFilter('courseName', $event)" (clear)="onClearFilter('courseName')"></span>
+                      </div>
+                    </th>
+                    <th>
+                      <div class="d-flex align-items-center gap-1">
+                        <span appSortableHeader label="Materia" [dir]="sortColumn('subjectName')" (toggle)="onSort('subjectName')"></span>
+                        <span appFilterDropdown label="Materia" [options]="filterOpts('subjectName')" [selected]="getFilter('subjectName')"
+                              [activeCount]="getFilter('subjectName').size" (toggle)="onFilter('subjectName', $event)" (clear)="onClearFilter('subjectName')"></span>
+                      </div>
+                    </th>
+                    <th>
+                      <div class="d-flex align-items-center gap-1">
+                        <span appSortableHeader label="Docente" [dir]="sortColumn('teacherName')" (toggle)="onSort('teacherName')"></span>
+                        <span appFilterDropdown label="Docente" [options]="filterOpts('teacherName')" [selected]="getFilter('teacherName')"
+                              [activeCount]="getFilter('teacherName').size" (toggle)="onFilter('teacherName', $event)" (clear)="onClearFilter('teacherName')"></span>
+                      </div>
+                    </th>
+                    <th>
+                      <div class="d-flex align-items-center gap-1">
+                        <span appSortableHeader label="Aula" [dir]="sortColumn('classroom')" (toggle)="onSort('classroom')"></span>
+                        <span appFilterDropdown label="Aula" [options]="filterOpts('classroom')" [selected]="getFilter('classroom')"
+                              [activeCount]="getFilter('classroom').size" (toggle)="onFilter('classroom', $event)" (clear)="onClearFilter('classroom')"></span>
+                      </div>
+                    </th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (schedule of filteredSchedules; track schedule.id) {
+                  @for (schedule of displayedSchedules; track schedule.id) {
                     <tr>
                       <td>{{ weekdayLabel(schedule.weekday) }}</td>
                       <td>{{ schedule.scheduleLabel }}</td>
@@ -204,7 +240,7 @@
               </div>
             </div>
             <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
+              <table class="table table-xs table-hover align-middle mb-0">
                 <thead>
                   <tr>
                     <th>Curso</th>

@@ -6,11 +6,14 @@ import { forkJoin } from 'rxjs';
 import { API_URL } from '../../core/api.config';
 import { AddUserComponent } from './add-user.component';
 import { InstitutionItem, RoleItem, UserItem, UserSavePayload } from './users.models';
+import { SortableHeaderComponent } from '../../shared/sortable-header.component';
+import { FilterDropdownComponent } from '../../shared/filter-dropdown.component';
+import { SortState, FilterState, applySort, applyFilters, getFilterOptions, toggleFilter, clearFilter, SortDir } from '../../shared/table-utils';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, AddUserComponent],
+  imports: [ReactiveFormsModule, FormsModule, AddUserComponent, SortableHeaderComponent, FilterDropdownComponent],
   templateUrl: './users.component.html',
   styleUrl: './users.component.css'
 })
@@ -36,6 +39,9 @@ export class UsersComponent {
   roleDialogOpen = false;
   passwordResetValue = 'Temp123*';
   errorMessage = '';
+  sort: SortState | null = null;
+  filters: FilterState = {};
+  displayedUsers: any[] = [];
 
   readonly permissionGroups = [
     { module: 'Usuarios', permissions: ['USER_VIEW', 'USER_MANAGE', 'ROLE_VIEW', 'ROLE_MANAGE'] },
@@ -86,6 +92,68 @@ export class UsersComponent {
         || specialization === this.subjectFilter;
       return matchesSearch && matchesRole && matchesStatus && matchesSubject;
     });
+  }
+
+  get roleFilterOptions(): string[] {
+    const set = new Set<string>();
+    for (const user of this.users) {
+      for (const r of user.roles) {
+        set.add(this.formatRole(r));
+      }
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }
+
+  sortColumn(col: string): SortDir { return this.sort?.column === col ? this.sort.dir : null; }
+  onSort(col: string): void {
+    const dir: SortDir = this.sort?.column === col
+      ? (this.sort.dir === 'asc' ? 'desc' : this.sort.dir === 'desc' ? null : 'asc')
+      : 'asc';
+    this.sort = dir ? { column: col, dir } : null;
+    this.refreshDisplayed();
+  }
+  filterOpts(col: string): string[] { return getFilterOptions(this.users, col); }
+  filterOptsArray(col: string, mapFn: (item: any) => string): string[] {
+    const set = new Set<string>();
+    for (const item of this.users) {
+      const v = (item as any)[col];
+      if (Array.isArray(v)) {
+        for (const el of v) {
+          const display = mapFn(el);
+          if (display) set.add(display);
+        }
+      } else {
+        const display = mapFn(v);
+        if (display) set.add(display);
+      }
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }
+  getFilter(col: string): Set<string> { return this.filters[col] ?? new Set(); }
+  onFilter(col: string, val: string): void { this.filters = toggleFilter(this.filters, col, val); this.refreshDisplayed(); }
+  onClearFilter(col: string): void { this.filters = clearFilter(this.filters, col); this.refreshDisplayed(); }
+  refreshDisplayed(): void {
+    let result = this.users.map(u => ({
+      ...u,
+      _rolesStr: u.roles.map(r => this.formatRole(r)).join(', '),
+      _enabledLabel: u.enabled ? 'Activo' : 'Inactivo'
+    }));
+    result = applySort(result, this.sort);
+    for (const [col, values] of Object.entries(this.filters)) {
+      if (values.size === 0) continue;
+      if (col === '_rolesStr') {
+        result = result.filter(item => item.roles.some((r: string) => values.has(this.formatRole(r))));
+      } else if (col === '_enabledLabel') {
+        result = result.filter(item => values.has(item._enabledLabel));
+      } else {
+        result = result.filter(item => {
+          const v = (item as any)[col];
+          const display = v == null ? '' : String(v);
+          return values.has(display);
+        });
+      }
+    }
+    this.displayedUsers = result;
   }
 
   formatRole(role: string): string {
@@ -458,6 +526,7 @@ export class UsersComponent {
         this.users = users;
         this.roles = roles;
         this.institutions = institutions;
+        this.refreshDisplayed();
         if (!this.selectedRoleName && roles.length > 0) {
           this.selectRole(roles[0].name);
         }
@@ -472,6 +541,7 @@ export class UsersComponent {
     this.http.get<UserItem[]>(`${API_URL}/users`).subscribe({
       next: (users) => {
         this.users = users;
+        this.refreshDisplayed();
         afterLoad?.();
       },
       error: () => this.errorMessage = 'No se pudo recargar el listado de usuarios.'

@@ -92,7 +92,7 @@ type Subject = { id: number; name: string; code: string; curriculumArea: string 
                 </h3>
               </div>
               <div class="table-responsive">
-                <table class="table table-striped align-middle mb-0">
+                <table class="table table-xs table-striped align-middle mb-0">
                   <thead>
                     <tr>
                       <th>Materia</th>
@@ -138,7 +138,7 @@ type Subject = { id: number; name: string; code: string; curriculumArea: string 
                                 <p class="text-muted small mb-0">No hay docentes registrados en esta area curricular.</p>
                               } @else {
                                 <div class="table-responsive">
-                                  <table class="table table-sm align-middle mb-0">
+                                  <table class="table table-xs align-middle mb-0">
                                     <thead>
                                       <tr>
                                         <th>Docente</th>

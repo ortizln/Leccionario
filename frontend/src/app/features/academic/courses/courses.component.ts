@@ -5,6 +5,9 @@ import { catchError, of } from 'rxjs';
 import { API_URL } from '../../../core/api.config';
 import { AuthService } from '../../../core/auth.service';
 import { AcademicCourse, AcademicStudent, AcademicOverview, AcademicYearItem, ImportSummaryResult, SchoolDayItem, SchoolModalityItem, WeekStudentAssignment } from '../academic.models';
+import { SortableHeaderComponent } from '../../../shared/sortable-header.component';
+import { FilterDropdownComponent } from '../../../shared/filter-dropdown.component';
+import { SortState, FilterState, applySort, applyFilters, getFilterOptions, toggleFilter, clearFilter, SortDir } from '../../../shared/table-utils';
 
 interface ScheduleBlockItem { id: number; label: string; startTime: string; endTime: string; blockOrder: number; blockType: string; active: boolean; }
 interface ScheduleOverviewData { blocks: ScheduleBlockItem[]; periods: Array<{ id: number; name: string; startDate: string; endDate: string; active: boolean }>; subjects: Array<{ id: number; name: string; code: string; curriculumArea: string }>; teachers: Array<{ id: number; name: string; specialization: string; subjectIds: number[] }>; }
@@ -13,7 +16,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
 @Component({
   selector: 'app-academic-courses',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule, SortableHeaderComponent, FilterDropdownComponent],
   styles: [`
     .modal-card-lg { max-width: 960px; }
     .schedule-form-grid {
@@ -166,21 +169,63 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
         }
 
         <div class="table-responsive">
-          <table class="table table-striped align-middle mb-0">
+          <table class="table table-xs table-striped align-middle mb-0">
             <thead>
               <tr>
-                <th>Curso</th>
-                <th>Paralelo</th>
-                <th>Subnivel</th>
-                <th>Grado</th>
-                <th>A&ntilde;o</th>
-                <th>Jornada</th>
-                <th>Modalidad</th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Curso" [dir]="sortColumn('name')" (toggle)="onSort('name')"></span>
+                    <span appFilterDropdown label="Curso" [options]="filterOpts('name')" [selected]="getFilter('name')"
+                          [activeCount]="getFilter('name').size" (toggle)="onFilter('name', $event)" (clear)="onClearFilter('name')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Paralelo" [dir]="sortColumn('parallel')" (toggle)="onSort('parallel')"></span>
+                    <span appFilterDropdown label="Paralelo" [options]="filterOpts('parallel')" [selected]="getFilter('parallel')"
+                          [activeCount]="getFilter('parallel').size" (toggle)="onFilter('parallel', $event)" (clear)="onClearFilter('parallel')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Subnivel" [dir]="sortColumn('subLevel')" (toggle)="onSort('subLevel')"></span>
+                    <span appFilterDropdown label="Subnivel" [options]="filterOpts('subLevel')" [selected]="getFilter('subLevel')"
+                          [activeCount]="getFilter('subLevel').size" (toggle)="onFilter('subLevel', $event)" (clear)="onClearFilter('subLevel')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Grado" [dir]="sortColumn('grade')" (toggle)="onSort('grade')"></span>
+                    <span appFilterDropdown label="Grado" [options]="filterOpts('grade')" [selected]="getFilter('grade')"
+                          [activeCount]="getFilter('grade').size" (toggle)="onFilter('grade', $event)" (clear)="onClearFilter('grade')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="A&ntilde;o" [dir]="sortColumn('academicYear')" (toggle)="onSort('academicYear')"></span>
+                    <span appFilterDropdown label="A&ntilde;o" [options]="filterOpts('academicYear')" [selected]="getFilter('academicYear')"
+                          [activeCount]="getFilter('academicYear').size" (toggle)="onFilter('academicYear', $event)" (clear)="onClearFilter('academicYear')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Jornada" [dir]="sortColumn('schoolDayName')" (toggle)="onSort('schoolDayName')"></span>
+                    <span appFilterDropdown label="Jornada" [options]="filterOpts('schoolDayName')" [selected]="getFilter('schoolDayName')"
+                          [activeCount]="getFilter('schoolDayName').size" (toggle)="onFilter('schoolDayName', $event)" (clear)="onClearFilter('schoolDayName')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Modalidad" [dir]="sortColumn('schoolModalityName')" (toggle)="onSort('schoolModalityName')"></span>
+                    <span appFilterDropdown label="Modalidad" [options]="filterOpts('schoolModalityName')" [selected]="getFilter('schoolModalityName')"
+                          [activeCount]="getFilter('schoolModalityName').size" (toggle)="onFilter('schoolModalityName', $event)" (clear)="onClearFilter('schoolModalityName')"></span>
+                  </div>
+                </th>
                 <th class="text-end"></th>
               </tr>
             </thead>
             <tbody>
-              @for (course of courses; track course.id) {
+              @for (course of displayedCourses; track course.id) {
                 <tr>
                   <td>{{ course.name }}</td>
                   <td>{{ course.parallel }}</td>
@@ -401,6 +446,26 @@ export class CoursesComponent implements OnInit {
   schoolModalities: SchoolModalityItem[] = [];
 
   gradeOptions: number[] = [];
+
+  sort: SortState | null = null;
+  filters: FilterState = {};
+  displayedCourses: AcademicCourse[] = [];
+
+  sortColumn(col: string): SortDir { return this.sort?.column === col ? this.sort.dir : null; }
+  onSort(col: string): void {
+    const dir: SortDir = this.sort?.column === col
+      ? (this.sort.dir === 'asc' ? 'desc' : this.sort.dir === 'desc' ? null : 'asc')
+      : 'asc';
+    this.sort = dir ? { column: col, dir } : null;
+    this.refreshDisplayed();
+  }
+  filterOpts(col: string): string[] { return getFilterOptions(this.courses, col); }
+  getFilter(col: string): Set<string> { return this.filters[col] ?? new Set(); }
+  onFilter(col: string, val: string): void { this.filters = toggleFilter(this.filters, col, val); this.refreshDisplayed(); }
+  onClearFilter(col: string): void { this.filters = clearFilter(this.filters, col); this.refreshDisplayed(); }
+  refreshDisplayed(): void {
+    this.displayedCourses = applyFilters(applySort(this.courses, this.sort), this.filters);
+  }
 
   form = this.fb.nonNullable.group({
     academicYearId: [null as number | null, Validators.required],
@@ -670,6 +735,7 @@ export class CoursesComponent implements OnInit {
     ).subscribe(data => {
       this.courses = data.courses;
       this.students = data.students;
+      this.refreshDisplayed();
     });
   }
 

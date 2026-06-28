@@ -4,6 +4,9 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { catchError, forkJoin, of } from 'rxjs';
 import { API_URL } from '../../../core/api.config';
 import { AuthService } from '../../../core/auth.service';
+import { SortableHeaderComponent } from '../../../shared/sortable-header.component';
+import { FilterDropdownComponent } from '../../../shared/filter-dropdown.component';
+import { SortState, FilterState, applySort, applyFilters, getFilterOptions, toggleFilter, clearFilter, SortDir } from '../../../shared/table-utils';
 import { AcademicCourse, AcademicStudent, AcademicOverview, CourseScheduleItem, ImportSummaryResult, ScheduleBlockItem, ScheduleOverview } from '../academic.models';
 
 type StudentRepresentative = {
@@ -15,7 +18,7 @@ type StudentRepresentative = {
 @Component({
   selector: 'app-academic-students',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule, SortableHeaderComponent, FilterDropdownComponent],
   template: `
     <div class="card border-0 shadow-sm h-100">
       <div class="card-body p-4 d-grid gap-4">
@@ -48,7 +51,7 @@ type StudentRepresentative = {
         <div class="row g-3">
           <div class="col-12 col-md-6">
             <label class="form-label fw-semibold">Filtrar por curso</label>
-            <select class="form-select form-select-sm" [value]="selectedCourseFilter" (change)="selectedCourseFilter = $any($event.target).value">
+            <select class="form-select form-select-sm" [value]="selectedCourseFilter" (change)="selectedCourseFilter = $any($event.target).value; refreshDisplayed()">
               <option value="all">Todos los cursos</option>
               @for (course of courses; track course.id) {
                 <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
@@ -57,7 +60,7 @@ type StudentRepresentative = {
           </div>
           <div class="col-12 col-md-6">
             <label class="form-label fw-semibold">Buscar</label>
-            <input class="form-control form-control-sm" type="text" [value]="search" (input)="search = $any($event.target).value" placeholder="Nombre, usuario o matricula">
+            <input class="form-control form-control-sm" type="text" [value]="search" (input)="search = $any($event.target).value; refreshDisplayed()" placeholder="Nombre, usuario o matricula">
           </div>
         </div>
 
@@ -216,19 +219,49 @@ type StudentRepresentative = {
         }
 
         <div class="table-responsive">
-          <table class="table table-striped align-middle mb-0">
+          <table class="table table-xs table-striped align-middle mb-0">
             <thead>
               <tr>
-                <th>Matricula</th>
-                <th>Estudiante</th>
-                <th>Curso</th>
-                <th>Usuario</th>
-                <th>Estado</th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Matricula" [dir]="sortColumn('enrollmentNumber')" (toggle)="onSort('enrollmentNumber')"></span>
+                    <span appFilterDropdown label="Matricula" [options]="filterOpts('enrollmentNumber')" [selected]="getFilter('enrollmentNumber')"
+                          [activeCount]="getFilter('enrollmentNumber').size" (toggle)="onFilter('enrollmentNumber', $event)" (clear)="onClearFilter('enrollmentNumber')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Estudiante" [dir]="sortColumn('fullName')" (toggle)="onSort('fullName')"></span>
+                    <span appFilterDropdown label="Estudiante" [options]="filterOpts('fullName')" [selected]="getFilter('fullName')"
+                          [activeCount]="getFilter('fullName').size" (toggle)="onFilter('fullName', $event)" (clear)="onClearFilter('fullName')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Curso" [dir]="sortColumn('courseName')" (toggle)="onSort('courseName')"></span>
+                    <span appFilterDropdown label="Curso" [options]="filterOpts('courseName')" [selected]="getFilter('courseName')"
+                          [activeCount]="getFilter('courseName').size" (toggle)="onFilter('courseName', $event)" (clear)="onClearFilter('courseName')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Usuario" [dir]="sortColumn('username')" (toggle)="onSort('username')"></span>
+                    <span appFilterDropdown label="Usuario" [options]="filterOpts('username')" [selected]="getFilter('username')"
+                          [activeCount]="getFilter('username').size" (toggle)="onFilter('username', $event)" (clear)="onClearFilter('username')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Estado" [dir]="sortColumn('enabled')" (toggle)="onSort('enabled')"></span>
+                    <span appFilterDropdown label="Estado" [options]="filterOpts('enabled')" [selected]="getFilter('enabled')"
+                          [activeCount]="getFilter('enabled').size" (toggle)="onFilter('enabled', $event)" (clear)="onClearFilter('enabled')"></span>
+                  </div>
+                </th>
                 <th class="text-end"></th>
               </tr>
             </thead>
             <tbody>
-              @for (student of filtered(); track student.id) {
+              @for (student of displayedStudents; track student.id) {
                 <tr>
                   <td>{{ student.enrollmentNumber }}</td>
                   <td>
@@ -243,123 +276,11 @@ type StudentRepresentative = {
                     </span>
                   </td>
                   <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="toggleInfo(student.id)">
-                      <i class="bi" [class.bi-eye]="selectedStudentId !== student.id" [class.bi-eye-slash]="selectedStudentId === student.id"></i>
-                      {{ selectedStudentId === student.id ? 'Ocultar' : 'Ver' }}
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="openStudentDetail(student)" title="Ver detalle">
+                      <i class="bi bi-eye me-1"></i>Ver
                     </button>
                   </td>
                 </tr>
-                @if (selectedStudentId === student.id) {
-                  <tr>
-                    <td colspan="6" class="p-0 border-0">
-                      <div class="p-4 d-grid gap-4 bg-white rounded-3">
-                        <div class="row g-3">
-                          <div class="col-12 col-md-4">
-                            <div class="card border-0 shadow-sm h-100">
-                              <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                  <h3 class="h6 mb-0"><i class="bi bi-person-vcard me-2"></i>Datos basicos</h3>
-                                  @if (canManageAcademic) {
-                                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="edit(student)">
-                                      <i class="bi bi-pencil"></i>
-                                    </button>
-                                  }
-                                </div>
-                                <dl class="row mb-0 small">
-                                  <dt class="col-5 text-muted">Nombres</dt>
-                                  <dd class="col-7 mb-1">{{ student.firstName }} {{ student.lastName }}</dd>
-                                  <dt class="col-5 text-muted">Usuario</dt>
-                                  <dd class="col-7 mb-1">{{ student.username }}</dd>
-                                  <dt class="col-5 text-muted">Correo</dt>
-                                  <dd class="col-7 mb-1">{{ student.email }}</dd>
-                                  <dt class="col-5 text-muted">Identificacion</dt>
-                                  <dd class="col-7 mb-1">{{ student.identification }}</dd>
-                                  <dt class="col-5 text-muted">Fecha de nac.</dt>
-                                  <dd class="col-7 mb-1">{{ student.birthDate || '—' }}</dd>
-                                  <dt class="col-5 text-muted">Genero</dt>
-                                  <dd class="col-7 mb-1">{{ {M:'Masculino', F:'Femenino', OTRO:'Otro'}[student.gender ?? ''] || '—' }}</dd>
-                                  <dt class="col-5 text-muted">Matricula</dt>
-                                  <dd class="col-7 mb-1">{{ student.enrollmentNumber }}</dd>
-                                  <dt class="col-5 text-muted">Curso</dt>
-                                  <dd class="col-7 mb-1">{{ student.courseName }}</dd>
-                                  <dt class="col-5 text-muted">Estado</dt>
-                                  <dd class="col-7 mb-1">
-                                    <span class="badge" [class.text-bg-success]="student.enabled" [class.text-bg-secondary]="!student.enabled">
-                                      {{ student.enabled ? 'Activo' : 'Inactivo' }}
-                                    </span>
-                                  </dd>
-                                </dl>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-12 col-md-4">
-                            <div class="card border-0 shadow-sm h-100">
-                              <div class="card-body">
-                                <h3 class="h6 mb-2"><i class="bi bi-people me-2"></i>Representante</h3>
-                                @let rep = studentRep(student.id);
-                                @if (rep) {
-                                  <dl class="row mb-0 small">
-                                    <dt class="col-5 text-muted">Nombre</dt>
-                                    <dd class="col-7 mb-1">{{ rep.fullName }}</dd>
-                                    <dt class="col-5 text-muted">Parentesco</dt>
-                                    <dd class="col-7 mb-1">{{ rep.relationship }}</dd>
-                                    <dt class="col-5 text-muted">Telefono</dt>
-                                    <dd class="col-7 mb-1">{{ rep.phone }}</dd>
-                                    <dt class="col-5 text-muted">Correo</dt>
-                                    <dd class="col-7 mb-1">{{ rep.email || 'Sin registro' }}</dd>
-                                  </dl>
-                                } @else {
-                                  <p class="text-muted small mb-0">Sin representante asignado.</p>
-                                }
-                              </div>
-                            </div>
-                          </div>
-
-                        </div>
-
-                        <div class="card border-0 shadow-sm">
-                          <div class="card-body">
-                            <h3 class="h6 mb-3"><i class="bi bi-calendar-week me-2"></i>Horario del curso</h3>
-                            @if (courseSchedule(student.courseId).length === 0) {
-                              <p class="text-muted small mb-0">Sin horario asignado al curso.</p>
-                            } @else {
-                              @for (day of weekdays; track day.value) {
-                                @let entries = courseScheduleByDay(student.courseId, day.value);
-                                @if (entries.length > 0) {
-                                  <div class="mb-3">
-                                    <div class="fw-semibold small text-uppercase text-primary mb-2">{{ day.label }}</div>
-                                    <div class="table-responsive">
-                                      <table class="table table-sm align-middle mb-0">
-                                        <thead>
-                                          <tr>
-                                            <th>Bloque</th>
-                                            <th>Materia</th>
-                                            <th>Docente</th>
-                                            <th>Aula</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          @for (entry of entries; track entry.id) {
-                                            <tr>
-                                              <td class="small">{{ entry.scheduleLabel }}</td>
-                                              <td class="fw-semibold small">{{ entry.subjectName }}</td>
-                                              <td class="small">{{ entry.teacherName }}</td>
-                                              <td class="small">{{ entry.classroom || 'Sin aula' }}</td>
-                                            </tr>
-                                          }
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  </div>
-                                }
-                              }
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                }
               } @empty {
                 <tr><td colspan="6" class="text-center text-muted py-4">No hay estudiantes para ese filtro.</td></tr>
               }
@@ -370,6 +291,166 @@ type StudentRepresentative = {
     </div>
 
     <input id="students-import-input" class="d-none" type="file" accept=".xlsx" (change)="handleImport($event)">
+
+    @if (detailStudent) {
+      <div class="modal-shell" (click)="closeStudentDetail()">
+        <div class="modal-card modal-card-lg" style="max-width:720px" (click)="$event.stopPropagation()">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+              <span class="badge rounded-pill text-bg-primary mb-2"><i class="bi bi-person-vcard me-1"></i>Ficha del estudiante</span>
+              <h2 class="h4 mb-0">{{ detailStudent.fullName }}</h2>
+              <div class="text-muted small">{{ detailStudent.enrollmentNumber }} &middot; {{ detailStudent.courseName }}</div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeStudentDetail()"><i class="bi bi-x-lg"></i></button>
+          </div>
+
+          <ul class="nav nav-tabs nav-tabs-sm mb-3">
+            <li class="nav-item">
+              <button class="nav-link" [class.active]="detailTab === 'datos'" type="button" (click)="detailTab = 'datos'">
+                <i class="bi bi-person-vcard me-1"></i>Datos basicos
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" [class.active]="detailTab === 'representante'" type="button" (click)="detailTab = 'representante'">
+                <i class="bi bi-people me-1"></i>Representante
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" [class.active]="detailTab === 'horario'" type="button" (click)="detailTab = 'horario'">
+                <i class="bi bi-calendar-week me-1"></i>Horario
+              </button>
+            </li>
+          </ul>
+
+          @if (detailTab === 'datos') {
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h3 class="h6 mb-0">Informacion del estudiante</h3>
+                  @if (canManageAcademic) {
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeStudentDetail(); edit(detailStudent)"><i class="bi bi-pencil me-1"></i>Editar</button>
+                  }
+                </div>
+                <dl class="row mb-0 small">
+                  <dt class="col-4 col-md-3 text-muted">Nombres</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ detailStudent.firstName }} {{ detailStudent.lastName }}</dd>
+                  <dt class="col-4 col-md-3 text-muted">Usuario</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ detailStudent.username }}</dd>
+                  <dt class="col-4 col-md-3 text-muted">Correo</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ detailStudent.email }}</dd>
+                  <dt class="col-4 col-md-3 text-muted">Identificacion</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ detailStudent.identification }}</dd>
+                  <dt class="col-4 col-md-3 text-muted">Fecha nac.</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ detailStudent.birthDate || '—' }}</dd>
+                  <dt class="col-4 col-md-3 text-muted">Genero</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ {M:'Masculino', F:'Femenino', OTRO:'Otro'}[detailStudent.gender ?? ''] || '—' }}</dd>
+                  <dt class="col-4 col-md-3 text-muted">Matricula</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ detailStudent.enrollmentNumber }}</dd>
+                  <dt class="col-4 col-md-3 text-muted">Curso</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ detailStudent.courseName }}</dd>
+                  <dt class="col-4 col-md-3 text-muted">Estado</dt>
+                  <dd class="col-8 col-md-9 mb-1">
+                    <span class="badge rounded-pill" [class.text-bg-success]="detailStudent.enabled" [class.text-bg-secondary]="!detailStudent.enabled">
+                      {{ detailStudent.enabled ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          }
+
+          @if (detailTab === 'representante') {
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4">
+                @let rep = studentRep(detailStudent.id);
+                @if (rep) {
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h6 mb-0"><i class="bi bi-person-check me-2"></i>{{ rep.fullName }}</h3>
+                  </div>
+                  <dl class="row mb-0 small">
+                    <dt class="col-4 col-md-3 text-muted">Nombre completo</dt>
+                    <dd class="col-8 col-md-9 mb-1">{{ rep.fullName }}</dd>
+                    <dt class="col-4 col-md-3 text-muted">Parentesco</dt>
+                    <dd class="col-8 col-md-9 mb-1">{{ rep.relationship }}</dd>
+                    <dt class="col-4 col-md-3 text-muted">Telefono</dt>
+                    <dd class="col-8 col-md-9 mb-1">{{ rep.phone }}</dd>
+                    <dt class="col-4 col-md-3 text-muted">Correo</dt>
+                    <dd class="col-8 col-md-9 mb-1">{{ rep.email || 'Sin registro' }}</dd>
+                    @if (rep.emergencyContact) {
+                      <dt class="col-4 col-md-3 text-muted">Contacto emergencia</dt>
+                      <dd class="col-8 col-md-9 mb-1">{{ rep.emergencyContact }}</dd>
+                    }
+                    @if (rep.emergencyPhone) {
+                      <dt class="col-4 col-md-3 text-muted">Tel. emergencia</dt>
+                      <dd class="col-8 col-md-9 mb-1">{{ rep.emergencyPhone }}</dd>
+                    }
+                    @if (rep.address) {
+                      <dt class="col-4 col-md-3 text-muted">Direccion</dt>
+                      <dd class="col-8 col-md-9 mb-1">{{ rep.address }}</dd>
+                    }
+                  </dl>
+                } @else {
+                  <div class="text-center py-4">
+                    <i class="bi bi-person-x text-muted" style="font-size:2rem"></i>
+                    <p class="text-muted small mt-2 mb-0">Sin representante asignado a este estudiante.</p>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (detailTab === 'horario') {
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4">
+                <h3 class="h6 mb-3"><i class="bi bi-calendar-week me-2"></i>Horario del curso</h3>
+                @if (courseSchedule(detailStudent.courseId).length === 0) {
+                  <div class="text-center py-4">
+                    <i class="bi bi-calendar-x text-muted" style="font-size:2rem"></i>
+                    <p class="text-muted small mt-2 mb-0">Sin horario asignado a este curso.</p>
+                  </div>
+                } @else {
+                  <ul class="nav nav-tabs nav-tabs-sm mb-3">
+                    @for (day of weekdays; track day.value) {
+                      @if (courseScheduleByDay(detailStudent.courseId, day.value).length > 0) {
+                        <li class="nav-item">
+                          <button class="nav-link" [class.active]="selectedScheduleDay === day.value" type="button" (click)="selectedScheduleDay = day.value">
+                            {{ day.shortLabel }}
+                          </button>
+                        </li>
+                      }
+                    }
+                  </ul>
+                  @let dayEntries = courseScheduleByDay(detailStudent.courseId, selectedScheduleDay);
+                  @if (dayEntries.length > 0) {
+                    <div class="table-responsive">
+                      <table class="table table-xs table-hover align-middle mb-0">
+                        <thead><tr><th>Bloque</th><th>Materia</th><th>Docente</th><th>Aula</th></tr></thead>
+                        <tbody>
+                          @for (entry of dayEntries; track entry.id) {
+                            <tr>
+                              <td>{{ entry.scheduleLabel }}</td>
+                              <td class="fw-semibold">{{ entry.subjectName }}</td>
+                              <td>{{ entry.teacherName }}</td>
+                              <td>{{ entry.classroom || '—' }}</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  } @else {
+                    <p class="text-muted small mb-0">Sin bloques programados este dia.</p>
+                  }
+                }
+              </div>
+            </div>
+          }
+
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <button class="btn btn-sm btn-primary" type="button" (click)="closeStudentDetail()">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class StudentsComponent implements OnInit {
@@ -387,7 +468,13 @@ export class StudentsComponent implements OnInit {
   search = '';
   editorOpen = false;
   editingId: number | null = null;
-  selectedStudentId: number | null = null;
+  detailStudent: AcademicStudent | null = null;
+  detailTab = 'datos';
+  selectedScheduleDay = 1;
+
+  sort: SortState | null = null;
+  filters: FilterState = {};
+  displayedStudents: AcademicStudent[] = [];
 
   repSearchOpen = false;
   repSearchTerm = '';
@@ -403,13 +490,13 @@ export class StudentsComponent implements OnInit {
   });
 
   readonly weekdays = [
-    { value: 1, label: 'Lunes' },
-    { value: 2, label: 'Martes' },
-    { value: 3, label: 'Miercoles' },
-    { value: 4, label: 'Jueves' },
-    { value: 5, label: 'Viernes' },
-    { value: 6, label: 'Sabado' },
-    { value: 7, label: 'Domingo' }
+    { value: 1, label: 'Lunes', shortLabel: 'Lun' },
+    { value: 2, label: 'Martes', shortLabel: 'Mar' },
+    { value: 3, label: 'Miercoles', shortLabel: 'Mie' },
+    { value: 4, label: 'Jueves', shortLabel: 'Jue' },
+    { value: 5, label: 'Viernes', shortLabel: 'Vie' },
+    { value: 6, label: 'Sabado', shortLabel: 'Sab' },
+    { value: 7, label: 'Domingo', shortLabel: 'Dom' }
   ];
 
   form = this.fb.nonNullable.group({
@@ -446,6 +533,7 @@ export class StudentsComponent implements OnInit {
       this.allReps = reps;
       this.scheduleBlocks = schedule.blocks;
       this.allSchedules = schedule.schedules;
+      this.refreshDisplayed();
     });
   }
 
@@ -462,8 +550,30 @@ export class StudentsComponent implements OnInit {
     });
   }
 
-  toggleInfo(studentId: number): void {
-    this.selectedStudentId = this.selectedStudentId === studentId ? null : studentId;
+  sortColumn(col: string): SortDir { return this.sort?.column === col ? this.sort.dir : null; }
+  onSort(col: string): void {
+    const dir: SortDir = this.sort?.column === col
+      ? (this.sort.dir === 'asc' ? 'desc' : this.sort.dir === 'desc' ? null : 'asc')
+      : 'asc';
+    this.sort = dir ? { column: col, dir } : null;
+    this.refreshDisplayed();
+  }
+  filterOpts(col: string): string[] { return getFilterOptions(this.filtered(), col); }
+  getFilter(col: string): Set<string> { return this.filters[col] ?? new Set(); }
+  onFilter(col: string, val: string): void { this.filters = toggleFilter(this.filters, col, val); this.refreshDisplayed(); }
+  onClearFilter(col: string): void { this.filters = clearFilter(this.filters, col); this.refreshDisplayed(); }
+  refreshDisplayed(): void {
+    this.displayedStudents = applyFilters(applySort(this.filtered(), this.sort), this.filters);
+  }
+
+  openStudentDetail(student: AcademicStudent): void {
+    this.detailStudent = student;
+    this.detailTab = 'datos';
+    this.selectedScheduleDay = 1;
+  }
+
+  closeStudentDetail(): void {
+    this.detailStudent = null;
   }
 
   studentRep(studentId: number): StudentRepresentative | undefined {

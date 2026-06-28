@@ -39,7 +39,7 @@ public class DemeritController {
     }
 
     @GetMapping("/active")
-    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    @PreAuthorize("hasAnyAuthority('ACADEMIC_VIEW', 'LESSONPLAN_MANAGE')")
     public ResponseEntity<List<DemeritOptionResponse>> findActive() {
         return ResponseEntity.ok(demeritService.findActiveOptions());
     }

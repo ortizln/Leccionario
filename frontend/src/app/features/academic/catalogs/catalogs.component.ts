@@ -5,11 +5,14 @@ import { catchError, forkJoin, of } from 'rxjs';
 import { API_URL } from '../../../core/api.config';
 import { AuthService } from '../../../core/auth.service';
 import { AcademicYearItem, SchoolDayItem, SchoolModalityItem } from '../academic.models';
+import { SortableHeaderComponent } from '../../../shared/sortable-header.component';
+import { FilterDropdownComponent } from '../../../shared/filter-dropdown.component';
+import { SortState, FilterState, applySort, applyFilters, getFilterOptions, toggleFilter, clearFilter, SortDir } from '../../../shared/table-utils';
 
 @Component({
   selector: 'app-catalogs',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule, SortableHeaderComponent, FilterDropdownComponent],
   template: `
     <div class="card border-0 shadow-sm h-100">
       <div class="card-body p-4 d-grid gap-4">
@@ -75,16 +78,28 @@ import { AcademicYearItem, SchoolDayItem, SchoolModalityItem } from '../academic
           }
 
           <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
+            <table class="table table-xs table-striped align-middle mb-0">
               <thead>
                 <tr>
-                  <th>Ano</th>
-                  <th>Estado</th>
+                  <th>
+                    <div class="d-flex align-items-center gap-1">
+                      <span appSortableHeader label="Ano" [dir]="yearSortColumn('year')" (toggle)="onYearSort('year')"></span>
+                      <span appFilterDropdown label="Ano" [options]="yearFilterOpts('year')" [selected]="getYearFilter('year')"
+                            [activeCount]="getYearFilter('year').size" (toggle)="onYearFilter('year', $event)" (clear)="onClearYearFilter('year')"></span>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="d-flex align-items-center gap-1">
+                      <span appSortableHeader label="Estado" [dir]="yearSortColumn('active')" (toggle)="onYearSort('active')"></span>
+                      <span appFilterDropdown label="Estado" [options]="yearFilterOpts('active')" [selected]="getYearFilter('active')"
+                            [activeCount]="getYearFilter('active').size" (toggle)="onYearFilter('active', $event)" (clear)="onClearYearFilter('active')"></span>
+                    </div>
+                  </th>
                   <th class="text-end"></th>
                 </tr>
               </thead>
               <tbody>
-                @for (y of academicYears; track y.id) {
+                @for (y of displayedYears; track y.id) {
                   <tr>
                     <td class="fw-semibold">{{ y.year }}</td>
                     <td>
@@ -145,16 +160,28 @@ import { AcademicYearItem, SchoolDayItem, SchoolModalityItem } from '../academic
           }
 
           <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
+            <table class="table table-xs table-striped align-middle mb-0">
               <thead>
                 <tr>
-                  <th>Nombre</th>
-                  <th>Estado</th>
+                  <th>
+                    <div class="d-flex align-items-center gap-1">
+                      <span appSortableHeader label="Nombre" [dir]="daySortColumn('name')" (toggle)="onDaySort('name')"></span>
+                      <span appFilterDropdown label="Nombre" [options]="dayFilterOpts('name')" [selected]="getDayFilter('name')"
+                            [activeCount]="getDayFilter('name').size" (toggle)="onDayFilter('name', $event)" (clear)="onClearDayFilter('name')"></span>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="d-flex align-items-center gap-1">
+                      <span appSortableHeader label="Estado" [dir]="daySortColumn('active')" (toggle)="onDaySort('active')"></span>
+                      <span appFilterDropdown label="Estado" [options]="dayFilterOpts('active')" [selected]="getDayFilter('active')"
+                            [activeCount]="getDayFilter('active').size" (toggle)="onDayFilter('active', $event)" (clear)="onClearDayFilter('active')"></span>
+                    </div>
+                  </th>
                   <th class="text-end"></th>
                 </tr>
               </thead>
               <tbody>
-                @for (d of schoolDays; track d.id) {
+                @for (d of displayedDays; track d.id) {
                   <tr>
                     <td class="fw-semibold">{{ d.name }}</td>
                     <td>
@@ -215,16 +242,28 @@ import { AcademicYearItem, SchoolDayItem, SchoolModalityItem } from '../academic
           }
 
           <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
+            <table class="table table-xs table-striped align-middle mb-0">
               <thead>
                 <tr>
-                  <th>Nombre</th>
-                  <th>Estado</th>
+                  <th>
+                    <div class="d-flex align-items-center gap-1">
+                      <span appSortableHeader label="Nombre" [dir]="modalitySortColumn('name')" (toggle)="onModalitySort('name')"></span>
+                      <span appFilterDropdown label="Nombre" [options]="modalityFilterOpts('name')" [selected]="getModalityFilter('name')"
+                            [activeCount]="getModalityFilter('name').size" (toggle)="onModalityFilter('name', $event)" (clear)="onClearModalityFilter('name')"></span>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="d-flex align-items-center gap-1">
+                      <span appSortableHeader label="Estado" [dir]="modalitySortColumn('active')" (toggle)="onModalitySort('active')"></span>
+                      <span appFilterDropdown label="Estado" [options]="modalityFilterOpts('active')" [selected]="getModalityFilter('active')"
+                            [activeCount]="getModalityFilter('active').size" (toggle)="onModalityFilter('active', $event)" (clear)="onClearModalityFilter('active')"></span>
+                    </div>
+                  </th>
                   <th class="text-end"></th>
                 </tr>
               </thead>
               <tbody>
-                @for (m of schoolModalities; track m.id) {
+                @for (m of displayedModalities; track m.id) {
                   <tr>
                     <td class="fw-semibold">{{ m.name }}</td>
                     <td>
@@ -283,6 +322,64 @@ export class CatalogsComponent implements OnInit {
     active: [true]
   });
 
+  yearSort: SortState | null = null;
+  yearFilters: FilterState = {};
+  displayedYears: AcademicYearItem[] = [];
+  daySort: SortState | null = null;
+  dayFilters: FilterState = {};
+  displayedDays: SchoolDayItem[] = [];
+  modalitySort: SortState | null = null;
+  modalityFilters: FilterState = {};
+  displayedModalities: SchoolModalityItem[] = [];
+
+  yearSortColumn(col: string): SortDir { return this.yearSort?.column === col ? this.yearSort.dir : null; }
+  onYearSort(col: string): void {
+    const dir: SortDir = this.yearSort?.column === col
+      ? (this.yearSort.dir === 'asc' ? 'desc' : this.yearSort.dir === 'desc' ? null : 'asc')
+      : 'asc';
+    this.yearSort = dir ? { column: col, dir } : null;
+    this.refreshDisplayedYears();
+  }
+  yearFilterOpts(col: string): string[] { return getFilterOptions(this.academicYears, col); }
+  getYearFilter(col: string): Set<string> { return this.yearFilters[col] ?? new Set(); }
+  onYearFilter(col: string, val: string): void { this.yearFilters = toggleFilter(this.yearFilters, col, val); this.refreshDisplayedYears(); }
+  onClearYearFilter(col: string): void { this.yearFilters = clearFilter(this.yearFilters, col); this.refreshDisplayedYears(); }
+  refreshDisplayedYears(): void {
+    this.displayedYears = applyFilters(applySort(this.academicYears, this.yearSort), this.yearFilters);
+  }
+
+  daySortColumn(col: string): SortDir { return this.daySort?.column === col ? this.daySort.dir : null; }
+  onDaySort(col: string): void {
+    const dir: SortDir = this.daySort?.column === col
+      ? (this.daySort.dir === 'asc' ? 'desc' : this.daySort.dir === 'desc' ? null : 'asc')
+      : 'asc';
+    this.daySort = dir ? { column: col, dir } : null;
+    this.refreshDisplayedDays();
+  }
+  dayFilterOpts(col: string): string[] { return getFilterOptions(this.schoolDays, col); }
+  getDayFilter(col: string): Set<string> { return this.dayFilters[col] ?? new Set(); }
+  onDayFilter(col: string, val: string): void { this.dayFilters = toggleFilter(this.dayFilters, col, val); this.refreshDisplayedDays(); }
+  onClearDayFilter(col: string): void { this.dayFilters = clearFilter(this.dayFilters, col); this.refreshDisplayedDays(); }
+  refreshDisplayedDays(): void {
+    this.displayedDays = applyFilters(applySort(this.schoolDays, this.daySort), this.dayFilters);
+  }
+
+  modalitySortColumn(col: string): SortDir { return this.modalitySort?.column === col ? this.modalitySort.dir : null; }
+  onModalitySort(col: string): void {
+    const dir: SortDir = this.modalitySort?.column === col
+      ? (this.modalitySort.dir === 'asc' ? 'desc' : this.modalitySort.dir === 'desc' ? null : 'asc')
+      : 'asc';
+    this.modalitySort = dir ? { column: col, dir } : null;
+    this.refreshDisplayedModalities();
+  }
+  modalityFilterOpts(col: string): string[] { return getFilterOptions(this.schoolModalities, col); }
+  getModalityFilter(col: string): Set<string> { return this.modalityFilters[col] ?? new Set(); }
+  onModalityFilter(col: string, val: string): void { this.modalityFilters = toggleFilter(this.modalityFilters, col, val); this.refreshDisplayedModalities(); }
+  onClearModalityFilter(col: string): void { this.modalityFilters = clearFilter(this.modalityFilters, col); this.refreshDisplayedModalities(); }
+  refreshDisplayedModalities(): void {
+    this.displayedModalities = applyFilters(applySort(this.schoolModalities, this.modalitySort), this.modalityFilters);
+  }
+
   ngOnInit(): void {
     this.loadData();
   }
@@ -296,6 +393,9 @@ export class CatalogsComponent implements OnInit {
       this.academicYears = years;
       this.schoolDays = days;
       this.schoolModalities = modalities;
+      this.refreshDisplayedYears();
+      this.refreshDisplayedDays();
+      this.refreshDisplayedModalities();
     });
   }
 

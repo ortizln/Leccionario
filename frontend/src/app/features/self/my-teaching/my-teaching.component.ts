@@ -10,6 +10,22 @@ import { catchError, of } from 'rxjs';
   selector: 'app-my-teaching',
   standalone: true,
   imports: [FormsModule],
+  styles: [`
+    .course-dropdown {
+      max-height: 280px; overflow-y: auto; z-index: 1060;
+      background: var(--app-surface); border: 1px solid var(--app-border);
+      border-radius: var(--radius-lg); box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .course-dropdown-item {
+      display: block; width: 100%; padding: 0.6rem 0.75rem; text-align: left;
+      background: none; border: none; border-bottom: 1px solid var(--app-border);
+      cursor: pointer; transition: background 0.1s;
+    }
+    .course-dropdown-item:last-child { border-bottom: none; }
+    .course-dropdown-item:hover, .course-dropdown-item.active {
+      background: rgba(85, 107, 47, 0.06);
+    }
+  `],
   template: `
     <div class="d-grid gap-4">
       @if (errorMessage) {
@@ -41,31 +57,34 @@ import { catchError, of } from 'rxjs';
           </ul>
 
           @if (activeTab === 'cursos') {
-            <div class="row g-3 mb-4">
-              @for (course of courses; track course.courseId) {
-                <div class="col-12 col-md-6 col-xl-4">
-                  <div class="card h-100" [class.border-primary]="selectedCourseId === course.courseId"
-                       [class.border-2]="selectedCourseId === course.courseId"
-                       style="cursor: pointer" (click)="selectCourse(course.courseId)">
-                    <div class="card-body">
-                      <div class="fw-semibold mb-1">{{ course.courseName }} {{ course.parallel }}</div>
-                      <div class="small text-muted mb-2">
-                        {{ course.level }} · {{ course.scheduleCount }} bloques
-                      </div>
-                      <div class="d-flex flex-wrap gap-1">
-                        @for (subj of course.subjectNames; track subj) {
-                          <span class="badge rounded-pill text-bg-light">{{ subj }}</span>
-                        }
-                      </div>
-                    </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold small">Selecciona un curso</label>
+              <div class="position-relative">
+                <input class="form-control form-control-sm" type="text"
+                       placeholder="Buscar curso..."
+                       [value]="courseSearch"
+                       (input)="courseSearch = $any($event.target).value"
+                       (focus)="courseDropdownOpen = true"
+                       (blur)="closeCourseDropdown()">
+                @if (courseDropdownOpen && filteredCourses().length > 0) {
+                  <div class="course-dropdown position-absolute w-100 mt-1">
+                    @for (course of filteredCourses(); track course.courseId) {
+                      <button class="course-dropdown-item" type="button"
+                              [class.active]="selectedCourseId === course.courseId"
+                              (mousedown)="selectCourse(course.courseId); courseSearch = ''; courseDropdownOpen = false">
+                        <div class="fw-semibold">{{ course.courseName }} {{ course.parallel }}</div>
+                        <div class="small text-muted">{{ course.level }} · {{ course.subjectNames.join(', ') }}</div>
+                      </button>
+                    }
                   </div>
-                </div>
-              } @empty {
-                <div class="col-12">
-                  <div class="text-center text-muted py-4">
-                    <i class="bi bi-calendar-x fs-1 mb-2 d-block"></i>
-                    No tienes cursos asignados.
-                  </div>
+                }
+              </div>
+              @if (selectedCourse()) {
+                <div class="mt-2 d-flex flex-wrap gap-1">
+                  @for (subj of selectedCourse()!.subjectNames; track subj) {
+                    <span class="badge rounded-pill text-bg-light">{{ subj }}</span>
+                  }
+                  <span class="badge rounded-pill text-bg-secondary">{{ selectedCourse()!.scheduleCount }} bloques</span>
                 </div>
               }
             </div>
@@ -74,20 +93,30 @@ import { catchError, of } from 'rxjs';
               <div class="row g-4">
                 <div class="col-12 col-lg-6">
                   <h3 class="h5 mb-3">Horario del curso</h3>
+                  <ul class="nav nav-tabs nav-tabs-sm mb-3">
+                    @for (day of scheduleWeekdays; track day.value) {
+                      @if (scheduleEntriesByDay(day.value).length > 0) {
+                        <li class="nav-item">
+                          <button class="nav-link" [class.active]="selectedScheduleDay === day.value"
+                                  type="button" (click)="selectedScheduleDay = day.value">
+                            {{ day.short }}
+                          </button>
+                        </li>
+                      }
+                    }
+                  </ul>
                   <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-xs table-hover align-middle mb-0">
                       <thead>
                         <tr>
-                          <th>Dia</th>
                           <th>Bloque</th>
                           <th>Materia</th>
                           <th>Aula</th>
                         </tr>
                       </thead>
                       <tbody>
-                        @for (entry of courseSchedule; track entry.id) {
+                        @for (entry of scheduleEntriesByDay(selectedScheduleDay); track entry.id) {
                           <tr>
-                            <td class="align-top">{{ weekdayLabel(entry.weekday) }}</td>
                             <td class="align-top">
                               <div class="fw-semibold">{{ entry.scheduleLabel }}</div>
                               <div class="small text-muted">{{ entry.startTime }} - {{ entry.endTime }}</div>
@@ -97,8 +126,8 @@ import { catchError, of } from 'rxjs';
                           </tr>
                         } @empty {
                           <tr>
-                            <td colspan="4" class="text-center text-muted py-4">
-                              Sin horario registrado para este curso.
+                            <td colspan="3" class="text-center text-muted py-4">
+                              Sin bloques este dia.
                             </td>
                           </tr>
                         }
@@ -109,7 +138,7 @@ import { catchError, of } from 'rxjs';
                 <div class="col-12 col-lg-6">
                   <h3 class="h5 mb-3">Estudiantes del curso ({{ courseStudents.length }})</h3>
                   <div class="table-responsive">
-                    <table class="table table-striped align-middle mb-0">
+                    <table class="table table-xs table-hover align-middle mb-0">
                       <thead>
                         <tr>
                           <th>Matricula</th>
@@ -207,7 +236,7 @@ import { catchError, of } from 'rxjs';
                           }
                         </td>
                         <td class="align-top">
-                          <span class="badge" [class.text-bg-success]="entry.teacherSignatureStatus === 'SIGNED'"
+                          <span class="badge rounded-pill" [class.text-bg-success]="entry.teacherSignatureStatus === 'SIGNED'"
                                 [class.text-bg-secondary]="entry.teacherSignatureStatus !== 'SIGNED'">
                             {{ entry.teacherSignatureStatus === 'SIGNED' ? 'Firmado' : 'Pendiente' }}
                           </span>
@@ -258,7 +287,10 @@ export class MyTeachingComponent implements OnInit {
   students: AcademicStudent[] = [];
   courses: TeacherCourse[] = [];
   selectedCourseId: number | null = null;
+  courseSearch = '';
+  courseDropdownOpen = false;
   courseSchedule: CourseScheduleEntry[] = [];
+  selectedScheduleDay = this.todayWeekday();
   courseStudents: AcademicStudent[] = [];
   journal: WeeklyJournalResponse | null = null;
   selectedWeekday = this.todayWeekday();
@@ -298,8 +330,28 @@ export class MyTeachingComponent implements OnInit {
 
   selectCourse(courseId: number): void {
     this.selectedCourseId = courseId;
+    this.selectedScheduleDay = this.todayWeekday();
     this.loadCourseSchedule(courseId);
     this.loadCourseStudents(courseId);
+  }
+
+  filteredCourses(): TeacherCourse[] {
+    const term = this.courseSearch.toLowerCase().trim();
+    if (!term) return this.courses;
+    return this.courses.filter(c =>
+      c.courseName.toLowerCase().includes(term) ||
+      c.parallel.toLowerCase().includes(term) ||
+      c.level.toLowerCase().includes(term) ||
+      c.subjectNames.some(s => s.toLowerCase().includes(term))
+    );
+  }
+
+  selectedCourse(): TeacherCourse | undefined {
+    return this.courses.find(c => c.courseId === this.selectedCourseId);
+  }
+
+  closeCourseDropdown(): void {
+    setTimeout(() => { this.courseDropdownOpen = false; }, 150);
   }
 
   prevWeek(): void {
@@ -324,6 +376,19 @@ export class MyTeachingComponent implements OnInit {
   weekdayLabel(weekday: number): string {
     const labels = ['', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
     return labels[weekday] || '';
+  }
+
+  readonly scheduleWeekdays = [
+    { value: 1, short: 'Lun' },
+    { value: 2, short: 'Mar' },
+    { value: 3, short: 'Mie' },
+    { value: 4, short: 'Jue' },
+    { value: 5, short: 'Vie' },
+    { value: 6, short: 'Sab' }
+  ];
+
+  scheduleEntriesByDay(weekday: number): CourseScheduleEntry[] {
+    return this.courseSchedule.filter(e => e.weekday === weekday);
   }
 
   saveEntry(entry: JournalEntry): void {

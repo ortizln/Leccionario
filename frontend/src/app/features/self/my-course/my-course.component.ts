@@ -54,7 +54,7 @@ import { catchError, of } from 'rxjs';
             <h3 class="h5 mb-1">Leccionario del dia</h3>
             <p class="text-muted mb-3">{{ dailyLog.logDate }} · {{ dailyLog.courseName }} · {{ dailyLog.status }}</p>
             <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
+              <table class="table table-xs table-hover align-middle mb-0">
                 <thead>
                   <tr>
                     <th>Bloque</th>
@@ -90,7 +90,7 @@ import { catchError, of } from 'rxjs';
         <div class="card-body p-4">
           <h3 class="h5 mb-3">Mis companeros</h3>
           <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
+            <table class="table table-xs table-hover align-middle mb-0">
               <thead>
                 <tr>
                   <th>Matricula</th>
@@ -116,7 +116,7 @@ import { catchError, of } from 'rxjs';
         <div class="card-body p-4">
           <h3 class="h5 mb-3">Mi horario</h3>
           <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
+            <table class="table table-xs table-hover align-middle mb-0">
               <thead>
                 <tr>
                   <th>Dia</th>

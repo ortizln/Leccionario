@@ -1,55 +1,25 @@
+.signature-box {
+  background: rgba(85, 107, 47, 0.03);
+  border-color: rgba(85, 107, 47, 0.08) !important;
+}
 
-    .daily-log-table textarea {
-      min-width: 180px;
-    }
-    .signature-box {
-      background: rgba(85, 107, 47, 0.03);
-      border-color: rgba(85, 107, 47, 0.08) !important;
-    }
-    .modal-shell {
-      position: fixed;
-      inset: 0;
-      z-index: 1050;
-      display: grid;
-      place-items: center;
-      padding: 1.5rem;
-      background: rgba(0, 0, 0, 0.50);
-      backdrop-filter: blur(4px);
-    }
-    .modal-card {
-      width: min(100%, 680px);
-      padding: 1.5rem;
-      border-radius: var(--radius-xl);
-      background: #FFFFFF;
-      border: 1px solid #D8D3C8;
-      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.16);
-    }
-    .absence-option {
-      background: rgba(85, 107, 47, 0.03);
-      border-color: rgba(85, 107, 47, 0.08) !important;
-      cursor: pointer;
-    }
-    .qr-preview {
-      width: min(100%, 280px);
-      padding: 0.75rem;
-      border-radius: var(--radius-lg);
-      background: #FFFFFF;
-      border: 1px solid #D8D3C8;
-    }
-    .qr-link-box {
-      padding: 0.9rem;
-      border-radius: var(--radius-lg);
-      background: rgba(85, 107, 47, 0.03);
-      border: 1px solid rgba(85, 107, 47, 0.08);
-    }
-    .signature-summary-card {
-      height: 100%;
-      padding: 1rem;
-      border-radius: var(--radius-lg);
-      background: rgba(85, 107, 47, 0.03);
-      border: 1px solid rgba(85, 107, 47, 0.08);
-    }
-    .final-signature-card {
-      background: #FFFFFF;
-    }
-  
+.signature-card {
+  padding: 0.75rem;
+  border-radius: var(--radius-lg, 0.5rem);
+  background: rgba(85, 107, 47, 0.03);
+  border: 1px solid rgba(85, 107, 47, 0.08);
+  transition: border-color 0.15s ease;
+}
+
+.signature-card--signed {
+  border-color: rgba(76, 175, 80, 0.3);
+  background: rgba(76, 175, 80, 0.03);
+}
+
+.signature-card--compact {
+  padding: 0.5rem;
+}
+
+.transition-shadow {
+  transition: box-shadow 0.15s ease;
+}

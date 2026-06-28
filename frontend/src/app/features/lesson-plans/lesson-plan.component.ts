@@ -23,6 +23,7 @@ export class LessonPlanComponent implements OnInit {
   canSearchLessonPlan = this.auth.hasPermission('ACADEMIC_VIEW') || this.auth.hasPermission('LESSONPLAN_VIEW');
   canManageLessonPlans = this.auth.hasPermission('LESSONPLAN_MANAGE');
   errorMessage = '';
+  isLoading = false;
   dailyLog: DailyLogItem | null = null;
   teacherTodayCourses: Array<{ courseId: number; courseName: string; periodId: number; logDate: string; subjectNames: string[] }> = [];
   teacherSelectedCourseId: number | null = null;
@@ -37,6 +38,9 @@ export class LessonPlanComponent implements OnInit {
   qrDataUrl = '';
   currentDate = this.today();
   selectedWeekday = this.todayWeekday();
+  availableDemeritCategories: DemeritCategoryOption[] = [];
+  availableFaltas: DemeritFaltaOption[] = [];
+  selectedFaltasByStudent: Map<number, number[]> = new Map();
 
   overview: ScheduleOverview = {
     blocks: [],
@@ -53,6 +57,7 @@ export class LessonPlanComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.loadDemerits();
     if (this.isTeacher) {
       this.loadTeacherToday();
     } else if (this.isReadOnly) {
@@ -142,6 +147,7 @@ export class LessonPlanComponent implements OnInit {
       return;
     }
 
+    this.isLoading = true;
     this.http.post<DailyLogItem>(`${API_URL}/daily-logs/generate`, {
       courseId,
       periodId: this.overview.periods.find(p => p.active)?.id ?? this.overview.periods[0]?.id ?? 0,
@@ -153,9 +159,11 @@ export class LessonPlanComponent implements OnInit {
       catchError((error) => {
         this.dailyLog = null;
         this.errorMessage = error?.error?.message ?? 'No se pudo cargar el leccionario.';
+        this.isLoading = false;
         return of(null);
       })
     ).subscribe((response) => {
+      this.isLoading = false;
       if (response) {
         this.dailyLog = this.mapDailyLog(response);
       }
@@ -241,6 +249,7 @@ export class LessonPlanComponent implements OnInit {
         enrollmentNumber: student.enrollmentNumber,
         selected: !!existing,
         category: existing?.category ?? 'DISCIPLINA',
+        faltaId: existing?.demeritId ?? null,
         notes: existing?.notes ?? ''
       };
     });
@@ -264,7 +273,12 @@ export class LessonPlanComponent implements OnInit {
       {
         incidents: this.incidentDrafts
           .filter(item => item.selected)
-          .map(item => ({ studentId: item.studentId, category: item.category, notes: item.notes }))
+          .map(item => ({
+            studentId: item.studentId,
+            category: item.category,
+            demeritId: item.category === 'DISCIPLINA' ? item.faltaId : null,
+            notes: item.notes
+          }))
       }
     ).subscribe({
       next: (saved) => {
@@ -310,6 +324,7 @@ export class LessonPlanComponent implements OnInit {
     this.teacherSelectedCourseId = courseId;
     this.errorMessage = '';
     const course = this.teacherTodayCourses.find(c => c.courseId === courseId);
+    this.isLoading = true;
     this.http.post<DailyLogItem>(`${API_URL}/daily-logs/generate`, {
       courseId,
       periodId: course?.periodId ?? 0,
@@ -318,8 +333,9 @@ export class LessonPlanComponent implements OnInit {
       city: null,
       generalNotes: null
     }).pipe(
-      catchError(() => { this.dailyLog = null; return of(null); })
+      catchError(() => { this.dailyLog = null; this.isLoading = false; return of(null); })
     ).subscribe(response => {
+      this.isLoading = false;
       if (response) this.dailyLog = this.mapDailyLog(response);
     });
   }
@@ -431,6 +447,20 @@ export class LessonPlanComponent implements OnInit {
     return this.hasSignature('TEACHER_TUTOR') && this.hasSignature('WEEK_STUDENT') && !this.hasSignature('GENERAL_INSPECTOR');
   }
 
+  selectedAbsenceCount(): number {
+    return this.absenceDrafts.filter(d => d.selected).length;
+  }
+
+  selectedIncidentCount(): number {
+    return this.incidentDrafts.filter(d => d.selected).length;
+  }
+
+  faltasForCategory(categoryCode: string): DemeritFaltaOption[] {
+    const cat = this.availableDemeritCategories.find(c => c.code === categoryCode);
+    if (!cat) return [];
+    return this.availableFaltas.filter(f => f.categoryId === cat.id);
+  }
+
   absenceLabel(absenceType: string): string {
     switch (absenceType) {
       case 'LATE': return 'Atraso';
@@ -479,9 +509,11 @@ export class LessonPlanComponent implements OnInit {
   }
 
   private loadStudentDailyLogForDate(date: string): void {
+    this.isLoading = true;
     this.http.get<DailyLogItem>(`${API_URL}/self/my-course-daily-log?logDate=${date}`).pipe(
       catchError(() => of(null))
     ).subscribe(data => {
+      this.isLoading = false;
       if (data) {
         this.dailyLog = this.mapDailyLog(data);
       } else {
@@ -522,6 +554,16 @@ export class LessonPlanComponent implements OnInit {
 
   private mapEntry(entry: DailyLogEntryItem): DailyLogEntryItem {
     return { ...entry, signed: entry.teacherSignatureStatus === 'SIGNED' };
+  }
+
+  private loadDemerits(): void {
+    this.http.get<DemeritCategoryOption[]>(`${API_URL}/demerit-categories`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => this.availableDemeritCategories = data.filter(c => c.active));
+
+    this.http.get<DemeritFaltaOption[]>(`${API_URL}/demerit-faltas/active`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => this.availableFaltas = data);
   }
 
   private today(): string {
@@ -627,6 +669,11 @@ type DailyLogIncidentItem = {
   studentId: number;
   studentName: string;
   enrollmentNumber: string;
+  demeritId: number | null;
+  demeritCode: string | null;
+  demeritCategory: string | null;
+  demeritDescription: string | null;
+  demeritScore: number | null;
   category: string;
   notes: string | null;
 };
@@ -637,6 +684,7 @@ type DailyLogIncidentDraft = {
   enrollmentNumber: string;
   selected: boolean;
   category: string;
+  faltaId: number | null;
   notes: string;
 };
 
@@ -647,4 +695,25 @@ type DailyLogSignatureItem = {
   signatureType: string;
   signedAt: string;
   notes: string | null;
+};
+
+type DemeritCategoryOption = {
+  id: number;
+  code: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  active: boolean;
+};
+
+type DemeritFaltaOption = {
+  id: number;
+  categoryId: number;
+  categoryName: string;
+  categoryCode: string;
+  code: string;
+  description: string;
+  score: number;
+  severity: string;
+  active: boolean;
 };

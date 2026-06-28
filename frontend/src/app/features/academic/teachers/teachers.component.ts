@@ -12,9 +12,12 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
   imports: [FormsModule, ReactiveFormsModule],
   template: `
     <div class="card border-0 shadow-sm h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h2 class="h5 mb-0">Docentes y carga asignada</h2>
+      <div class="card-body p-4 d-grid gap-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="h4 mb-1">Docentes y carga asignada</h2>
+            <p class="text-muted small mb-0">Gestiona la informacion, asignacion de materias, cursos y horarios de los docentes.</p>
+          </div>
           <details class="action-menu">
             <summary class="btn btn-sm btn-primary">
               <i class="bi bi-list-ul me-2"></i>Acciones
@@ -36,15 +39,15 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
           </details>
         </div>
 
-        <div class="row g-3 mb-3">
-          <div class="col-12 col-lg-6">
-            <label class="form-label fw-semibold">Buscar docente</label>
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label fw-semibold small">Buscar docente</label>
             <input class="form-control form-control-sm" type="text" [value]="search" (input)="search = $any($event.target).value" placeholder="Nombre, usuario o especialidad">
           </div>
         </div>
 
         <div class="table-responsive">
-          <table class="table table-striped align-middle mb-0">
+          <table class="table table-xs table-hover align-middle mb-0">
             <thead>
               <tr>
                 <th>Docente</th>
@@ -61,151 +64,23 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                     <div class="fw-semibold">{{ teacher.fullName }}</div>
                     <div class="small text-muted">{{ teacher.specialization || 'Sin especialidad' }}</div>
                   </td>
-                  <td>{{ teacher.subjects.length > 0 ? teacher.subjects.join(', ') : 'Sin materias asignadas' }}</td>
-                  <td>{{ teacher.courses.length > 0 ? teacher.courses.join(', ') : 'Sin cursos asignados' }}</td>
                   <td>
-                    <span class="badge" [class.text-bg-success]="teacher.weeklyBlocks > 0" [class.text-bg-secondary]="teacher.weeklyBlocks === 0">
+                    <span class="table-cell-truncate">{{ teacher.subjects.length > 0 ? teacher.subjects.join(', ') : 'Sin materias' }}</span>
+                  </td>
+                  <td>
+                    <span class="table-cell-truncate">{{ teacher.courses.length > 0 ? teacher.courses.join(', ') : 'Sin cursos' }}</span>
+                  </td>
+                  <td>
+                    <span class="badge rounded-pill" [class.text-bg-success]="teacher.weeklyBlocks > 0" [class.text-bg-secondary]="teacher.weeklyBlocks === 0">
                       {{ teacher.weeklyBlocks }}
                     </span>
                   </td>
                   <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="toggleInfo(teacher.id)">
-                      <i class="bi" [class.bi-eye]="selectedTeacherId !== teacher.id" [class.bi-eye-slash]="selectedTeacherId === teacher.id"></i>
-                      {{ selectedTeacherId === teacher.id ? 'Ocultar' : 'Ver' }}
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="openTeacherDetail(teacher)" title="Ver detalle">
+                      <i class="bi bi-eye me-1"></i>Ver
                     </button>
                   </td>
                 </tr>
-                @if (selectedTeacherId === teacher.id) {
-                  <tr>
-                    <td colspan="5" class="p-0 border-0">
-                      <div class="p-4 d-grid gap-4 bg-white rounded-3">
-                        <div class="row g-3">
-                          <div class="col-12 col-md-4">
-                            <div class="card border-0 shadow-sm h-100">
-                              <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                  <h3 class="h6 mb-0"><i class="bi bi-person-vcard me-2"></i>Informacion personal</h3>
-                                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="editTeacher(teacher)">
-                                    <i class="bi bi-pencil"></i>
-                                  </button>
-                                </div>
-                                <dl class="row mb-0 small">
-                                  <dt class="col-5 text-muted">Usuario</dt>
-                                  <dd class="col-7 mb-1">{{ teacher.username }}</dd>
-                                  <dt class="col-5 text-muted">Correo</dt>
-                                  <dd class="col-7 mb-1">{{ teacher.username }}&#64;educacion.gob.ec</dd>
-                                  <dt class="col-5 text-muted">Estado</dt>
-                                  <dd class="col-7 mb-1">
-                                    <span class="badge" [class.text-bg-success]="teacher.enabled" [class.text-bg-secondary]="!teacher.enabled">
-                                      {{ teacher.enabled ? 'Activo' : 'Inactivo' }}
-                                    </span>
-                                  </dd>
-                                </dl>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-12 col-md-4">
-                            <div class="card border-0 shadow-sm h-100">
-                              <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                  <h3 class="h6 mb-0"><i class="bi bi-book me-2"></i>Materias asignadas</h3>
-                                </div>
-                                @if (teacher.subjects.length > 0) {
-                                  <ul class="list-unstyled mb-0 small">
-                                    @for (subj of teacher.subjects; track subj) {
-                                      <li><i class="bi bi-dot me-1"></i>{{ subj }}</li>
-                                    }
-                                  </ul>
-                                } @else {
-                                  <p class="text-muted small mb-0">Sin materias asignadas.</p>
-                                }
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-12 col-md-4">
-                            <div class="card border-0 shadow-sm h-100">
-                              <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                  <h3 class="h6 mb-0"><i class="bi bi-mortarboard me-2"></i>Cursos asignados</h3>
-                                </div>
-                                @if (teacher.courses.length > 0) {
-                                  <ul class="list-unstyled mb-0 small">
-                                    @for (course of teacher.courses; track course) {
-                                      <li><i class="bi bi-dot me-1"></i>{{ course }}</li>
-                                    }
-                                  </ul>
-                                } @else {
-                                  <p class="text-muted small mb-0">Sin cursos asignados.</p>
-                                }
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="card border-0 shadow-sm">
-                          <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                              <h3 class="h6 mb-0"><i class="bi bi-calendar-week me-2"></i>Horario semanal</h3>
-                              @if (canManageAcademic && addingScheduleFor !== teacher.id) {
-                                <button class="btn btn-sm btn-outline-primary" type="button" (click)="startAddScheduleEntry(teacher.id)">
-                                  <i class="bi bi-plus-circle me-1"></i>Agregar
-                                </button>
-                              }
-                            </div>
-
-                            @if (teacherSchedule(teacher.id).length === 0) {
-                              <p class="text-muted small mb-0">Sin horario asignado.</p>
-                            } @else {
-                              @for (day of weekdays; track day.value) {
-                                @let entries = teacherScheduleByDay(teacher.id, day.value);
-                                @if (entries.length > 0) {
-                                  <div class="mb-3">
-                                    <div class="fw-semibold small text-uppercase text-primary mb-2">{{ day.label }}</div>
-                                    <div class="table-responsive">
-                                      <table class="table table-sm align-middle mb-0">
-                                        <thead>
-                                          <tr>
-                                            <th>Bloque</th>
-                                            <th>Materia</th>
-                                            <th>Curso</th>
-                                            <th>Aula</th>
-                                            <th class="text-end"></th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          @for (entry of entries; track entry.id) {
-                                              <tr>
-                                                <td class="small">{{ entry.scheduleLabel }}</td>
-                                                <td class="fw-semibold small">{{ entry.subjectName }}</td>
-                                                <td class="small">{{ entry.courseName }}</td>
-                                                <td class="small">{{ entry.classroom || 'Sin aula' }}</td>
-                                                <td class="text-end">
-                                                  @if (canManageAcademic) {
-                                                    <button class="btn btn-sm btn-link text-primary p-0 me-2" type="button"
-                                                            (click)="startEditScheduleEntry(entry)">
-                                                      <i class="bi bi-pencil"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-link text-danger p-0" type="button"
-                                                            (click)="deleteScheduleEntry(entry.id)">
-                                                      <i class="bi bi-trash"></i>
-                                                    </button>
-                                                  }
-                                                </td>
-                                              </tr>
-                                          }
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  </div>
-                                }
-                              }
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                }
               } @empty {
                 <tr><td colspan="5" class="text-center text-muted py-4">No hay docentes vinculados al horario.</td></tr>
               }
@@ -216,6 +91,192 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
     </div>
 
     <input id="teachers-import-input" class="d-none" type="file" accept=".xlsx" (change)="handleImport($event)">
+
+    @if (detailTeacher) {
+      <div class="modal-shell" (click)="closeTeacherDetail()">
+        <div class="modal-card modal-card-lg" style="max-width:720px" (click)="$event.stopPropagation()">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+              <span class="badge rounded-pill text-bg-primary mb-2"><i class="bi bi-person-badge me-1"></i>Ficha del docente</span>
+              <h2 class="h4 mb-0">{{ detailTeacher.fullName }}</h2>
+              <div class="text-muted small">{{ detailTeacher.specialization || 'Sin especialidad' }} &middot; {{ detailTeacher.weeklyBlocks }} bloques/semana</div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeTeacherDetail()"><i class="bi bi-x-lg"></i></button>
+          </div>
+
+          <ul class="nav nav-tabs nav-tabs-sm mb-3">
+            <li class="nav-item">
+              <button class="nav-link" [class.active]="detailTab === 'datos'" type="button" (click)="detailTab = 'datos'">
+                <i class="bi bi-person-vcard me-1"></i>Datos personales
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" [class.active]="detailTab === 'materias'" type="button" (click)="detailTab = 'materias'">
+                <i class="bi bi-book me-1"></i>Materias
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" [class.active]="detailTab === 'cursos'" type="button" (click)="detailTab = 'cursos'">
+                <i class="bi bi-mortarboard me-1"></i>Cursos
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" [class.active]="detailTab === 'horario'" type="button" (click)="detailTab = 'horario'">
+                <i class="bi bi-calendar-week me-1"></i>Horario
+              </button>
+            </li>
+          </ul>
+
+          @if (detailTab === 'datos') {
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h3 class="h6 mb-0">Informacion personal</h3>
+                  @if (canManageAcademic) {
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeTeacherDetail(); editTeacher(detailTeacher)"><i class="bi bi-pencil me-1"></i>Editar</button>
+                  }
+                </div>
+                <dl class="row mb-0 small">
+                  <dt class="col-4 col-md-3 text-muted">Nombres</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ detailTeacher.firstName }} {{ detailTeacher.lastName }}</dd>
+                  <dt class="col-4 col-md-3 text-muted">Usuario</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ detailTeacher.username }}</dd>
+                  <dt class="col-4 col-md-3 text-muted">Correo</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ detailTeacher.username }}&#64;educacion.gob.ec</dd>
+                  <dt class="col-4 col-md-3 text-muted">Especialidad</dt>
+                  <dd class="col-8 col-md-9 mb-1">{{ detailTeacher.specialization || 'Sin especialidad' }}</dd>
+                  <dt class="col-4 col-md-3 text-muted">Estado</dt>
+                  <dd class="col-8 col-md-9 mb-1">
+                    <span class="badge rounded-pill" [class.text-bg-success]="detailTeacher.enabled" [class.text-bg-secondary]="!detailTeacher.enabled">
+                      {{ detailTeacher.enabled ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          }
+
+          @if (detailTab === 'materias') {
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h3 class="h6 mb-0"><i class="bi bi-book me-2"></i>Materias asignadas</h3>
+                  @if (canManageAcademic) {
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeTeacherDetail(); editTeacher(detailTeacher)">
+                      <i class="bi bi-pencil me-1"></i>Editar
+                    </button>
+                  }
+                </div>
+                @if (detailTeacher.subjects.length > 0) {
+                  <div class="d-flex flex-wrap gap-2">
+                    @for (subj of detailTeacher.subjects; track subj) {
+                      <span class="badge rounded-pill text-bg-light">{{ subj }}</span>
+                    }
+                  </div>
+                } @else {
+                  <div class="text-center py-4">
+                    <i class="bi bi-book text-muted" style="font-size:2rem"></i>
+                    <p class="text-muted small mt-2 mb-0">Sin materias asignadas.</p>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (detailTab === 'cursos') {
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h3 class="h6 mb-0"><i class="bi bi-mortarboard me-2"></i>Cursos asignados</h3>
+                  @if (canManageAcademic) {
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeTeacherDetail(); editTeacher(detailTeacher)">
+                      <i class="bi bi-pencil me-1"></i>Editar
+                    </button>
+                  }
+                </div>
+                @if (detailTeacher.courses.length > 0) {
+                  <div class="d-flex flex-wrap gap-2">
+                    @for (course of detailTeacher.courses; track course) {
+                      <span class="badge rounded-pill text-bg-light">{{ course }}</span>
+                    }
+                  </div>
+                } @else {
+                  <div class="text-center py-4">
+                    <i class="bi bi-mortarboard text-muted" style="font-size:2rem"></i>
+                    <p class="text-muted small mt-2 mb-0">Sin cursos asignados.</p>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (detailTab === 'horario') {
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h3 class="h6 mb-0"><i class="bi bi-calendar-week me-2"></i>Horario semanal</h3>
+                  @if (canManageAcademic) {
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="startAddScheduleEntry(detailTeacher.id)">
+                      <i class="bi bi-plus-circle me-1"></i>Agregar bloque
+                    </button>
+                  }
+                </div>
+                @if (teacherSchedule(detailTeacher.id).length === 0) {
+                  <div class="text-center py-4">
+                    <i class="bi bi-calendar-x text-muted" style="font-size:2rem"></i>
+                    <p class="text-muted small mt-2 mb-0">Sin horario asignado.</p>
+                  </div>
+                } @else {
+                  <ul class="nav nav-tabs nav-tabs-sm mb-3">
+                    @for (day of weekdays; track day.value) {
+                      @if (teacherScheduleByDay(detailTeacher.id, day.value).length > 0) {
+                        <li class="nav-item">
+                          <button class="nav-link" [class.active]="selectedScheduleDay === day.value" type="button" (click)="selectedScheduleDay = day.value">
+                            {{ day.shortLabel }}
+                          </button>
+                        </li>
+                      }
+                    }
+                  </ul>
+                  @let dayEntries = teacherScheduleByDay(detailTeacher.id, selectedScheduleDay);
+                  @if (dayEntries.length > 0) {
+                    <div class="table-responsive">
+                      <table class="table table-xs table-hover align-middle mb-0">
+                        <thead>
+                          <tr><th>Bloque</th><th>Materia</th><th>Curso</th><th>Aula</th><th class="text-end"></th></tr>
+                        </thead>
+                        <tbody>
+                          @for (entry of dayEntries; track entry.id) {
+                            <tr>
+                              <td>{{ entry.scheduleLabel }}</td>
+                              <td class="fw-semibold">{{ entry.subjectName }}</td>
+                              <td>{{ entry.courseName }}</td>
+                              <td>{{ entry.classroom || '—' }}</td>
+                              <td class="text-end">
+                                @if (canManageAcademic) {
+                                  <button class="btn btn-sm btn-link text-primary p-0 me-2" type="button" (click)="startEditScheduleEntry(entry)"><i class="bi bi-pencil"></i></button>
+                                  <button class="btn btn-sm btn-link text-danger p-0" type="button" (click)="deleteScheduleEntry(entry.id)"><i class="bi bi-trash"></i></button>
+                                }
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  } @else {
+                    <p class="text-muted small mb-0">Sin bloques programados este dia.</p>
+                  }
+                }
+              </div>
+            </div>
+          }
+
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <button class="btn btn-sm btn-primary" type="button" (click)="closeTeacherDetail()">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    }
 
     @if (editorOpen) {
       <div class="modal-shell" (click)="cancelEdit()">
@@ -392,7 +453,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
             <div class="mb-3">
               <h6 class="small fw-bold text-muted mb-2">Horario asignado</h6>
               <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
-                <table class="table table-sm align-middle mb-0">
+                <table class="table table-xs align-middle mb-0">
                   <thead class="sticky-top bg-light">
                     <tr>
                       <th class="small">Dia</th>
@@ -460,8 +521,10 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
               <div class="col-12 col-md-6">
                 <label class="form-label fw-semibold small">Curso</label>
                 <select class="form-select form-select-sm" formControlName="courseId">
-                  @for (c of overviewCourses; track c.id) {
+                  @for (c of teacherScheduleCourses(); track c.id) {
                     <option [value]="c.id">{{ c.name }} {{ c.parallel }}</option>
+                  } @empty {
+                    <option value="" disabled>No tiene cursos asignados</option>
                   }
                 </select>
               </div>
@@ -500,7 +563,9 @@ export class TeachersComponent implements OnInit {
   search = '';
   editorOpen = false;
   editingId: number | null = null;
-  selectedTeacherId: number | null = null;
+  detailTeacher: AcademicTeacher | null = null;
+  detailTab: 'datos' | 'materias' | 'cursos' | 'horario' = 'datos';
+  selectedScheduleDay = 1;
   editingSubjectsFor: number | null = null;
   editingCoursesFor: number | null = null;
   pendingSubjectSelection: Set<string> = new Set();
@@ -525,13 +590,13 @@ export class TeachersComponent implements OnInit {
   });
 
   readonly weekdays = [
-    { value: 1, label: 'Lunes' },
-    { value: 2, label: 'Martes' },
-    { value: 3, label: 'Miercoles' },
-    { value: 4, label: 'Jueves' },
-    { value: 5, label: 'Viernes' },
-    { value: 6, label: 'Sabado' },
-    { value: 7, label: 'Domingo' }
+    { value: 1, label: 'Lunes', shortLabel: 'Lun' },
+    { value: 2, label: 'Martes', shortLabel: 'Mar' },
+    { value: 3, label: 'Miercoles', shortLabel: 'Mie' },
+    { value: 4, label: 'Jueves', shortLabel: 'Jue' },
+    { value: 5, label: 'Viernes', shortLabel: 'Vie' },
+    { value: 6, label: 'Sabado', shortLabel: 'Sab' },
+    { value: 7, label: 'Domingo', shortLabel: 'Dom' }
   ];
 
   form = this.fb.nonNullable.group({
@@ -580,11 +645,15 @@ export class TeachersComponent implements OnInit {
     );
   }
 
-  toggleInfo(teacherId: number): void {
-    this.selectedTeacherId = this.selectedTeacherId === teacherId ? null : teacherId;
-    if (this.selectedTeacherId !== teacherId) {
-      this.cancelEditSection();
-    }
+  openTeacherDetail(teacher: AcademicTeacher): void {
+    this.detailTeacher = teacher;
+    this.detailTab = 'datos';
+    this.selectedScheduleDay = 1;
+  }
+
+  closeTeacherDetail(): void {
+    this.detailTeacher = null;
+    this.detailTab = 'datos';
   }
 
   startEditSubjects(teacher: AcademicTeacher): void {
@@ -704,6 +773,16 @@ export class TeachersComponent implements OnInit {
     return this.overviewSubjects.filter(s => this.scheduleModalTeacher!.subjects.includes(s.name));
   }
 
+  teacherScheduleCourses(): Array<{ id: number; name: string; parallel: string }> {
+    if (!this.scheduleModalTeacher) return [];
+    const teacherCourses = this.scheduleModalTeacher!.courses;
+    if (!teacherCourses || teacherCourses.length === 0) return this.overviewCourses;
+    return this.overviewCourses.filter(c => {
+      const fullName = (c.name + ' ' + c.parallel).toLowerCase().trim();
+      return teacherCourses.some(tc => tc.toLowerCase().trim() === fullName);
+    });
+  }
+
   activePeriodId(): number {
     return this.periods.find(p => p.active)?.id ?? this.periods[0]?.id ?? 0;
   }
@@ -713,7 +792,7 @@ export class TeachersComponent implements OnInit {
     this.addingScheduleFor = teacherId;
     this.scheduleModalTeacher = this.teachers.find(t => t.id === teacherId) || null;
     this.scheduleForm.reset({
-      courseId: this.overviewCourses[0]?.id ?? 0,
+      courseId: this.teacherScheduleCourses()[0]?.id ?? 0,
       subjectId: this.teacherScheduleSubjects()[0]?.id ?? 0,
       scheduleBlockId: this.classBlocks()[0]?.id ?? 0,
       weekday: 1,
@@ -757,8 +836,11 @@ export class TeachersComponent implements OnInit {
 
     request$.pipe(catchError(() => of(null))).subscribe({
       next: () => {
+        const savedDay = this.scheduleForm.getRawValue().weekday;
         this.cancelScheduleEdit();
         this.loadData();
+        this.selectedScheduleDay = savedDay;
+        this.detailTab = 'horario';
       }
     });
   }
@@ -800,7 +882,7 @@ export class TeachersComponent implements OnInit {
   editTeacher(teacher: AcademicTeacher): void {
     this.editingId = teacher.id;
     this.editorOpen = true;
-    this.selectedTeacherId = null;
+    this.detailTeacher = null;
     this.pendingSubjectSelection = new Set(teacher.subjects);
     this.pendingCourseSelection = new Set(teacher.courses);
     this.http.get<AcademicTeacher>(`${API_URL}/academic/teachers/${teacher.id}`).pipe(

@@ -4,11 +4,14 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angu
 import { catchError, of } from 'rxjs';
 import { API_URL } from '../../core/api.config';
 import { AuthService } from '../../core/auth.service';
+import { SortableHeaderComponent } from '../../shared/sortable-header.component';
+import { FilterDropdownComponent } from '../../shared/filter-dropdown.component';
+import { SortState, FilterState, applySort, applyFilters, getFilterOptions, toggleFilter, clearFilter, SortDir } from '../../shared/table-utils';
 
 @Component({
   selector: 'app-schedule-management',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule, SortableHeaderComponent, FilterDropdownComponent],
   templateUrl: './schedule-management.component.html'
 })
 export class ScheduleManagementComponent {
@@ -24,6 +27,48 @@ export class ScheduleManagementComponent {
   blockModalOpen = false;
   scheduleModalOpen = false;
   activeTab = 'blocks';
+
+  sort: SortState | null = null;
+  filters: FilterState = {};
+  displayedSchedules: CourseScheduleItem[] = [];
+
+  sortColumn(col: string): SortDir { return this.sort?.column === col ? this.sort.dir : null; }
+  onSort(col: string): void {
+    const dir: SortDir = this.sort?.column === col
+      ? (this.sort.dir === 'asc' ? 'desc' : this.sort.dir === 'desc' ? null : 'asc')
+      : 'asc';
+    this.sort = dir ? { column: col, dir } : null;
+    this.refreshDisplayed();
+  }
+  filterOpts(col: string): string[] { return getFilterOptions(this.overview.schedules, col); }
+  getFilter(col: string): Set<string> { return this.filters[col] ?? new Set(); }
+  onFilter(col: string, val: string): void { this.filters = toggleFilter(this.filters, col, val); this.refreshDisplayed(); }
+  onClearFilter(col: string): void { this.filters = clearFilter(this.filters, col); this.refreshDisplayed(); }
+  refreshDisplayed(): void {
+    this.displayedSchedules = this.applyWeekdayFilter(applyFilters(applySort(this.filteredSchedules, this.sort), this.filters));
+  }
+
+  weekdayLabelFilter(): string[] {
+    return this.overview.schedules.map(s => this.weekdayLabel(s.weekday));
+  }
+  getWeekdayFilter(): Set<string> { return this.filters['weekday'] ?? new Set(); }
+  getWeekdayFilterCount(): number { return this.filters['weekday']?.size ?? 0; }
+  onWeekdayFilter(val: string): void {
+    const dayNum = this.weekdays.find(d => d.label === val)?.value;
+    if (dayNum == null) return;
+    const strVal = String(dayNum);
+    this.filters = toggleFilter(this.filters, 'weekday', strVal);
+    this.refreshDisplayed();
+  }
+  onClearWeekdayFilter(): void {
+    this.filters = clearFilter(this.filters, 'weekday');
+    this.refreshDisplayed();
+  }
+  applyWeekdayFilter(items: CourseScheduleItem[]): CourseScheduleItem[] {
+    const vals = this.filters['weekday'];
+    if (!vals || vals.size === 0) return items;
+    return items.filter(s => vals.has(String(s.weekday)));
+  }
 
   overview: ScheduleOverview = {
     blocks: [],
@@ -262,6 +307,7 @@ export class ScheduleManagementComponent {
       if (!this.editingScheduleId) {
         this.resetScheduleForm();
       }
+      this.refreshDisplayed();
       afterLoad?.();
     });
   }
