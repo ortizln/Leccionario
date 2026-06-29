@@ -164,7 +164,7 @@ export class ScheduleManagementComponent {
       && s.id !== editingId
     );
     if (!conflict) return '';
-    return `El docente ya tiene bloque asignado el ${this.weekdayLabel(weekday)} en ${conflict.scheduleLabel} para el curso ${conflict.courseName}.`;
+    return `El docente ya tiene hora clase asignada el ${this.weekdayLabel(weekday)} en ${conflict.scheduleLabel} para el curso ${conflict.courseName}.`;
   }
 
   onCourseChange(): void {
@@ -270,7 +270,7 @@ export class ScheduleManagementComponent {
     request$.subscribe({
       next: () => this.loadOverview(() => this.resetBlockForm()),
       error: (error) => {
-        this.errorMessage = error?.error?.message ?? 'No se pudo guardar el bloque horario.';
+        this.errorMessage = error?.error?.message ?? 'No se pudo guardar la hora clase.';
       }
     });
   }
@@ -311,8 +311,8 @@ export class ScheduleManagementComponent {
 
   downloadBlockTemplate(): void {
     this.http.get(`${API_URL}/schedules/import-template/blocks`, { responseType: 'blob' }).subscribe({
-      next: (file) => this.downloadBlob(file, 'bloques-plantilla.xlsx'),
-      error: () => this.errorMessage = 'No se pudo descargar la plantilla de bloques.'
+      next: (file) => this.downloadBlob(file, 'horas-clase-plantilla.xlsx'),
+      error: () => this.errorMessage = 'No se pudo descargar la plantilla de horas clase.'
     });
   }
 
@@ -332,7 +332,7 @@ export class ScheduleManagementComponent {
   }
 
   handleBlockImport(event: Event): void {
-    this.handleImport(event, `${API_URL}/schedules/import/blocks`, 'bloques');
+    this.handleImport(event, `${API_URL}/schedules/import/blocks`, 'horas clase');
   }
 
   handleAssignmentImport(event: Event): void {

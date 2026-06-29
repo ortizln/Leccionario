@@ -53,7 +53,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                 <th>Docente</th>
                 <th>Materias</th>
                 <th>Cursos</th>
-                <th>Bloques/semana</th>
+                <th>Hora Clase/semana</th>
                 <th class="text-end"></th>
               </tr>
             </thead>
@@ -100,7 +100,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
             <div>
               <span class="badge rounded-pill text-bg-primary mb-2"><i class="bi bi-person-badge me-1"></i>Ficha del docente</span>
               <h2 class="h4 mb-0">{{ dt.fullName }}</h2>
-              <div class="text-muted small">{{ dt.specialization || 'Sin especialidad' }} &middot; {{ dt.weeklyBlocks }} bloques/semana</div>
+              <div class="text-muted small">{{ dt.specialization || 'Sin especialidad' }} &middot; {{ dt.weeklyBlocks }} horas clase/semana</div>
             </div>
             <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeTeacherDetail()"><i class="bi bi-x-lg"></i></button>
           </div>
@@ -218,7 +218,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                   <h3 class="h6 mb-0"><i class="bi bi-calendar-week me-2"></i>Horario semanal</h3>
                   @if (canManageAcademic) {
                     <button class="btn btn-sm btn-outline-primary" type="button" (click)="startAddScheduleEntry(dt.id)">
-                      <i class="bi bi-plus-circle me-1"></i>Agregar bloque
+                      <i class="bi bi-plus-circle me-1"></i>Agregar hora clase
                     </button>
                   }
                 </div>
@@ -244,7 +244,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                     <div class="table-responsive">
                       <table class="table table-xs table-hover align-middle mb-0">
                         <thead>
-                          <tr><th>Bloque</th><th>Materia</th><th>Curso</th><th>Aula</th><th class="text-end"></th></tr>
+                          <tr><th>Hora Clase</th><th>Materia</th><th>Curso</th><th>Aula</th><th class="text-end"></th></tr>
                         </thead>
                         <tbody>
                           @for (entry of dayEntries; track entry.id) {
@@ -265,7 +265,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                       </table>
                     </div>
                   } @else {
-                    <p class="text-muted small mb-0">Sin bloques programados este dia.</p>
+                    <p class="text-muted small mb-0">Sin horas clase programadas este dia.</p>
                   }
                 }
               </div>
@@ -466,7 +466,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
           <div class="d-flex justify-content-between align-items-start mb-3">
             <h5 class="mb-0">
               <i class="bi bi-calendar-week me-2"></i>
-              {{ editingScheduleEntryId ? 'Editar bloque' : 'Agregar bloque' }}
+               {{ editingScheduleEntryId ? 'Editar hora clase' : 'Agregar hora clase' }}
               <span class="text-muted small ms-2">— {{ scheduleModalTeacher.fullName }}</span>
             </h5>
             <button class="btn-close" type="button" (click)="cancelScheduleEdit()"></button>
@@ -480,7 +480,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                   <thead class="sticky-top bg-light">
                     <tr>
                       <th class="small">Dia</th>
-                      <th class="small">Bloque</th>
+                      <th class="small">Hora Clase</th>
                       <th class="small">Materia</th>
                       <th class="small">Curso</th>
                       <th class="small">Aula</th>
@@ -506,11 +506,11 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
             </div>
           } @else {
             <div class="text-center text-muted small py-2 mb-3 border-bottom">
-              <i class="bi bi-calendar-x me-1"></i>Este docente no tiene bloques asignados aun.
+              <i class="bi bi-calendar-x me-1"></i>Este docente no tiene horas clase asignadas aun.
             </div>
           }
 
-          <h6 class="small fw-bold text-muted mb-2">{{ editingScheduleEntryId ? 'Editar bloque' : 'Nuevo bloque' }}</h6>
+          <h6 class="small fw-bold text-muted mb-2">{{ editingScheduleEntryId ? 'Editar hora clase' : 'Nueva hora clase' }}</h6>
           @if (scheduleError) {
             <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-2 small">
               <i class="bi bi-exclamation-triangle"></i>
@@ -528,7 +528,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                 </select>
               </div>
               <div class="col-12 col-md-6">
-                <label class="form-label fw-semibold small">Bloque horario</label>
+                <label class="form-label fw-semibold small">Hora clase</label>
                 <select class="form-select form-select-sm" formControlName="scheduleBlockId">
                   @for (b of classBlocks(); track b.id) {
                     <option [value]="b.id">{{ b.label }}</option>
@@ -888,7 +888,7 @@ export class TeachersComponent implements OnInit {
 
     request$.pipe(
       catchError((error) => {
-        this.scheduleError = error?.error?.message || 'No se pudo guardar el bloque horario.';
+        this.scheduleError = error?.error?.message || 'No se pudo guardar la hora clase.';
         return of(null);
       })
     ).subscribe({
@@ -1035,7 +1035,7 @@ export class TeachersComponent implements OnInit {
     const rows = this.filtered().map(t => `
       <tr><td>${t.fullName}</td><td>${t.specialization || 'Sin especialidad'}</td><td>${t.subjects.join(', ') || 'Sin materias asignadas'}</td><td>${t.courses.join(', ') || 'Sin cursos asignados'}</td><td>${t.weeklyBlocks}</td></tr>
     `).join('');
-    this.exportHtmlTable('docentes-leccionario.xls', ['Docente', 'Especialidad', 'Materias', 'Cursos', 'Bloques/semana'], rows);
+    this.exportHtmlTable('docentes-leccionario.xls', ['Docente', 'Especialidad', 'Materias', 'Cursos', 'Horas clase/semana'], rows);
   }
 
   private downloadBlob(blob: Blob, fileName: string): void {

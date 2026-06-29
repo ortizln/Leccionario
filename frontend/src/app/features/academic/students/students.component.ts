@@ -424,7 +424,7 @@ type StudentRepresentative = {
                   @if (dayEntries.length > 0) {
                     <div class="table-responsive">
                       <table class="table table-xs table-hover align-middle mb-0">
-                        <thead><tr><th>Bloque</th><th>Materia</th><th>Docente</th><th>Aula</th></tr></thead>
+                        <thead><tr><th>Hora Clase</th><th>Materia</th><th>Docente</th><th>Aula</th></tr></thead>
                         <tbody>
                           @for (entry of dayEntries; track entry.id) {
                             <tr>
@@ -438,7 +438,7 @@ type StudentRepresentative = {
                       </table>
                     </div>
                   } @else {
-                    <p class="text-muted small mb-0">Sin bloques programados este dia.</p>
+                    <p class="text-muted small mb-0">Sin horas clase programadas este dia.</p>
                   }
                 }
               </div>

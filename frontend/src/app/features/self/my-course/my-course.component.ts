@@ -57,7 +57,7 @@ import { catchError, of } from 'rxjs';
               <table class="table table-xs table-hover align-middle mb-0">
                 <thead>
                   <tr>
-                    <th>Bloque</th>
+                    <th>Hora Clase</th>
                     <th>Materia</th>
                     <th>Docente</th>
                     <th>Tema</th>
@@ -120,7 +120,7 @@ import { catchError, of } from 'rxjs';
               <thead>
                 <tr>
                   <th>Dia</th>
-                  <th>Bloque</th>
+                  <th>Hora Clase</th>
                   <th>Materia</th>
                   <th>Docente</th>
                   <th>Aula</th>

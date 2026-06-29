@@ -2,8 +2,8 @@
     <section class="d-grid gap-4">
       <header>
         <span class="badge rounded-pill text-bg-primary mb-2"><i class="bi bi-calendar-week me-1"></i>Horario institucional</span>
-        <h1 class="display-6 fw-bold mb-2">Bloques y asignacion por curso</h1>
-        <p class="text-muted mb-0">Define los bloques del dia lectivo y asigna materia, docente y aula por curso para preparar el leccionario diario.</p>
+        <h1 class="display-6 fw-bold mb-2">Horas clase y asignacion por curso</h1>
+        <p class="text-muted mb-0">Define las horas clase del dia lectivo y asigna materia, docente y aula por curso para preparar el leccionario diario.</p>
       </header>
 
       @if (errorMessage) {
@@ -22,8 +22,8 @@
         <div class="col-12 col-md-4">
           <div class="card border-0 shadow-sm h-100 cursor-pointer" [class.card-active]="activeTab === 'blocks'" (click)="activeTab = 'blocks'">
             <div class="card-body">
-              <div class="fw-semibold">Bloques</div>
-              <div class="text-muted small">{{ blocks.length }} bloques horarios configurados.</div>
+              <div class="fw-semibold">Horas clase</div>
+              <div class="text-muted small">{{ blocks.length }} horas clase configuradas.</div>
             </div>
           </div>
         </div>
@@ -48,7 +48,7 @@
       <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link" [class.active]="activeTab === 'blocks'" type="button" role="tab" (click)="activeTab = 'blocks'">
-            <i class="bi bi-clock me-1"></i>Bloques
+            <i class="bi bi-clock me-1"></i>Horas clase
           </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -68,7 +68,7 @@
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
               <div>
-                <h2 class="h4 mb-1">Bloques horarios</h2>
+                <h2 class="h4 mb-1">Horas clase</h2>
                 <p class="text-muted mb-0">Configura horas de clase o receso para la jornada.</p>
               </div>
               @if (canManageSchedules) {
@@ -90,7 +90,7 @@
                     </div>
                   </details>
                   <button class="btn btn-sm btn-primary" type="button" (click)="openBlockModal()">
-                    <i class="bi bi-plus-circle me-2"></i>Nuevo bloque
+                    <i class="bi bi-plus-circle me-2"></i>Nueva hora clase
                   </button>
                 </div>
               }
@@ -105,7 +105,7 @@
                   <div class="small text-muted">{{ block.startTime }} - {{ block.endTime }} &middot; {{ block.blockType === 'CLASS' ? 'Clase' : 'Receso' }}</div>
                 </button>
               } @empty {
-                <p class="text-muted small text-center py-4 mb-0">No hay bloques configurados. Cree el primer bloque usando el boton "Nuevo bloque".</p>
+                <p class="text-muted small text-center py-4 mb-0">No hay horas clase configuradas. Cree la primera hora clase usando el boton "Nueva hora clase".</p>
               }
             </div>
           </div>
@@ -118,7 +118,7 @@
             <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
               <div>
                 <h2 class="h4 mb-1">Asignaciones</h2>
-                <p class="text-muted mb-0">Relaciona curso, periodo, bloque, materia, docente y aula.</p>
+                <p class="text-muted mb-0">Relaciona curso, periodo, hora clase, materia, docente y aula.</p>
               </div>
               @if (canManageSchedules) {
                 <div class="d-flex gap-2">
@@ -167,8 +167,8 @@
                     </th>
                     <th>
                       <div class="d-flex align-items-center gap-1">
-                        <span appSortableHeader label="Bloque" [dir]="sortColumn('scheduleLabel')" (toggle)="onSort('scheduleLabel')"></span>
-                        <span appFilterDropdown label="Bloque" [options]="filterOpts('scheduleLabel')" [selected]="getFilter('scheduleLabel')"
+                        <span appSortableHeader label="Hora Clase" [dir]="sortColumn('scheduleLabel')" (toggle)="onSort('scheduleLabel')"></span>
+                        <span appFilterDropdown label="Hora Clase" [options]="filterOpts('scheduleLabel')" [selected]="getFilter('scheduleLabel')"
                               [activeCount]="getFilter('scheduleLabel').size" (toggle)="onFilter('scheduleLabel', $event)" (clear)="onClearFilter('scheduleLabel')"></span>
                       </div>
                     </th>
@@ -279,7 +279,7 @@
       <div class="modal-shell">
         <div class="modal-card" style="max-width: 520px;">
           <div class="d-flex justify-content-between align-items-start mb-3">
-            <h5 class="mb-0">{{ editingBlockId ? 'Editar bloque' : 'Nuevo bloque' }}</h5>
+            <h5 class="mb-0">{{ editingBlockId ? 'Editar hora clase' : 'Nueva hora clase' }}</h5>
             <button class="btn-close" type="button" (click)="blockModalOpen = false"></button>
           </div>
           <form [formGroup]="blockForm" class="row g-3">
@@ -309,13 +309,13 @@
             <div class="col-12">
               <div class="form-check form-switch border rounded p-3">
                 <input class="form-check-input" id="blockActive" type="checkbox" formControlName="active">
-                <label class="form-check-label ms-2 fw-semibold" for="blockActive">Bloque activo</label>
+                <label class="form-check-label ms-2 fw-semibold" for="blockActive">Hora clase activa</label>
               </div>
             </div>
             <div class="col-12 d-flex justify-content-end gap-2">
               <button class="btn btn-sm btn-outline-primary" type="button" (click)="blockModalOpen = false">Cancelar</button>
               <button class="btn btn-sm btn-primary" type="button" (click)="saveBlock()">
-                {{ editingBlockId ? 'Guardar bloque' : 'Crear bloque' }}
+                {{ editingBlockId ? 'Guardar hora clase' : 'Crear hora clase' }}
               </button>
             </div>
           </form>
@@ -356,7 +356,7 @@
               </select>
             </div>
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Bloque</label>
+              <label class="form-label fw-semibold">Hora clase</label>
               <select class="form-select form-select-sm" formControlName="scheduleBlockId">
                 @for (block of classBlocks; track block.id) {
                   <option [value]="block.id">{{ block.label }}</option>

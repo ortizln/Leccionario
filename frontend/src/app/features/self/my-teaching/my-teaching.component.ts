@@ -84,7 +84,7 @@ import { catchError, of } from 'rxjs';
                   @for (subj of selectedCourse()!.subjectNames; track subj) {
                     <span class="badge rounded-pill text-bg-light">{{ subj }}</span>
                   }
-                  <span class="badge rounded-pill text-bg-secondary">{{ selectedCourse()!.scheduleCount }} bloques</span>
+                  <span class="badge rounded-pill text-bg-secondary">{{ selectedCourse()!.scheduleCount }} horas clase</span>
                 </div>
               }
             </div>
@@ -109,7 +109,7 @@ import { catchError, of } from 'rxjs';
                     <table class="table table-xs table-hover align-middle mb-0">
                       <thead>
                         <tr>
-                          <th>Bloque</th>
+                          <th>Hora Clase</th>
                           <th>Materia</th>
                           <th>Aula</th>
                         </tr>
@@ -127,7 +127,7 @@ import { catchError, of } from 'rxjs';
                         } @empty {
                           <tr>
                             <td colspan="3" class="text-center text-muted py-4">
-                              Sin bloques este dia.
+                              Sin horas clase este dia.
                             </td>
                           </tr>
                         }
@@ -192,14 +192,14 @@ import { catchError, of } from 'rxjs';
 
             @if (selectedDay(); as day) {
               <div class="mb-3 text-muted small">
-                {{ day.logDate }} · {{ day.entries.length }} bloques
+                {{ day.logDate }} · {{ day.entries.length }} horas clase
               </div>
 
               <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                   <thead>
                     <tr>
-                      <th>Bloque</th>
+                      <th>Hora Clase</th>
                       <th>Curso</th>
                       <th>Materia</th>
                       <th>Unidad didactica</th>

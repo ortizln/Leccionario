@@ -113,7 +113,7 @@ export class MobileCloseComponent {
 
   descriptionLabel(): string {
     if (this.mode === 'entry') {
-      return 'Escanea el QR del bloque, confirma tu usuario y codigo institucional para cerrar la clase.';
+      return 'Escanea el QR de la hora clase, confirma tu usuario y codigo institucional para cerrar la clase.';
     }
     if (this.mode === 'signature') {
       return 'Escanea el QR de firma, confirma tu usuario y codigo institucional para registrar esta firma del leccionario.';

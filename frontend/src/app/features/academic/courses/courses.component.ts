@@ -10,7 +10,7 @@ import { FilterDropdownComponent } from '../../../shared/filter-dropdown.compone
 import { SortState, FilterState, applySort, applyFilters, getFilterOptions, toggleFilter, clearFilter, SortDir } from '../../../shared/table-utils';
 
 interface ScheduleBlockItem { id: number; label: string; startTime: string; endTime: string; blockOrder: number; blockType: string; active: boolean; }
-interface ScheduleOverviewData { blocks: ScheduleBlockItem[]; periods: Array<{ id: number; name: string; startDate: string; endDate: string; active: boolean }>; subjects: Array<{ id: number; name: string; code: string; curriculumArea: string }>; teachers: Array<{ id: number; name: string; specialization: string; subjectIds: number[] }>; }
+interface ScheduleOverviewData { blocks: ScheduleBlockItem[]; periods: Array<{ id: number; name: string; startDate: string; endDate: string; active: boolean }>; subjects: Array<{ id: number; name: string; code: string; curriculumArea: string }>; teachers: Array<{ id: number; name: string; specialization: string; subjectIds: number[]; courseNames: string[] }>; }
 interface ScheduleItem { id: number; courseId: number; courseName: string; periodId: number; periodName: string; scheduleBlockId: number; scheduleLabel: string; subjectId: number; subjectName: string; teacherId: number; teacherName: string; weekday: number; classroom: string | null; }
 
 @Component({
@@ -299,7 +299,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
               </select>
             </div>
             <div class="schedule-form-field">
-              <label class="form-label fw-semibold small mb-1">Bloque</label>
+              <label class="form-label fw-semibold small mb-1">Hora Clase</label>
               <select class="form-select form-select-sm" formControlName="sBlockId">
                 @for (b of classBlocks; track b.id) {
                   <option [value]="b.id">{{ b.label }} ({{ b.startTime }}&ndash;{{ b.endTime }})</option>
@@ -309,7 +309,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
             <div class="schedule-form-field">
               <label class="form-label fw-semibold small mb-1">Docente</label>
               <select class="form-select form-select-sm" formControlName="sTeacherId" (change)="onScheduleTeacherChange()">
-                @for (t of scheduleTeachers; track t.id) {
+                @for (t of filteredTeachers; track t.id) {
                   <option [value]="t.id">{{ t.name }}</option>
                 }
               </select>
@@ -329,11 +329,17 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
             <div class="schedule-form-actions">
               <label class="form-label fw-semibold small mb-1 d-none d-md-block">&nbsp;</label>
               <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-primary" type="button" (click)="saveSchedule()" [disabled]="!canManageAcademic">Asignar</button>
+                <button class="btn btn-sm btn-primary" type="button" (click)="saveSchedule()" [disabled]="!canManageAcademic || !!teacherConflictMessage">Asignar</button>
                 <button class="btn btn-sm btn-outline-secondary" type="button" (click)="resetScheduleForm()">Limpiar</button>
               </div>
             </div>
           </form>
+
+          @if (teacherConflictMessage) {
+            <div class="alert alert-danger py-2 small mb-3">
+              <i class="bi bi-exclamation-triangle me-1"></i>{{ teacherConflictMessage }}
+            </div>
+          }
 
           @if (courseSchedules.length > 0) {
             <div class="table-responsive">
@@ -341,7 +347,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                 <thead>
                   <tr class="small text-muted">
                     <th>D&iacute;a</th>
-                    <th>Bloque</th>
+                    <th>Hora Clase</th>
                     <th>Periodo</th>
                     <th>Materia</th>
                     <th>Docente</th>
@@ -583,7 +589,7 @@ export class CoursesComponent implements OnInit {
   scheduleBlocks: ScheduleBlockItem[] = [];
   schedulePeriods: Array<{ id: number; name: string; startDate: string; endDate: string; active: boolean }> = [];
   scheduleSubjects: Array<{ id: number; name: string; code: string; curriculumArea: string }> = [];
-  scheduleTeachers: Array<{ id: number; name: string; specialization: string; subjectIds: number[] }> = [];
+  scheduleTeachers: Array<{ id: number; name: string; specialization: string; subjectIds: number[]; courseNames: string[] }> = [];
   courseSchedules: ScheduleItem[] = [];
   scheduleError = '';
 
@@ -610,12 +616,37 @@ export class CoursesComponent implements OnInit {
     return this.scheduleBlocks.filter(b => b.blockType === 'CLASS' && b.active);
   }
 
+  get filteredTeachers(): Array<{ id: number; name: string; specialization: string; subjectIds: number[]; courseNames: string[] }> {
+    const courseId = this.selectedCourseId;
+    if (!courseId) return this.scheduleTeachers;
+    const course = this.courses.find(c => c.id === courseId);
+    if (!course) return this.scheduleTeachers;
+    const courseLabel = (course.name + ' ' + course.parallel).toLowerCase().trim();
+    return this.scheduleTeachers.filter(t => t.courseNames.some(cn => cn.toLowerCase().trim() === courseLabel));
+  }
+
   get filteredScheduleSubjects(): Array<{ id: number; name: string; code: string; curriculumArea: string }> {
     const teacherId = this.scheduleForm.controls.sTeacherId.value;
     if (!teacherId) return this.scheduleSubjects;
     const teacher = this.scheduleTeachers.find(t => t.id === teacherId);
     if (!teacher || !teacher.subjectIds || teacher.subjectIds.length === 0) return this.scheduleSubjects;
     return this.scheduleSubjects.filter(s => teacher.subjectIds.includes(s.id));
+  }
+
+  get teacherConflictMessage(): string {
+    const teacherId = Number(this.scheduleForm.controls.sTeacherId.value);
+    const blockId = Number(this.scheduleForm.controls.sBlockId.value);
+    const weekday = Number(this.scheduleForm.controls.sWeekday.value);
+    const periodId = Number(this.scheduleForm.controls.sPeriodId.value);
+    if (!teacherId || !blockId || !weekday || !periodId) return '';
+    const conflict = this.courseSchedules.find(s =>
+      s.teacherId === teacherId
+      && s.scheduleBlockId === blockId
+      && s.weekday === weekday
+      && s.periodId === periodId
+    );
+    if (!conflict) return '';
+    return `El docente ya tiene hora clase asignada el ${this.weekdayLabel(weekday)} en ${conflict.scheduleLabel}.`;
   }
 
   weekdayLabel(weekday: number): string {
@@ -675,13 +706,15 @@ export class CoursesComponent implements OnInit {
   onScheduleTeacherChange(): void {
     const subjects = this.filteredScheduleSubjects;
     const current = this.scheduleForm.controls.sSubjectId.value;
-    if (subjects.length > 0 && !subjects.some(s => s.id === current)) {
+    if (subjects.length === 1) {
+      this.scheduleForm.controls.sSubjectId.setValue(subjects[0].id);
+    } else if (subjects.length > 0 && !subjects.some(s => s.id === current)) {
       this.scheduleForm.controls.sSubjectId.setValue(subjects[0].id);
     }
   }
 
   saveSchedule(): void {
-    if (!this.canManageAcademic || !this.selectedCourseId) return;
+    if (!this.canManageAcademic || !this.selectedCourseId || this.teacherConflictMessage) return;
     this.scheduleError = '';
     const raw = this.scheduleForm.getRawValue();
     const payload = {

@@ -61,7 +61,7 @@ export class LoginComponent implements OnDestroy {
       shellTitle: 'Leccionario Estudiantil Digital',
       shellSubtitle: 'Control de leccionario, avance curricular y auditoria academica.',
       mobileTitle: 'Leccionario Mobile',
-      mobileSubtitle: 'Consulta tu horario, registra novedades y cierra cada bloque desde una sola vista.',
+      mobileSubtitle: 'Consulta tu horario, registra novedades y cierra cada hora clase desde una sola vista.',
       logoUrl: null,
       loginLogoUrl: null,
       primaryColor: '#556B2F',

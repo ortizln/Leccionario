@@ -29,10 +29,10 @@
         </div>
         <div class="d-flex align-items-center gap-2">
           @if (dailyLog) {
-            <span class="badge rounded-pill" [class.text-bg-success]="dailyLog.status === 'CLOSED'" [class.text-bg-warning]="dailyLog.status === 'DRAFT'" [class.text-bg-secondary]="dailyLog.status !== 'DRAFT' && dailyLog.status !== 'CLOSED'">
-              {{ dailyLog.status === 'DRAFT' ? 'Borrador' : dailyLog.status === 'CLOSED' ? 'Cerrado' : dailyLog.status }}
+            <span class="badge rounded-pill" [class.text-bg-success]="dailyLog.status === 'CLOSED'" [class.text-bg-secondary]="dailyLog.status !== 'CLOSED'">
+              {{ dailyLog.status === 'CLOSED' ? 'Cerrado' : '' }}
             </span>
-            <span class="badge rounded-pill text-bg-light">{{ displayEntries.length }} bloques</span>
+            <span class="badge rounded-pill text-bg-light">{{ displayEntries.length }} horas clase</span>
           }
         </div>
       </div>
@@ -270,7 +270,7 @@
                     </td>
                     <td class="text-end align-top">
                       <div class="d-flex gap-1 justify-content-end">
-                        <button class="btn btn-sm btn-outline-primary" type="button" (click)="openEntryQr(entry)" title="QR cierre de bloque">
+                        <button class="btn btn-sm btn-outline-primary" type="button" (click)="openEntryQr(entry)" title="QR cierre de hora clase">
                           <i class="bi bi-qr-code"></i>
                         </button>
                         @if (canEditEntry(entry)) {
@@ -292,7 +292,7 @@
                 <tr>
                   <td [attr.colspan]="isReadOnly ? 5 : 9" class="text-center text-muted py-4">
                     <i class="bi bi-calendar-x fs-3 d-block mb-2"></i>
-                    No hay bloques generados para esta jornada.
+                    No hay horas clase generadas para esta jornada.
                   </td>
                 </tr>
               }
@@ -448,7 +448,7 @@
         <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
           <div>
             <span class="badge rounded-pill text-bg-warning text-dark mb-2">Inasistencias</span>
-            <h2 class="h4 mb-1">Bloque {{ absenceDialogEntry.scheduleLabel }}</h2>
+            <h2 class="h4 mb-1">Hora clase {{ absenceDialogEntry.scheduleLabel }}</h2>
             <p class="text-muted small mb-0">{{ absenceDialogEntry.subjectName || 'Sin asignatura' }} &middot; {{ absenceDialogEntry.startTime }} - {{ absenceDialogEntry.endTime }}</p>
           </div>
           <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeAbsenceDialog()">
@@ -511,7 +511,7 @@
         <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
           <div>
             <span class="badge rounded-pill text-bg-warning text-dark mb-2">Novedades</span>
-            <h2 class="h4 mb-1">Bloque {{ incidentDialogEntry.scheduleLabel }}</h2>
+            <h2 class="h4 mb-1">Hora clase {{ incidentDialogEntry.scheduleLabel }}</h2>
             <p class="text-muted small mb-0">{{ incidentDialogEntry.subjectName || 'Sin asignatura' }} &middot; {{ incidentDialogEntry.startTime }} - {{ incidentDialogEntry.endTime }}</p>
           </div>
           <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeIncidentDialog()">
