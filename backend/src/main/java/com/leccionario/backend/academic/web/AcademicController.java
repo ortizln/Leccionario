@@ -235,6 +235,13 @@ public class AcademicController {
         return ResponseEntity.ok(academicService.updateRepresentative(id, request));
     }
 
+    @DeleteMapping("/representatives/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<Void> deleteRepresentative(@PathVariable Long id, Principal principal) {
+        academicService.deleteRepresentative(id, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/courses/{courseId}/week-student-assignments")
     @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
     public ResponseEntity<List<WeekStudentAssignmentResponse>> getWeekStudentAssignments(

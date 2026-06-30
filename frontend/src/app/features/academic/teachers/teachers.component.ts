@@ -575,7 +575,7 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
     }
 
     @if (confirmDeleteTeacher) {
-      <div class="modal-shell" style="z-index:1060" (click)="confirmDeleteTeacher = null">
+      <div class="modal-shell" style="z-index:1060" (click)="confirmDeleteTeacher = null; deleteError = ''">
         <div class="modal-card" style="max-width:420px" (click)="$event.stopPropagation()">
           <div class="text-center mb-3">
             <i class="bi bi-person-dash text-danger" style="font-size:2.5rem"></i>
@@ -584,8 +584,11 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
           <p class="text-muted small text-center mb-3">
             Se eliminara a <strong>{{ confirmDeleteTeacher.fullName }}</strong> junto con sus horarios y lecciones. Esta accion no se puede deshacer.
           </p>
+          @if (deleteError) {
+            <div class="alert alert-danger py-2 small">{{ deleteError }}</div>
+          }
           <div class="d-flex justify-content-center gap-2">
-            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="confirmDeleteTeacher = null">Cancelar</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="confirmDeleteTeacher = null; deleteError = ''">Cancelar</button>
             <button class="btn btn-sm btn-danger" type="button" (click)="deleteTeacher()" [disabled]="deletingTeacher">
               @if (deletingTeacher) {
                 <span class="spinner-border spinner-border-sm me-1"></span>
@@ -1007,14 +1010,19 @@ export class TeachersComponent implements OnInit {
   deleteTeacher(): void {
     if (!this.confirmDeleteTeacher || !this.canManageAcademic) return;
     this.deletingTeacher = true;
+    this.deleteError = '';
     const id = this.confirmDeleteTeacher.id;
     this.http.delete(`${API_URL}/academic/teachers/${id}`).pipe(
       map(() => true),
-      catchError(() => of(false))
+      catchError(err => {
+        this.deleteError = err?.error?.message ?? 'No se pudo eliminar el docente.';
+        return of(false);
+      })
     ).subscribe(ok => {
       this.deletingTeacher = false;
       if (ok) {
         this.confirmDeleteTeacher = null;
+        this.deleteError = '';
         this.closeTeacherDetail();
         this.loadData();
       }

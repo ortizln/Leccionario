@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, map, of } from 'rxjs';
 import { API_URL } from '../../../core/api.config';
 import { AuthService } from '../../../core/auth.service';
 import { AcademicCourse, AcademicStudent, AcademicOverview } from '../academic.models';
@@ -191,7 +191,10 @@ export type StudentRepresentative = {
                   </td>
                   <td class="text-end">
                     @if (canManageAcademic) {
-                      <button class="btn btn-sm btn-outline-primary" type="button" (click)="edit(rep)">Editar</button>
+                      <div class="d-flex gap-2 justify-content-end">
+                        <button class="btn btn-sm btn-outline-primary" type="button" (click)="edit(rep)">Editar</button>
+                        <button class="btn btn-sm btn-outline-danger" type="button" (click)="confirmDeleteRep = rep"><i class="bi bi-trash"></i></button>
+                      </div>
                     }
                   </td>
                 </tr>
@@ -203,6 +206,31 @@ export type StudentRepresentative = {
         </div>
       </div>
     </div>
+    @if (confirmDeleteRep) {
+      <div class="modal-shell" style="z-index:1060" (click)="confirmDeleteRep = null; deleteRepError = ''">
+        <div class="modal-card" style="max-width:420px" (click)="$event.stopPropagation()">
+          <div class="text-center mb-3">
+            <i class="bi bi-person-dash text-danger" style="font-size:2.5rem"></i>
+          </div>
+          <h5 class="text-center mb-2">Eliminar representante</h5>
+          <p class="text-muted small text-center mb-3">
+            Se eliminara el registro de <strong>{{ confirmDeleteRep.fullName }}</strong>. Esta accion no se puede deshacer.
+          </p>
+          @if (deleteRepError) {
+            <div class="alert alert-danger py-2 small">{{ deleteRepError }}</div>
+          }
+          <div class="d-flex justify-content-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="confirmDeleteRep = null; deleteRepError = ''">Cancelar</button>
+            <button class="btn btn-sm btn-danger" type="button" (click)="deleteRepresentative()" [disabled]="deletingRep">
+              @if (deletingRep) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              }
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class RepresentativesComponent implements OnInit {
@@ -224,6 +252,9 @@ export class RepresentativesComponent implements OnInit {
   sort: SortState | null = null;
   filters: FilterState = {};
   displayedRepresentatives: StudentRepresentative[] = [];
+  confirmDeleteRep: StudentRepresentative | null = null;
+  deletingRep = false;
+  deleteRepError = '';
 
   sortColumn(col: string): SortDir { return this.sort?.column === col ? this.sort.dir : null; }
   onSort(col: string): void {
@@ -330,6 +361,27 @@ export class RepresentativesComponent implements OnInit {
   cancelEdit(): void {
     this.editorOpen = false;
     this.editingId = null;
+  }
+
+  deleteRepresentative(): void {
+    if (!this.confirmDeleteRep || !this.canManageAcademic) return;
+    this.deletingRep = true;
+    this.deleteRepError = '';
+    const id = this.confirmDeleteRep.id;
+    this.http.delete(`${API_URL}/academic/representatives/${id}`).pipe(
+      map(() => true),
+      catchError(err => {
+        this.deleteRepError = err?.error?.message ?? 'No se pudo eliminar el representante.';
+        return of(false);
+      })
+    ).subscribe(ok => {
+      this.deletingRep = false;
+      if (ok) {
+        this.confirmDeleteRep = null;
+        this.deleteRepError = '';
+        this.load();
+      }
+    });
   }
 
   save(): void {

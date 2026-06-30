@@ -953,6 +953,14 @@ public class AcademicService {
         return toRepresentativeResponse(saved);
     }
 
+    @Transactional
+    public void deleteRepresentative(Long id, String username) {
+        Representative rep = representativeRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("El representante seleccionado no existe."));
+        representativeRepository.deleteById(id);
+        auditService.log(username, "DELETE_REPRESENTATIVE", "ACADEMIC", rep.getFullName());
+    }
+
     private void applyRepresentative(Representative rep, RepresentativeRequest request) {
         rep.setStudentId(request.studentId());
         rep.setFullName(request.fullName().trim());

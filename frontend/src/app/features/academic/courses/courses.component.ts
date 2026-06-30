@@ -434,7 +434,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                       </td>
                       @if (canManageAcademic) {
                         <td class="text-end">
-                          <button class="btn btn-sm btn-outline-danger" type="button" (click)="deleteConfirmStudent = student" [disabled]="removingStudentId === student.id">
+                          <button class="btn btn-sm btn-outline-danger" type="button" (click)="deleteConfirmStudent = student; deleteStudentError = ''" [disabled]="removingStudentId === student.id">
                             @if (removingStudentId === student.id) {
                               <span class="spinner-border spinner-border-sm"></span>
                             } @else {
@@ -484,7 +484,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
     }
 
     @if (deleteConfirmStudent) {
-      <div class="modal-shell" style="z-index:1060" (click)="deleteConfirmStudent = null">
+      <div class="modal-shell" style="z-index:1060" (click)="deleteConfirmStudent = null; deleteStudentError = ''">
         <div class="modal-card" style="max-width:420px" (click)="$event.stopPropagation()">
           <div class="text-center mb-3">
             <i class="bi bi-person-dash text-danger" style="font-size:2.5rem"></i>
@@ -493,8 +493,11 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
           <p class="text-muted small text-center mb-3">
             Se retirara a <strong>{{ deleteConfirmStudent.fullName }}</strong> del curso. Esta accion no se puede deshacer.
           </p>
+          @if (deleteStudentError) {
+            <div class="alert alert-danger py-2 small">{{ deleteStudentError }}</div>
+          }
           <div class="d-flex justify-content-center gap-2">
-            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="deleteConfirmStudent = null">Cancelar</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="deleteConfirmStudent = null; deleteStudentError = ''">Cancelar</button>
             <button class="btn btn-sm btn-danger" type="button" (click)="confirmRemoveStudent()" [disabled]="removingStudentId === deleteConfirmStudent.id">
               @if (removingStudentId === deleteConfirmStudent.id) {
                 <span class="spinner-border spinner-border-sm me-1"></span>
@@ -696,6 +699,7 @@ export class CoursesComponent implements OnInit {
   courseStudents: AcademicStudent[] = [];
   removingStudentId: number | null = null;
   deleteConfirmStudent: AcademicStudent | null = null;
+  deleteStudentError = '';
 
   deleteConfirmCourse: AcademicCourse | null = null;
   deleteError = '';
@@ -784,12 +788,18 @@ export class CoursesComponent implements OnInit {
   removeStudentFromCourse(student: AcademicStudent): void {
     if (!this.canManageAcademic) return;
     this.removingStudentId = student.id;
+    this.deleteStudentError = '';
     this.http.delete(`${API_URL}/academic/students/${student.id}`).pipe(
       map(() => true),
-      catchError(() => of(false))
+      catchError(err => {
+        this.deleteStudentError = err?.error?.message ?? 'No se pudo retirar el estudiante.';
+        return of(false);
+      })
     ).subscribe(ok => {
       this.removingStudentId = null;
       if (ok) {
+        this.deleteConfirmStudent = null;
+        this.deleteStudentError = '';
         this.courseStudents = this.courseStudents.filter(s => s.id !== student.id);
         this.loadData();
       }
@@ -798,9 +808,7 @@ export class CoursesComponent implements OnInit {
 
   confirmRemoveStudent(): void {
     if (!this.deleteConfirmStudent) return;
-    const student = this.deleteConfirmStudent;
-    this.deleteConfirmStudent = null;
-    this.removeStudentFromCourse(student);
+    this.removeStudentFromCourse(this.deleteConfirmStudent);
   }
 
   confirmDeleteCourse(course: AcademicCourse): void {
@@ -813,17 +821,18 @@ export class CoursesComponent implements OnInit {
     this.deleting = true;
     this.deleteError = '';
     this.http.delete(`${API_URL}/academic/courses/${this.deleteConfirmCourse.id}`).pipe(
+      map(() => true),
       catchError(err => {
         this.deleteError = err?.error?.message ?? 'No se pudo eliminar el curso.';
-        return of(null);
+        return of(false);
       })
-    ).subscribe(result => {
+    ).subscribe(ok => {
       this.deleting = false;
-      if (result === null && !this.deleteError) return;
-      if (this.deleteError) return;
-      this.deleteConfirmCourse = null;
-      this.closeCourseStudents();
-      this.loadData();
+      if (ok) {
+        this.deleteConfirmCourse = null;
+        this.closeCourseStudents();
+        this.loadData();
+      }
     });
   }
 
