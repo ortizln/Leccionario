@@ -328,7 +328,7 @@ type StudentRepresentative = {
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h3 class="h6 mb-0">Informacion del estudiante</h3>
                   @if (canManageAcademic) {
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeStudentDetail(); edit(detailStudent)"><i class="bi bi-pencil me-1"></i>Editar</button>
+                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="edit(detailStudent)"><i class="bi bi-pencil me-1"></i>Editar</button>
                   }
                 </div>
                 <dl class="row mb-0 small">
@@ -605,6 +605,7 @@ export class StudentsComponent implements OnInit {
   }
 
   edit(student: AcademicStudent): void {
+    this.detailStudent = null;
     this.editingId = student.id;
     this.editorOpen = true;
     const rep = this.allReps.find(r => r.studentId === student.id);

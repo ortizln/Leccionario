@@ -29,6 +29,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -97,6 +98,27 @@ public class AcademicController {
             @Valid @RequestBody AcademicCourseRequest request,
             Principal principal) {
         return ResponseEntity.ok(academicService.updateCourse(id, request, principal.getName()));
+    }
+
+    @DeleteMapping("/courses/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<Void> deleteCourse(@PathVariable Long id, Principal principal) {
+        academicService.deleteCourse(id, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/students/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<Void> deleteStudent(@PathVariable Long id, Principal principal) {
+        academicService.deleteStudent(id, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/teachers/{id}")
+    @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
+    public ResponseEntity<Void> deleteTeacher(@PathVariable Long id, Principal principal) {
+        academicService.deleteTeacher(id, principal.getName());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/students")

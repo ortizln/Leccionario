@@ -18,8 +18,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "courses", uniqueConstraints = @UniqueConstraint(
-        columnNames = {"grade", "parallel", "academic_year_id"},
-        name = "uk_course_grade_parallel_year"))
+        columnNames = {"sub_level", "grade", "parallel", "academic_year_id"},
+        name = "uk_course_sublevel_grade_parallel_year"))
 public class Course extends BaseEntity {
 
     @Column(nullable = false, length = 100)

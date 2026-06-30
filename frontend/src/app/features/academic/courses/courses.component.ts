@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, of } from 'rxjs';
+import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { catchError, map, of } from 'rxjs';
 import { API_URL } from '../../../core/api.config';
 import { AuthService } from '../../../core/auth.service';
 import { AcademicCourse, AcademicStudent, AcademicOverview, AcademicYearItem, ImportSummaryResult, SchoolDayItem, SchoolModalityItem, WeekStudentAssignment } from '../academic.models';
@@ -126,6 +126,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                   <label class="form-label fw-semibold small">Subnivel Educativo</label>
                   <select class="form-select form-select-sm" formControlName="subLevel" (change)="onSubLevelChange()">
                     <option [ngValue]="null">Seleccionar...</option>
+                    <option value="INICIAL">Inicial</option>
                     <option value="PREPARATORIA">Basica Preparatoria</option>
                     <option value="ELEMENTAL">Basica Elemental</option>
                     <option value="MEDIA">Basica Media</option>
@@ -144,11 +145,17 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                 </div>
                 <div class="col-12 col-md-2">
                   <label class="form-label fw-semibold small">Paralelo</label>
-                  <input class="form-control form-control-sm text-uppercase" type="text" formControlName="parallel" placeholder="A">
+                  <input class="form-control form-control-sm text-uppercase" type="text" formControlName="parallel" placeholder="A" maxlength="1">
+                  @if (form.controls.parallel.hasError('singleLetter')) {
+                    <div class="text-danger small mt-1">Una sola letra (A-Z)</div>
+                  }
                 </div>
                 <div class="col-12 col-md-2">
                   <label class="form-label fw-semibold small">Capacidad</label>
                   <input class="form-control form-control-sm" type="number" formControlName="capacity" placeholder="40" min="1">
+                  @if (form.controls.capacity.hasError('min') || form.controls.capacity.hasError('required')) {
+                    <div class="text-danger small mt-1">Minimo 1 estudiante</div>
+                  }
                 </div>
                 <div class="col-12">
                   <label class="form-label fw-semibold small">Nombre del Curso (auto-generado)</label>
@@ -161,7 +168,7 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                 }
                 <div class="col-12 d-flex justify-content-end gap-2 mt-2">
                   <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEdit()">Cancelar</button>
-                  <button class="btn btn-sm btn-primary" type="button" (click)="save()"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                  <button class="btn btn-sm btn-primary" type="button" (click)="save()" [disabled]="form.invalid"><i class="bi bi-check-lg me-1"></i>Guardar</button>
                 </div>
               </form>
             </div>
@@ -249,6 +256,9 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                           </button>
                           <button class="btn btn-sm btn-link text-start w-100" type="button" (click)="openCourseStudents(course)">
                             <i class="bi bi-people me-2"></i>Estudiantes
+                          </button>
+                          <button class="btn btn-sm btn-link text-start w-100 text-danger" type="button" (click)="confirmDeleteCourse(course)">
+                            <i class="bi bi-trash me-2"></i>Eliminar
                           </button>
                         </div>
                       </details>
@@ -403,6 +413,9 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                     <th>Estudiante</th>
                     <th>Usuario</th>
                     <th>Estado</th>
+                    @if (canManageAcademic) {
+                      <th></th>
+                    }
                   </tr>
                 </thead>
                 <tbody>
@@ -419,6 +432,17 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
                           {{ student.enabled ? 'Activo' : 'Inactivo' }}
                         </span>
                       </td>
+                      @if (canManageAcademic) {
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-outline-danger" type="button" (click)="deleteConfirmStudent = student" [disabled]="removingStudentId === student.id">
+                            @if (removingStudentId === student.id) {
+                              <span class="spinner-border spinner-border-sm"></span>
+                            } @else {
+                              <i class="bi bi-trash"></i>
+                            }
+                          </button>
+                        </td>
+                      }
                     </tr>
                   }
                 </tbody>
@@ -428,6 +452,55 @@ interface ScheduleItem { id: number; courseId: number; courseName: string; perio
           }
           <div class="d-flex justify-content-end mt-3">
             <button class="btn btn-sm btn-outline-primary" type="button" (click)="closeCourseStudents()">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (deleteConfirmCourse) {
+      <div class="modal-shell" (click)="deleteConfirmCourse = null">
+        <div class="modal-card" style="max-width:420px" (click)="$event.stopPropagation()">
+          <div class="text-center mb-3">
+            <i class="bi bi-exclamation-triangle text-danger" style="font-size:2.5rem"></i>
+          </div>
+          <h5 class="text-center mb-2">Eliminar curso</h5>
+          <p class="text-muted small text-center mb-3">
+            Se eliminara <strong>{{ deleteConfirmCourse.name }} {{ deleteConfirmCourse.parallel }}</strong> y todo su horario asignado. Esta accion no se puede deshacer.
+          </p>
+          @if (deleteError) {
+            <div class="alert alert-danger py-2 small">{{ deleteError }}</div>
+          }
+          <div class="d-flex justify-content-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="deleteConfirmCourse = null">Cancelar</button>
+            <button class="btn btn-sm btn-danger" type="button" (click)="deleteCourse()" [disabled]="deleting">
+              @if (deleting) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              }
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (deleteConfirmStudent) {
+      <div class="modal-shell" style="z-index:1060" (click)="deleteConfirmStudent = null">
+        <div class="modal-card" style="max-width:420px" (click)="$event.stopPropagation()">
+          <div class="text-center mb-3">
+            <i class="bi bi-person-dash text-danger" style="font-size:2.5rem"></i>
+          </div>
+          <h5 class="text-center mb-2">Retirar estudiante</h5>
+          <p class="text-muted small text-center mb-3">
+            Se retirara a <strong>{{ deleteConfirmStudent.fullName }}</strong> del curso. Esta accion no se puede deshacer.
+          </p>
+          <div class="d-flex justify-content-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="deleteConfirmStudent = null">Cancelar</button>
+            <button class="btn btn-sm btn-danger" type="button" (click)="confirmRemoveStudent()" [disabled]="removingStudentId === deleteConfirmStudent.id">
+              @if (removingStudentId === deleteConfirmStudent.id) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              }
+              Retirar
+            </button>
           </div>
         </div>
       </div>
@@ -473,16 +546,22 @@ export class CoursesComponent implements OnInit {
     this.displayedCourses = applyFilters(applySort(this.courses, this.sort), this.filters);
   }
 
+  private singleLetterValidator = (control: AbstractControl): ValidationErrors | null => {
+    const val = control.value;
+    if (!val) return null;
+    return /^[A-Z]$/.test(val) ? null : { singleLetter: true };
+  };
+
   form = this.fb.nonNullable.group({
     academicYearId: [null as number | null, Validators.required],
     schoolDayId: [null as number | null],
     schoolModalityId: [null as number | null],
     subLevel: [null as string | null, Validators.required],
     grade: [null as number | null, Validators.required],
-    parallel: ['', Validators.required],
+    parallel: ['', [Validators.required, this.singleLetterValidator]],
     level: [''],
     name: [''],
-    capacity: [null as number | null],
+    capacity: [null as number | null, [Validators.required, Validators.min(1)]],
     weekStudentId: [null as number | null]
   });
 
@@ -505,6 +584,7 @@ export class CoursesComponent implements OnInit {
 
   private getGradesForSubLevel(subLevel: string): number[] {
     switch (subLevel) {
+      case 'INICIAL': return [1, 2];
       case 'PREPARATORIA': return [1];
       case 'ELEMENTAL': return [2, 3, 4];
       case 'MEDIA': return [5, 6, 7];
@@ -524,9 +604,10 @@ export class CoursesComponent implements OnInit {
     const parts: string[] = [];
     parts.push(grade + '.\u00BA');
     if (subLevel === 'BGU') parts.push('Curso de Bachillerato');
+    else if (subLevel === 'INICIAL') parts.push('Nivel Inicial');
     else parts.push('Grado de EGB');
-    const section = (subLevel === 'BGU') ? 'BACHILLERATO' : 'EGB';
-    parts.push(section === 'EGB' ? 'EGB' : 'Bachillerato');
+    const section = (subLevel === 'BGU') ? 'BACHILLERATO' : (subLevel === 'INICIAL' ? 'INICIAL' : 'EGB');
+    parts.push(section === 'EGB' ? 'EGB' : (section === 'INICIAL' ? 'Inicial' : 'Bachillerato'));
     this.form.controls.level.setValue(parts.join(' ') || '');
   }
 
@@ -536,7 +617,7 @@ export class CoursesComponent implements OnInit {
     const subLevel = this.form.controls.subLevel.value;
     if (grade == null || !parallel || !subLevel) return '';
     const gradeName = this.gradeLabel(grade);
-    const suffix = subLevel === 'BGU' ? ' BGU' : ' EGB';
+    const suffix = subLevel === 'BGU' ? ' BGU' : (subLevel === 'INICIAL' ? ' INICIAL' : ' EGB');
     return gradeName + suffix + ' "' + parallel.trim().toUpperCase() + '"';
   }
 
@@ -559,6 +640,7 @@ export class CoursesComponent implements OnInit {
   subLevelDisplay(subLevel: string | null): string {
     if (!subLevel) return '-';
     switch (subLevel) {
+      case 'INICIAL': return 'Inicial';
       case 'PREPARATORIA': return 'Basica Preparatoria';
       case 'ELEMENTAL': return 'Basica Elemental';
       case 'MEDIA': return 'Basica Media';
@@ -572,6 +654,7 @@ export class CoursesComponent implements OnInit {
     const subLevel = this.form.controls.subLevel.value;
     const grade = this.form.controls.grade.value;
     if (!subLevel || grade == null) return null;
+    if (subLevel === 'INICIAL') return 'Inicial ' + grade;
     if (subLevel === 'PREPARATORIA') return 'Jardin de infantes (5 anos)';
     if (subLevel === 'ELEMENTAL') return '2.\u00BA Grado a 4.\u00BA Grado';
     if (subLevel === 'MEDIA') return '5.\u00BA Grado a 7.\u00BA Grado';
@@ -611,6 +694,12 @@ export class CoursesComponent implements OnInit {
   courseStudentsModalOpen = false;
   courseStudentsCourseName = '';
   courseStudents: AcademicStudent[] = [];
+  removingStudentId: number | null = null;
+  deleteConfirmStudent: AcademicStudent | null = null;
+
+  deleteConfirmCourse: AcademicCourse | null = null;
+  deleteError = '';
+  deleting = false;
 
   get classBlocks(): ScheduleBlockItem[] {
     return this.scheduleBlocks.filter(b => b.blockType === 'CLASS' && b.active);
@@ -690,6 +779,52 @@ export class CoursesComponent implements OnInit {
     this.courseStudentsModalOpen = false;
     this.courseStudentsCourseName = '';
     this.courseStudents = [];
+  }
+
+  removeStudentFromCourse(student: AcademicStudent): void {
+    if (!this.canManageAcademic) return;
+    this.removingStudentId = student.id;
+    this.http.delete(`${API_URL}/academic/students/${student.id}`).pipe(
+      map(() => true),
+      catchError(() => of(false))
+    ).subscribe(ok => {
+      this.removingStudentId = null;
+      if (ok) {
+        this.courseStudents = this.courseStudents.filter(s => s.id !== student.id);
+        this.loadData();
+      }
+    });
+  }
+
+  confirmRemoveStudent(): void {
+    if (!this.deleteConfirmStudent) return;
+    const student = this.deleteConfirmStudent;
+    this.deleteConfirmStudent = null;
+    this.removeStudentFromCourse(student);
+  }
+
+  confirmDeleteCourse(course: AcademicCourse): void {
+    this.deleteConfirmCourse = course;
+    this.deleteError = '';
+  }
+
+  deleteCourse(): void {
+    if (!this.deleteConfirmCourse || !this.canManageAcademic) return;
+    this.deleting = true;
+    this.deleteError = '';
+    this.http.delete(`${API_URL}/academic/courses/${this.deleteConfirmCourse.id}`).pipe(
+      catchError(err => {
+        this.deleteError = err?.error?.message ?? 'No se pudo eliminar el curso.';
+        return of(null);
+      })
+    ).subscribe(result => {
+      this.deleting = false;
+      if (result === null && !this.deleteError) return;
+      if (this.deleteError) return;
+      this.deleteConfirmCourse = null;
+      this.closeCourseStudents();
+      this.loadData();
+    });
   }
 
   resetScheduleForm(): void {
@@ -797,10 +932,14 @@ export class CoursesComponent implements OnInit {
     this.saveError = '';
     this.gradeOptions = [];
     this.assignments = [];
+    const currentYear = new Date().getFullYear();
+    const defaultYear = this.academicYears.find(y => y.year === currentYear)?.id ?? this.academicYears[0]?.id ?? null;
+    const defaultDay = this.schoolDays.find(d => d.name.toLowerCase().includes('matutina'))?.id ?? this.schoolDays[0]?.id ?? null;
+    const defaultModality = this.schoolModalities.find(m => m.name.toLowerCase().includes('presencial'))?.id ?? this.schoolModalities[0]?.id ?? null;
     this.form.reset({
-      academicYearId: null,
-      schoolDayId: null,
-      schoolModalityId: null,
+      academicYearId: defaultYear,
+      schoolDayId: defaultDay,
+      schoolModalityId: defaultModality,
       subLevel: null,
       grade: null,
       parallel: '',
@@ -882,7 +1021,7 @@ export class CoursesComponent implements OnInit {
       name: this.autoName() || raw.name || '',
       parallel: raw.parallel.toUpperCase(),
       level: raw.level || '',
-      section: raw.subLevel === 'BGU' ? 'BACHILLERATO' : (raw.subLevel ? 'EGB' : null),
+      section: raw.subLevel === 'BGU' ? 'BACHILLERATO' : (raw.subLevel === 'INICIAL' ? 'INICIAL' : (raw.subLevel ? 'EGB' : null)),
       subLevel: raw.subLevel,
       grade: raw.grade,
       weekStudentId: raw.weekStudentId,

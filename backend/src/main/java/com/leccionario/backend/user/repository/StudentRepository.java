@@ -13,4 +13,6 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     boolean existsByEnrollmentNumberIgnoreCaseAndCourseId(String enrollmentNumber, Long courseId);
 
     boolean existsByEnrollmentNumberIgnoreCaseAndCourseIdAndIdNot(String enrollmentNumber, Long courseId, Long id);
+
+    long countByCourseId(Long courseId);
 }

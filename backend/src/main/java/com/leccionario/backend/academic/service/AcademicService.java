@@ -38,6 +38,14 @@ import com.leccionario.backend.audit.service.AuditService;
 import com.leccionario.backend.common.excel.ExcelSupport;
 import com.leccionario.backend.common.excel.ImportSummaryResponse;
 import com.leccionario.backend.common.exception.BusinessException;
+import com.leccionario.backend.demerit.repository.StudentDemerRepository;
+import com.leccionario.backend.dailylog.repository.DailyLogRepository;
+import com.leccionario.backend.dailylog.repository.DailyLogEntryRepository;
+import com.leccionario.backend.dailylog.repository.DailyLogSignatureRepository;
+import com.leccionario.backend.dailylog.repository.DailyLogStudentAbsenceRepository;
+import com.leccionario.backend.dailylog.repository.DailyLogStudentIncidentRepository;
+import com.leccionario.backend.evaluation.repository.EvaluationRepository;
+import com.leccionario.backend.lessonplan.repository.LessonPlanRepository;
 import com.leccionario.backend.institution.domain.Institution;
 import com.leccionario.backend.institution.repository.InstitutionRepository;
 import com.leccionario.backend.schedule.repository.CourseScheduleRepository;
@@ -85,6 +93,14 @@ public class AcademicService {
     private final PasswordEncoder passwordEncoder;
     private final RepresentativeRepository representativeRepository;
     private final WeekStudentAssignmentRepository weekStudentAssignmentRepository;
+    private final DailyLogRepository dailyLogRepository;
+    private final DailyLogEntryRepository dailyLogEntryRepository;
+    private final DailyLogSignatureRepository dailyLogSignatureRepository;
+    private final DailyLogStudentAbsenceRepository dailyLogStudentAbsenceRepository;
+    private final DailyLogStudentIncidentRepository dailyLogStudentIncidentRepository;
+    private final LessonPlanRepository lessonPlanRepository;
+    private final EvaluationRepository evaluationRepository;
+    private final StudentDemerRepository studentDemerRepository;
 
     @Transactional(readOnly = true)
     public AcademicOverviewResponse getOverview() {
@@ -146,6 +162,80 @@ public class AcademicService {
         }
         auditService.log(username, "UPDATE_COURSE", "ACADEMIC", saved.getName() + " " + saved.getParallel());
         return toCourseResponse(saved);
+    }
+
+    @Transactional
+    public void deleteCourse(Long id, String username) {
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("El curso seleccionado no existe."));
+        long studentCount = studentRepository.countByCourseId(id);
+        if (studentCount > 0) {
+            throw new BusinessException("No se puede eliminar el curso porque tiene " + studentCount + " estudiante(s) matriculado(s). Retire los estudiantes primero.");
+        }
+        courseScheduleRepository.deleteByCourseId(id);
+        weekStudentAssignmentRepository.deleteByCourseId(id);
+        dailyLogStudentAbsenceRepository.deleteByCourseId(id);
+        dailyLogStudentIncidentRepository.deleteByCourseId(id);
+        dailyLogEntryRepository.deleteByCourseId(id);
+        dailyLogSignatureRepository.deleteByCourseId(id);
+        dailyLogRepository.deleteByCourseId(id);
+        evaluationRepository.deleteByCourseId(id);
+        lessonPlanRepository.deleteByCourseId(id);
+        studentDemerRepository.deleteByCourseId(id);
+        courseRepository.deleteById(id);
+        auditService.log(username, "DELETE_COURSE", "ACADEMIC", course.getName() + " " + course.getParallel());
+    }
+
+    @Transactional
+    public void deleteStudent(Long id, String username) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("El estudiante seleccionado no existe."));
+        User user = student.getUser();
+        Long studentId = student.getId();
+
+        evaluationRepository.deleteByStudentId(studentId);
+        studentDemerRepository.deleteByStudentId(studentId);
+        dailyLogStudentAbsenceRepository.deleteByStudentId(studentId);
+        dailyLogStudentIncidentRepository.deleteByStudentId(studentId);
+        weekStudentAssignmentRepository.deleteByStudentId(studentId);
+        studentRepository.deleteById(studentId);
+        if (user != null) {
+            userRepository.deleteById(user.getId());
+        }
+        auditService.log(username, "DELETE_STUDENT", "ACADEMIC",
+                student.getUser().getFirstName() + " " + student.getUser().getLastName());
+    }
+
+    @Transactional
+    public void deleteTeacher(Long id, String username) {
+        Teacher teacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("El docente seleccionado no existe."));
+        User user = teacher.getUser();
+
+        dailyLogEntryRepository.nullifyTeacher(id);
+        evaluationRepository.deleteByLessonPlanTeacherId(id);
+        lessonPlanRepository.deleteByTeacherId(id);
+        studentDemerRepository.deleteByTeacherId(id);
+        courseScheduleRepository.deleteByTeacherId(id);
+        teacherRepository.deleteById(id);
+        if (user != null) {
+            cleanupUserFromStudents(user.getId());
+            userRepository.deleteById(user.getId());
+        }
+        auditService.log(username, "DELETE_TEACHER", "ACADEMIC",
+                user.getFirstName() + " " + user.getLastName());
+    }
+
+    private void cleanupUserFromStudents(Long userId) {
+        studentRepository.findByUserId(userId).ifPresent(student -> {
+            Long studentId = student.getId();
+            evaluationRepository.deleteByStudentId(studentId);
+            studentDemerRepository.deleteByStudentId(studentId);
+            dailyLogStudentAbsenceRepository.deleteByStudentId(studentId);
+            dailyLogStudentIncidentRepository.deleteByStudentId(studentId);
+            weekStudentAssignmentRepository.deleteByStudentId(studentId);
+            studentRepository.deleteById(studentId);
+        });
     }
 
     @Transactional
@@ -315,16 +405,31 @@ public class AcademicService {
     public byte[] exportCourseTemplate() {
         Workbook workbook = ExcelSupport.newWorkbook();
         Sheet sheet = workbook.createSheet("cursos");
-        ExcelSupport.writeHeaders(sheet, "name", "parallel", "level", "section", "subLevel", "grade", "weekStudentEnrollment");
+        ExcelSupport.writeHeaders(sheet, "name", "parallel", "level", "section", "subLevel", "grade", "capacity");
         var sample = sheet.createRow(1);
         sample.createCell(0).setCellValue("Primero BGU");
         sample.createCell(1).setCellValue("A");
-        sample.createCell(2).setCellValue("Bachillerato");
-        sample.createCell(3).setCellValue("BACHILLERATO");
-        sample.createCell(4).setCellValue("BGU");
+        sample.createCell(2).setCellValue("1. Grado de EGB");
+        sample.createCell(3).setCellValue("EGB");
+        sample.createCell(4).setCellValue("PREPARATORIA");
         sample.createCell(5).setCellValue(1);
-        sample.createCell(6).setCellValue("1001");
+        sample.createCell(6).setCellValue(40);
+
+        Sheet catalog = workbook.createSheet("catalogos");
+        ExcelSupport.writeHeaders(catalog, "secciones", "subniveles", "grados_por_subnivel");
+        catalog.createRow(1).createCell(0).setCellValue("EGB");
+        catalog.createRow(2).createCell(0).setCellValue("INICIAL");
+        catalog.createRow(3).createCell(0).setCellValue("BACHILLERATO");
+        catalog.createRow(1).createCell(1).setCellValue("INICIAL -> Grados 1, 2");
+        catalog.createRow(2).createCell(1).setCellValue("PREPARATORIA -> Grado 1");
+        catalog.createRow(3).createCell(1).setCellValue("ELEMENTAL -> Grados 2, 3, 4");
+        catalog.createRow(4).createCell(1).setCellValue("MEDIA -> Grados 5, 6, 7");
+        catalog.createRow(5).createCell(1).setCellValue("SUPERIOR -> Grados 8, 9, 10");
+        catalog.createRow(6).createCell(1).setCellValue("BGU -> Cursos 1, 2, 3");
+        catalog.createRow(1).createCell(2).setCellValue("El nombre del curso se auto-genera: Grado + Paralelo");
+
         ExcelSupport.autoSize(sheet, 7);
+        ExcelSupport.autoSize(catalog, 3);
         return ExcelSupport.toBytes(workbook);
     }
 
@@ -332,7 +437,7 @@ public class AcademicService {
     public byte[] exportStudentTemplate() {
         Workbook workbook = ExcelSupport.newWorkbook();
         Sheet sheet = workbook.createSheet("estudiantes");
-        ExcelSupport.writeHeaders(sheet, "username", "email", "identification", "firstName", "lastName", "enrollmentNumber", "courseName", "parallel", "enabled");
+        ExcelSupport.writeHeaders(sheet, "username", "email", "identification", "firstName", "lastName", "enrollmentNumber", "courseName", "parallel", "enabled", "birthDate", "gender");
         var sample = sheet.createRow(1);
         sample.createCell(0).setCellValue("cadete.nuevo");
         sample.createCell(1).setCellValue("cadete.nuevo@leccionario.local");
@@ -343,9 +448,11 @@ public class AcademicService {
         sample.createCell(6).setCellValue(courseRepository.findAll().stream().findFirst().map(Course::getName).orElse("Primero BGU"));
         sample.createCell(7).setCellValue(courseRepository.findAll().stream().findFirst().map(Course::getParallel).orElse("A"));
         sample.createCell(8).setCellValue("true");
+        sample.createCell(9).setCellValue("2010-05-15");
+        sample.createCell(10).setCellValue("M");
 
         Sheet catalog = workbook.createSheet("catalogos");
-        ExcelSupport.writeHeaders(catalog, "courseName", "parallel", "level", "section", "subLevel", "grade");
+        ExcelSupport.writeHeaders(catalog, "courseName", "parallel", "level", "section", "subLevel", "grade", "gender_values");
         var courses = courseRepository.findAll();
         for (int index = 0; index < courses.size(); index++) {
             var row = catalog.createRow(index + 1);
@@ -358,9 +465,15 @@ public class AcademicService {
                 row.createCell(5).setCellValue(courses.get(index).getGrade());
             }
         }
+        var genderRow = catalog.createRow(1);
+        genderRow.createCell(6).setCellValue("M = Masculino");
+        var genderRow2 = catalog.createRow(2);
+        genderRow2.createCell(6).setCellValue("F = Femenino");
+        var genderRow3 = catalog.createRow(3);
+        genderRow3.createCell(6).setCellValue("OTRO = Otro");
 
-        ExcelSupport.autoSize(sheet, 9);
-        ExcelSupport.autoSize(catalog, 3);
+        ExcelSupport.autoSize(sheet, 11);
+        ExcelSupport.autoSize(catalog, 7);
         return ExcelSupport.toBytes(workbook);
     }
 
@@ -379,14 +492,18 @@ public class AcademicService {
         sample.createCell(6).setCellValue("true");
 
         Sheet catalog = workbook.createSheet("catalogos");
-        ExcelSupport.writeHeaders(catalog, "roles_docente", "especialidades_referenciales");
-        var row = catalog.createRow(1);
-        row.createCell(0).setCellValue(RoleDefaults.DOCENTE);
-        row.createCell(1).setCellValue("Matematica");
-        var row2 = catalog.createRow(2);
-        row2.createCell(1).setCellValue("Lengua y Literatura");
-        var row3 = catalog.createRow(3);
-        row3.createCell(1).setCellValue("Ciencias Naturales");
+        ExcelSupport.writeHeaders(catalog, "especialidades_referenciales", "notas");
+        var areas = new String[]{
+            "Matematica", "Lengua y Literatura", "Ciencias Naturales",
+            "Estudios Sociales", "Ingles", "Educacion Fisica",
+            "Artes Plasticas", "Musica", "Tecnologia e Informatica",
+            "Formacion Ciudadana", "Religion", "Emprendimiento"
+        };
+        for (int i = 0; i < areas.length; i++) {
+            catalog.createRow(i + 1).createCell(0).setCellValue(areas[i]);
+        }
+        catalog.createRow(1).createCell(1).setCellValue("Las especialidades son orientaciones.");
+        catalog.createRow(2).createCell(1).setCellValue("Las materias y cursos se asignan por separado.");
 
         ExcelSupport.autoSize(sheet, 7);
         ExcelSupport.autoSize(catalog, 2);
@@ -412,17 +529,14 @@ public class AcademicService {
                         ExcelSupport.getString(row, 0),
                         ExcelSupport.getString(row, 1),
                         ExcelSupport.getString(row, 2),
+                        ExcelSupport.getString(row, 3),
+                        ExcelSupport.getString(row, 4),
+                        ExcelSupport.getInt(row, 5, 0),
                         null,
                         null,
                         null,
-                        resolveWeekStudentId(
-                                ExcelSupport.getString(row, 0),
-                                ExcelSupport.getString(row, 1),
-                                ExcelSupport.getString(row, 3)),
                         null,
-                        null,
-                        null,
-                        null),
+                        ExcelSupport.getInt(row, 6, 40)),
                         actor);
                 imported++;
             } catch (Exception exception) {
@@ -468,8 +582,8 @@ public class AcademicService {
                         ExcelSupport.getString(row, 5),
                         course.getId(),
                         ExcelSupport.getBoolean(row, 8, true),
-                        null,
-                        null), actor);
+                        ExcelSupport.getDate(row, 9),
+                        ExcelSupport.getString(row, 10)), actor);
                 imported++;
             } catch (Exception exception) {
                 errors.add("Fila " + excelRow + ": " + exception.getMessage());

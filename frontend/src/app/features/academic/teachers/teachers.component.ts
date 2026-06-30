@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, of } from 'rxjs';
+import { catchError, map, of } from 'rxjs';
 import { API_URL } from '../../../core/api.config';
 import { AuthService } from '../../../core/auth.service';
 import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryResult, ScheduleBlockItem, ScheduleOverview } from '../academic.models';
@@ -134,7 +134,10 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h3 class="h6 mb-0">Informacion personal</h3>
                   @if (canManageAcademic) {
-                    <button class="btn btn-sm btn-outline-primary" type="button" (click)="editTeacher(dt)"><i class="bi bi-pencil me-1"></i>Editar</button>
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-sm btn-outline-primary" type="button" (click)="editTeacher(dt)"><i class="bi bi-pencil me-1"></i>Editar</button>
+                      <button class="btn btn-sm btn-outline-danger" type="button" (click)="confirmDeleteTeacher = dt"><i class="bi bi-trash me-1"></i>Eliminar</button>
+                    </div>
                   }
                 </div>
                 <dl class="row mb-0 small">
@@ -570,6 +573,29 @@ import { AcademicOverview, AcademicTeacher, CourseScheduleItem, ImportSummaryRes
         </div>
       </div>
     }
+
+    @if (confirmDeleteTeacher) {
+      <div class="modal-shell" style="z-index:1060" (click)="confirmDeleteTeacher = null">
+        <div class="modal-card" style="max-width:420px" (click)="$event.stopPropagation()">
+          <div class="text-center mb-3">
+            <i class="bi bi-person-dash text-danger" style="font-size:2.5rem"></i>
+          </div>
+          <h5 class="text-center mb-2">Eliminar docente</h5>
+          <p class="text-muted small text-center mb-3">
+            Se eliminara a <strong>{{ confirmDeleteTeacher.fullName }}</strong> junto con sus horarios y lecciones. Esta accion no se puede deshacer.
+          </p>
+          <div class="d-flex justify-content-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="confirmDeleteTeacher = null">Cancelar</button>
+            <button class="btn btn-sm btn-danger" type="button" (click)="deleteTeacher()" [disabled]="deletingTeacher">
+              @if (deletingTeacher) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              }
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class TeachersComponent implements OnInit {
@@ -596,6 +622,9 @@ export class TeachersComponent implements OnInit {
   detailTab: 'datos' | 'materias' | 'cursos' | 'horario' = 'datos';
   selectedScheduleDay = 1;
   editingSubjectsFor: number | null = null;
+  confirmDeleteTeacher: AcademicTeacher | null = null;
+  deletingTeacher = false;
+  deleteError = '';
   editingCoursesFor: number | null = null;
   pendingSubjectSelection: Set<string> = new Set();
   pendingCourseSelection: Set<string> = new Set();
@@ -971,6 +1000,23 @@ export class TeachersComponent implements OnInit {
           specialization: teacher.specialization,
           enabled: teacher.enabled
         });
+      }
+    });
+  }
+
+  deleteTeacher(): void {
+    if (!this.confirmDeleteTeacher || !this.canManageAcademic) return;
+    this.deletingTeacher = true;
+    const id = this.confirmDeleteTeacher.id;
+    this.http.delete(`${API_URL}/academic/teachers/${id}`).pipe(
+      map(() => true),
+      catchError(() => of(false))
+    ).subscribe(ok => {
+      this.deletingTeacher = false;
+      if (ok) {
+        this.confirmDeleteTeacher = null;
+        this.closeTeacherDetail();
+        this.loadData();
       }
     });
   }

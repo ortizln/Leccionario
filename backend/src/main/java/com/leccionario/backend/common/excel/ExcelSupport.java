@@ -3,7 +3,9 @@ package com.leccionario.backend.common.excel;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -87,6 +89,21 @@ public final class ExcelSupport {
     public static LocalTime getTime(Row row, int index) {
         String value = getString(row, index);
         return LocalTime.parse(value);
+    }
+
+    public static LocalDate getDate(Row row, int index) {
+        Cell cell = row.getCell(index);
+        if (cell == null) {
+            return null;
+        }
+        if (cell.getCellType() == CellType.NUMERIC && org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
+            return cell.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        }
+        String value = getString(row, index);
+        if (value.isBlank()) {
+            return null;
+        }
+        return LocalDate.parse(value);
     }
 
     public static boolean rowIsEmpty(Row row, int columns) {

@@ -196,11 +196,21 @@ body.sidebar-collapsed .sidebar-mini-card .flex-grow-1,
 body.sidebar-collapsed .sidebar-mini-card .small.text-white-50,
 body.sidebar-collapsed .sidebar-mini-card .sidebar-white-text,
 body.sidebar-collapsed .sidebar-security-card,
-body.sidebar-collapsed .sidebar-mini-card .btn-outline-light span { display: none; }
+body.sidebar-collapsed .sidebar-mini-card .btn-outline-light span {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+}
 
 body.sidebar-collapsed .brand-badge { width: 36px; height: 36px; font-size: 0.8rem; }
 body.sidebar-collapsed .sidebar-mini-card .card-body { padding: 0.5rem !important; }
 body.sidebar-collapsed .sidebar-mini-card { padding: 0.5rem !important; }
+body.sidebar-collapsed .sidebar-mini-card.sidebar-security-card { display: none !important; height: 0 !important; min-height: 0 !important; border: none !important; box-shadow: none !important; }
 body.sidebar-collapsed .sidebar-mini-card .d-flex.align-items-start { justify-content: center; }
 body.sidebar-collapsed .sidebar-mini-card .d-flex.align-items-start > div:last-child { display: none; }
 body.sidebar-collapsed .nav.flex-column.gap-1 { margin-left: 0 !important; }
@@ -292,7 +302,9 @@ body.sidebar-collapsed .nav.flex-column.gap-1 .nav-link { justify-content: cente
 .app-sidebar .app-nav-link,
 .app-sidebar .app-nav-link span { color: #FFFFFF !important; }
 
-.app-sidebar .btn-outline-light {
+.app-sidebar .btn-outline-light,
+.app-sidebar .btn-outline-light span,
+.app-sidebar .btn-outline-light i {
   color: #FFFFFF !important;
   border-color: rgba(255, 255, 255, 0.20);
   border-radius: var(--radius-md);

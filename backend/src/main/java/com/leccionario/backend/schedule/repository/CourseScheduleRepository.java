@@ -72,4 +72,12 @@ public interface CourseScheduleRepository extends JpaRepository<CourseSchedule, 
             Long id);
 
     boolean existsByTeacherIdAndCourseId(Long teacherId, Long courseId);
+
+    @Modifying
+    @Query("DELETE FROM CourseSchedule cs WHERE cs.course.id = :courseId")
+    void deleteByCourseId(@Param("courseId") Long courseId);
+
+    @Modifying
+    @Query("DELETE FROM CourseSchedule cs WHERE cs.teacher.id = :teacherId")
+    void deleteByTeacherId(@Param("teacherId") Long teacherId);
 }
