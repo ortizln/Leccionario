@@ -1,4 +1,4 @@
-package com.example.leccionario_mobile
+package com.leccionario.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

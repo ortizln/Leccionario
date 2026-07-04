@@ -15,6 +15,7 @@ import com.leccionario.backend.announcement.repository.AnnouncementRepository;
 import com.leccionario.backend.announcement.repository.AnnouncementScheduleRepository;
 import com.leccionario.backend.audit.service.AuditService;
 import com.leccionario.backend.common.exception.BusinessException;
+import com.leccionario.backend.config.NotificationBroadcaster;
 import com.leccionario.backend.schedule.domain.ScheduleBlock;
 import com.leccionario.backend.schedule.repository.ScheduleBlockRepository;
 import com.leccionario.backend.user.domain.User;
@@ -26,6 +27,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +45,7 @@ public class AnnouncementService {
     private final TeacherRepository teacherRepository;
     private final ScheduleBlockRepository scheduleBlockRepository;
     private final AuditService auditService;
+    private final NotificationBroadcaster notificationBroadcaster;
 
     @Transactional
     public AnnouncementResponse createAnnouncement(AnnouncementRequest request, String username) {
@@ -73,6 +76,13 @@ public class AnnouncementService {
 
         createRecipients(saved, request.courseId());
         auditService.log(username, "CREATE_ANNOUNCEMENT", "ANNOUNCEMENT", saved.getTitle());
+        notificationBroadcaster.broadcastAnnouncement("CREATED", Map.of(
+                "id", saved.getId(),
+                "title", saved.getTitle(),
+                "type", saved.getAnnouncementType().name(),
+                "priority", saved.getPriority().name(),
+                "createdBy", creator.getFirstName() + " " + creator.getLastName()
+        ));
         return toResponse(saved, creator.getId());
     }
 
@@ -106,6 +116,11 @@ public class AnnouncementService {
         }
 
         auditService.log(username, "UPDATE_ANNOUNCEMENT", "ANNOUNCEMENT", saved.getTitle());
+        notificationBroadcaster.broadcastAnnouncement("UPDATED", Map.of(
+                "id", saved.getId(),
+                "title", saved.getTitle(),
+                "type", saved.getAnnouncementType().name()
+        ));
         return toResponse(saved, null);
     }
 
@@ -113,10 +128,15 @@ public class AnnouncementService {
     public void deleteAnnouncement(Long id, String username) {
         Announcement announcement = announcementRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("El anuncio seleccionado no existe."));
+        String title = announcement.getTitle();
         recipientRepository.deleteByAnnouncementId(id);
         scheduleRepository.deleteByAnnouncementId(id);
         announcementRepository.deleteByIdDirect(id);
-        auditService.log(username, "DELETE_ANNOUNCEMENT", "ANNOUNCEMENT", announcement.getTitle());
+        auditService.log(username, "DELETE_ANNOUNCEMENT", "ANNOUNCEMENT", title);
+        notificationBroadcaster.broadcastAnnouncement("DELETED", Map.of(
+                "id", id,
+                "title", title
+        ));
     }
 
     @Transactional(readOnly = true)
@@ -184,6 +204,8 @@ public class AnnouncementService {
             recipient.setRead(true);
             recipient.setReadAt(OffsetDateTime.now());
             recipientRepository.save(recipient);
+            long unreadCount = recipientRepository.countByUserIdAndReadFalse(user.getId());
+            notificationBroadcaster.broadcastAnnouncementRead(username, announcementId, unreadCount);
         }
     }
 

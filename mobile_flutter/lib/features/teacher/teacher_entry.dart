@@ -7,12 +7,14 @@ class TeacherEntryPoint extends StatelessWidget {
   final AuthRepository authRepository;
   final VoidCallback onLogout;
   final void Function(BuildContext) onOpenSettings;
+  final int unreadCount;
 
   const TeacherEntryPoint({
     super.key,
     required this.authRepository,
     required this.onLogout,
     required this.onOpenSettings,
+    this.unreadCount = 0,
   });
 
   @override
@@ -21,6 +23,7 @@ class TeacherEntryPoint extends StatelessWidget {
       authRepository: authRepository,
       onLogout: onLogout,
       onOpenSettings: onOpenSettings,
+      unreadCount: unreadCount,
     );
   }
 }

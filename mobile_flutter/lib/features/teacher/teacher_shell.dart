@@ -12,12 +12,14 @@ class TeacherShell extends StatefulWidget {
   final AuthRepository authRepository;
   final VoidCallback onLogout;
   final void Function(BuildContext) onOpenSettings;
+  final int unreadCount;
 
   const TeacherShell({
     super.key,
     required this.authRepository,
     required this.onLogout,
     required this.onOpenSettings,
+    this.unreadCount = 0,
   });
 
   @override
@@ -28,21 +30,12 @@ class _TeacherShellState extends State<TeacherShell> {
   late final TeacherRepository _repo;
   late final AnnouncementRepository _announcementRepo;
   int _currentIndex = 0;
-  int _unreadCount = 0;
 
   @override
   void initState() {
     super.initState();
     _repo = TeacherRepository(auth: widget.authRepository);
     _announcementRepo = AnnouncementRepository(auth: widget.authRepository);
-    _loadUnreadCount();
-  }
-
-  Future<void> _loadUnreadCount() async {
-    try {
-      final count = await _announcementRepo.fetchUnreadCount();
-      if (mounted) setState(() => _unreadCount = count);
-    } catch (_) {}
   }
 
   @override
@@ -62,10 +55,7 @@ class _TeacherShellState extends State<TeacherShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (i) {
-          setState(() => _currentIndex = i);
-          if (i == 3) _loadUnreadCount();
-        },
+        onDestinationSelected: (i) => setState(() => _currentIndex = i),
         backgroundColor: cs.surface,
         indicatorColor: cs.primaryContainer,
         height: 72,
@@ -88,13 +78,13 @@ class _TeacherShellState extends State<TeacherShell> {
           ),
           NavigationDestination(
             icon: Badge(
-              isLabelVisible: _unreadCount > 0,
-              label: Text('$_unreadCount', style: const TextStyle(fontSize: 10)),
+              isLabelVisible: widget.unreadCount > 0,
+              label: Text('${widget.unreadCount}', style: const TextStyle(fontSize: 10)),
               child: const Icon(Icons.notifications_outlined),
             ),
             selectedIcon: Badge(
-              isLabelVisible: _unreadCount > 0,
-              label: Text('$_unreadCount', style: const TextStyle(fontSize: 10)),
+              isLabelVisible: widget.unreadCount > 0,
+              label: Text('${widget.unreadCount}', style: const TextStyle(fontSize: 10)),
               child: const Icon(Icons.notifications),
             ),
             label: 'Anuncios',

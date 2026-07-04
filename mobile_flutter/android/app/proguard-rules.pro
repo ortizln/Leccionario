@@ -1,0 +1,3 @@
+-keep class io.flutter.** { *; }
+-keep class com.leccionario.mobile.** { *; }
+-dontwarn io.flutter.embedding.**
