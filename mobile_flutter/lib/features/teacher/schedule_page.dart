@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../announcements/announcement_repository.dart';
+import '../announcements/models.dart';
 import 'models.dart';
 import 'teacher_repository.dart';
 
 class SchedulePage extends StatefulWidget {
   final TeacherRepository repo;
-  const SchedulePage({super.key, required this.repo});
+  final AnnouncementRepository? announcementRepo;
+  const SchedulePage({super.key, required this.repo, this.announcementRepo});
 
   @override
   State<SchedulePage> createState() => _SchedulePageState();
@@ -13,6 +16,7 @@ class SchedulePage extends StatefulWidget {
 
 class _SchedulePageState extends State<SchedulePage> {
   List<ScheduleEntry> _entries = [];
+  List<Announcement> _announcements = [];
   bool _loading = true;
   String? _error;
 
@@ -61,10 +65,26 @@ class _SchedulePageState extends State<SchedulePage> {
   Future<void> _load() async {
     try {
       final entries = await widget.repo.fetchMySchedule();
-      if (mounted) setState(() { _entries = entries; _loading = false; });
+      List<Announcement> announcements = [];
+      if (widget.announcementRepo != null) {
+        try { announcements = await widget.announcementRepo!.fetchMyAnnouncements(); } catch (_) {}
+      }
+      if (mounted) setState(() { _entries = entries; _announcements = announcements; _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }
+  }
+
+  int _announcementsForWeekday(int weekday) {
+    final now = DateTime.now();
+    final startOfWeek = now.subtract(Duration(days: now.weekday - weekday));
+    final dateStr = startOfWeek.toIso8601String().substring(0, 10);
+    return _announcements.where((a) {
+      if (a.schedules.isNotEmpty) {
+        return a.schedules.any((s) => s.weekday == weekday);
+      }
+      return a.eventDate != null && a.eventDate == dateStr;
+    }).length;
   }
 
   @override
@@ -212,6 +232,7 @@ class _SchedulePageState extends State<SchedulePage> {
   Widget _buildDaySection(int weekday, List<ScheduleEntry> entries, ColorScheme cs, TextTheme tt) {
     final color = _subjectColors[(weekday - 1) % _subjectColors.length];
     entries.sort((a, b) => a.scheduleLabel.compareTo(b.scheduleLabel));
+    final annCount = _announcementsForWeekday(weekday);
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -235,9 +256,34 @@ class _SchedulePageState extends State<SchedulePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _weekdayNames[weekday] ?? '',
-                        style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
+                      Row(
+                        children: [
+                          Text(
+                            _weekdayNames[weekday] ?? '',
+                            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
+                          ),
+                          if (annCount > 0) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE07A5F).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.notifications_active, size: 12, color: Color(0xFFE07A5F)),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    '$annCount',
+                                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFE07A5F)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       Text(
                         '${entries.length} ${entries.length == 1 ? 'bloque' : 'bloques'}',

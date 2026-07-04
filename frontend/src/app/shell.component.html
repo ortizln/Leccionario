@@ -81,6 +81,11 @@
         <a class="nav-link app-nav-link" routerLink="/app/demerits" routerLinkActive="active" title="Demeritos">
           <i class="bi bi-exclamation-diamond me-2"></i><span>Demeritos</span>
         </a>
+        @if (auth.hasPermission('ANNOUNCEMENT_VIEW')) {
+          <a class="nav-link app-nav-link" routerLink="/app/announcements" routerLinkActive="active" title="Anuncios">
+            <i class="bi bi-megaphone me-2"></i><span>Anuncios</span>
+          </a>
+        }
       }
       @if (auth.hasPermission('LESSONPLAN_VIEW')) {
         <a class="nav-link app-nav-link" routerLink="/app/lesson-plans" routerLinkActive="active" title="Leccionario">

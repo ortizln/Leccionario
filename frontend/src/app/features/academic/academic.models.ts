@@ -131,3 +131,29 @@ export type SchoolModalityItem = {
   name: string;
   active: boolean;
 };
+
+export type AnnouncementScheduleItem = {
+  scheduleBlockId: number;
+  blockLabel: string;
+  startTime: string;
+  endTime: string;
+  weekday: number;
+  weekdayLabel: string;
+};
+
+export type Announcement = {
+  id: number;
+  title: string;
+  description: string;
+  type: 'EVENT' | 'TASK' | 'ALERT';
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  eventDate: string | null;
+  eventEndDate: string | null;
+  courseId: number | null;
+  courseName: string | null;
+  createdByName: string;
+  createdAt: string;
+  recipientCount: number;
+  read: boolean;
+  schedules: AnnouncementScheduleItem[];
+};

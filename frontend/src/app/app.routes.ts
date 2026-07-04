@@ -13,6 +13,7 @@ import { AuditComponent } from './features/audit/audit.component';
 import { ScheduleManagementComponent } from './features/schedules/schedule-management.component';
 import { DemeritManagementComponent } from './features/demerits/demerit-management.component';
 import { BrandingManagementComponent } from './features/branding/branding-management.component';
+import { AnnouncementsComponent } from './features/announcements/announcements.component';
 import { CoursesComponent } from './features/academic/courses/courses.component';
 import { StudentsComponent } from './features/academic/students/students.component';
 import { TeachersComponent } from './features/academic/teachers/teachers.component';
@@ -56,6 +57,7 @@ export const appRoutes: Routes = [
       { path: 'my-course', component: MyCourseComponent, canActivate: [permissionGuard], data: { permission: 'STUDENT_SELF_VIEW', denyRoles: ['ROLE_ADMINISTRADOR', 'ROLE_ADMINISTRATIVO'] } },
       { path: 'my-teaching', component: MyTeachingComponent, canActivate: [permissionGuard], data: { permission: 'TEACHER_SELF_VIEW', denyRoles: ['ROLE_ADMINISTRADOR', 'ROLE_ADMINISTRATIVO'] } },
       { path: 'demerits', component: DemeritManagementComponent, canActivate: [permissionGuard], data: { permission: 'ACADEMIC_VIEW' } },
+      { path: 'announcements', component: AnnouncementsComponent, canActivate: [permissionGuard], data: { permission: 'ANNOUNCEMENT_VIEW' } },
       { path: 'audit', component: AuditComponent, canActivate: [permissionGuard], data: { permission: 'AUDIT_VIEW' } },
       { path: 'branding', component: BrandingManagementComponent, canActivate: [permissionGuard], data: { permission: 'SETTINGS_VIEW' } }
     ]
