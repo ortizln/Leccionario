@@ -1,10 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { catchError, of } from 'rxjs';
+import { catchError, of, Subscription } from 'rxjs';
 import QRCode from 'qrcode';
 import { API_URL } from '../../core/api.config';
 import { AuthService } from '../../core/auth.service';
+import { WebSocketService } from '../../core/websocket.service';
+import { Announcement } from '../academic/academic.models';
 
 @Component({
   selector: 'app-lesson-plan',
@@ -17,6 +19,8 @@ export class LessonPlanComponent implements OnInit {
   private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
+  private ws = inject(WebSocketService);
+  private wsSubs: Subscription[] = [];
 
   isTeacher = this.auth.hasPermission('TEACHER_SELF_VIEW') && !this.auth.hasPermission('ACADEMIC_MANAGE');
   isReadOnly = this.auth.hasPermission('STUDENT_SELF_VIEW') && !this.auth.hasPermission('ACADEMIC_MANAGE') && !this.auth.hasPermission('TEACHER_SELF_VIEW');
@@ -41,6 +45,9 @@ export class LessonPlanComponent implements OnInit {
   availableDemeritCategories: DemeritCategoryOption[] = [];
   availableFaltas: DemeritFaltaOption[] = [];
   selectedFaltasByStudent: Map<number, number[]> = new Map();
+  myAnnouncements: Announcement[] = [];
+  popoverAnnouncement: Announcement | null = null;
+  private announcedDateBlockKeys = new Set<string>();
 
   overview: ScheduleOverview = {
     blocks: [],
@@ -58,6 +65,7 @@ export class LessonPlanComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDemerits();
+    this.loadAnnouncements();
     if (this.isTeacher) {
       this.loadTeacherToday();
     } else if (this.isReadOnly) {
@@ -65,6 +73,27 @@ export class LessonPlanComponent implements OnInit {
     } else if (this.canSearchLessonPlan) {
       this.loadOverview();
     }
+    this.wsSubs.push(
+      this.ws.onAnnouncement().subscribe(() => this.loadAnnouncements()),
+      this.ws.onScheduleChange().subscribe(() => this.loadAnnouncements())
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.wsSubs.forEach(s => s.unsubscribe());
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(e: MouseEvent): void {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.ann-popover') && !target.closest('.ann-trigger')) {
+      this.popoverAnnouncement = null;
+    }
+  }
+
+  togglePopover(ann: Announcement, event: MouseEvent): void {
+    event.stopPropagation();
+    this.popoverAnnouncement = this.popoverAnnouncement?.id === ann.id ? null : ann;
   }
 
   get weekDays(): Array<{ date: string; dayLabel: string; numDay: string; weekday: number }> {
@@ -466,6 +495,52 @@ export class LessonPlanComponent implements OnInit {
       case 'LATE': return 'Atraso';
       case 'JUSTIFIED': return 'Justificada';
       default: return 'Inasistencia';
+    }
+  }
+
+  isEntryAnnounced(entry: DailyLogEntryItem): boolean {
+    return this.announcedDateBlockKeys.has(`${this.dailyLog?.logDate}_${entry.scheduleBlockId}`);
+  }
+
+  getAnnouncedForEntry(entry: DailyLogEntryItem): Announcement | null {
+    if (!this.dailyLog) return null;
+    for (const ann of this.myAnnouncements) {
+      for (const s of ann.schedules) {
+        if (s.scheduleDate === this.dailyLog.logDate && s.scheduleBlockId === entry.scheduleBlockId) {
+          return ann;
+        }
+      }
+    }
+    return null;
+  }
+
+  getRowClass(entry: DailyLogEntryItem): string {
+    const ann = this.getAnnouncedForEntry(entry);
+    if (!ann) return '';
+    return `row-announced-${ann.priority.toLowerCase()}`;
+  }
+
+  getBadgeClass(entry: DailyLogEntryItem): string {
+    const ann = this.getAnnouncedForEntry(entry);
+    if (!ann) return 'announced-badge';
+    return `announced-badge announced-badge-${ann.priority.toLowerCase()}`;
+  }
+
+  private loadAnnouncements(): void {
+    this.http.get<Announcement[]>(`${API_URL}/announcements/my`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => {
+      this.myAnnouncements = data;
+      this.buildAnnouncedKeys();
+    });
+  }
+
+  private buildAnnouncedKeys(): void {
+    this.announcedDateBlockKeys.clear();
+    for (const ann of this.myAnnouncements) {
+      for (const s of ann.schedules) {
+        this.announcedDateBlockKeys.add(`${s.scheduleDate}_${s.scheduleBlockId}`);
+      }
     }
   }
 

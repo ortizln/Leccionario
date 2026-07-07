@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.leccionario.mobile"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -21,23 +21,23 @@ android {
     defaultConfig {
         applicationId = "com.leccionario.mobile"
         minSdk = 24
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
     signingConfigs {
-        getByName("debug") {
+        create("release") {
             storeFile = file("release-keystore.jks")
-            storePassword = "leccionario123"
-            keyAlias = "leccionario"
-            keyPassword = "leccionario123"
+            storePassword = System.getenv("KEYSTORE_STORE_PASSWORD") ?: ""
+            keyAlias = System.getenv("KEYSTORE_KEY_ALIAS") ?: "leccionario"
+            keyPassword = System.getenv("KEYSTORE_KEY_PASSWORD") ?: ""
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

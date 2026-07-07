@@ -1,9 +1,7 @@
-import 'dart:convert';
-
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 
-import '../../core/config/app_config.dart';
+import '../../core/network/api_client.dart';
 import '../../core/storage/local_store.dart';
 import '../auth/auth_repository.dart';
 import 'models.dart';
@@ -177,12 +175,10 @@ class DailyLogRepository {
   }
 
   Future<MobileCloseSummary> fetchCloseSummary(MobileCloseAction action) async {
-    final response = await http
-        .get(Uri.parse('${AppConfig.apiBaseUrl}${_closePath(action)}'));
-    final json = jsonDecode(response.body) as Map<String, dynamic>;
-    if (response.statusCode >= 400) {
-      throw Exception(json['message'] ?? 'No se pudo leer el QR.');
-    }
+    final response = await ApiClient.instance.dio.get(
+      _closePath(action),
+    );
+    final json = response.data as Map<String, dynamic>;
     return MobileCloseSummary.fromJson(action.mode, json);
   }
 
@@ -192,20 +188,16 @@ class DailyLogRepository {
     required String code,
     String? notes,
   }) async {
-    final response = await http.post(
-      Uri.parse('${AppConfig.apiBaseUrl}${_closePath(action, submit: true)}'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
+    final response = await ApiClient.instance.dio.post(
+      _closePath(action, submit: true),
+      data: {
         'username': username.trim(),
         'code': code.trim(),
         'notes': notes?.trim().isEmpty ?? true ? null : notes!.trim(),
-      }),
+      },
     );
 
-    final json = jsonDecode(response.body) as Map<String, dynamic>;
-    if (response.statusCode >= 400) {
-      throw Exception(json['message'] ?? 'No se pudo completar la validacion.');
-    }
+    final json = response.data as Map<String, dynamic>;
     return MobileCloseSummary.fromJson(action.mode, json);
   }
 
@@ -215,20 +207,12 @@ class DailyLogRepository {
       throw Exception('No existe una sesion activa');
     }
 
-    final response = await http.get(
-      Uri.parse(
-          '${AppConfig.apiBaseUrl}/daily-logs/mobile/today?workDate=$workDate'),
-      headers: {
-        'Authorization': 'Bearer ${session.token}',
-        'Content-Type': 'application/json',
-      },
+    final response = await ApiClient.instance.dio.get(
+      '/daily-logs/mobile/today',
+      queryParameters: {'workDate': workDate},
     );
 
-    final json = jsonDecode(response.body) as Map<String, dynamic>;
-    if (response.statusCode >= 400) {
-      throw Exception(json['message'] ?? 'No se pudo cargar la jornada de hoy');
-    }
-
+    final json = response.data as Map<String, dynamic>;
     return MobileTodayResponse.fromJson(json);
   }
 
@@ -239,17 +223,17 @@ class DailyLogRepository {
   }) async {
     final items = await localStore.readPending(table);
     for (final item in items) {
-      final response = await http.put(
-        Uri.parse('${AppConfig.apiBaseUrl}${pathBuilder(item)}'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(item.payload),
-      );
-
-      if (response.statusCode < 400) {
+      try {
+        await ApiClient.instance.dio.put(
+          pathBuilder(item),
+          data: item.payload,
+        );
         await localStore.removePending(table, item.entryId);
+      } on DioException catch (e) {
+        if (e.response?.statusCode != null &&
+            e.response!.statusCode! < 400) {
+          await localStore.removePending(table, item.entryId);
+        }
       }
     }
   }

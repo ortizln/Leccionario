@@ -15,6 +15,34 @@ for arg in "$@"; do
   esac
 done
 
+# --- Refuse to run as root ---
+if [ "$(id -u)" -eq 0 ]; then
+  echo "[mobile] ERROR: No ejecutes este script con sudo. Flutter no funciona como root."
+  echo "[mobile] Ejecuta sin sudo: ./scripts/build_mobile_apk.sh"
+  exit 1
+fi
+
+# --- Detect Android SDK ---
+if [ -z "${ANDROID_HOME}" ]; then
+  for candidate in \
+    "${HOME}/Android/Sdk" \
+    "${HOME}/android-sdk" \
+    "/opt/android-sdk" \
+    "/usr/lib/android-sdk"; do
+    if [ -d "$candidate" ]; then
+      export ANDROID_HOME="$candidate"
+      break
+    fi
+  done
+fi
+
+if [ -z "${ANDROID_HOME}" ]; then
+  echo "[mobile] ERROR: ANDROID_HOME no encontrado. Instala Android SDK o exporta ANDROID_HOME."
+  exit 1
+fi
+
+export ANDROID_SDK_ROOT="${ANDROID_HOME}"
+
 # --- Detect or install JDK 17 (Android Gradle Plugin requires JDK <= 24) ---
 
 detect_java_version() {
@@ -100,6 +128,11 @@ fi
 
 echo "[mobile] Generando APK release"
 cd "${ANDROID_DIR}"
+
+export KEYSTORE_STORE_PASSWORD="${KEYSTORE_STORE_PASSWORD:-leccionario123}"
+export KEYSTORE_KEY_ALIAS="${KEYSTORE_KEY_ALIAS:-leccionario}"
+export KEYSTORE_KEY_PASSWORD="${KEYSTORE_KEY_PASSWORD:-leccionario123}"
+
 ./gradlew assembleRelease
 
 cd "${MOBILE_DIR}"

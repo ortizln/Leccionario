@@ -137,6 +137,7 @@ export type AnnouncementScheduleItem = {
   blockLabel: string;
   startTime: string;
   endTime: string;
+  scheduleDate: string;
   weekday: number;
   weekdayLabel: string;
 };

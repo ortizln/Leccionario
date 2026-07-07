@@ -35,7 +35,7 @@ class _TeacherShellState extends State<TeacherShell> {
   void initState() {
     super.initState();
     _repo = TeacherRepository(auth: widget.authRepository);
-    _announcementRepo = AnnouncementRepository(auth: widget.authRepository);
+    _announcementRepo = AnnouncementRepository();
   }
 
   @override

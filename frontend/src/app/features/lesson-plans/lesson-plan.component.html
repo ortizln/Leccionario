@@ -173,12 +173,17 @@
             </thead>
             <tbody>
               @for (entry of displayEntries; track entry.id) {
-                <tr>
+                <tr [class]="getRowClass(entry)">
                   <td class="align-top">
                     <div class="fw-semibold small">{{ entry.scheduleLabel }}</div>
                     <div class="small text-muted">{{ entry.startTime }} - {{ entry.endTime }}</div>
                     @if (entry.blockType === 'RECESS') {
                       <span class="badge rounded-pill text-bg-warning text-dark mt-1">Receso</span>
+                    }
+                    @if (isEntryAnnounced(entry)) {
+                      <span class="badge announced-badge ann-trigger mt-1" [ngClass]="getBadgeClass(entry)" (click)="togglePopover(getAnnouncedForEntry(entry), $event)">
+                        <i class="bi bi-megaphone"></i>
+                      </span>
                     }
                   </td>
                   <td class="align-top">
@@ -612,6 +617,45 @@
           <div class="fw-semibold small mb-1">Enlace directo</div>
           <div class="small text-break text-muted">{{ qrTargetUrl }}</div>
         </div>
+      </div>
+    </div>
+  }
+
+  @if (popoverAnnouncement) {
+    <div class="ann-popover" (click)="$event.stopPropagation()">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="badge" [ngClass]="{
+          'text-bg-success': popoverAnnouncement.type === 'EVENT',
+          'text-bg-primary': popoverAnnouncement.type === 'TASK',
+          'text-bg-danger': popoverAnnouncement.type === 'ALERT'
+        }">
+          @if (popoverAnnouncement.type === 'EVENT') { Evento }
+          @if (popoverAnnouncement.type === 'TASK') { Tarea }
+          @if (popoverAnnouncement.type === 'ALERT') { Alerta }
+        </span>
+        @if (popoverAnnouncement.priority === 'HIGH' || popoverAnnouncement.priority === 'URGENT') {
+          <span class="badge" [ngClass]="{'text-bg-warning': popoverAnnouncement.priority === 'HIGH', 'text-bg-danger': popoverAnnouncement.priority === 'URGENT'}">
+            {{ popoverAnnouncement.priority === 'URGENT' ? 'Urgente' : 'Alta' }}
+          </span>
+        }
+        @if (popoverAnnouncement.courseName) {
+          <span class="badge text-bg-secondary">{{ popoverAnnouncement.courseName }}</span>
+        }
+      </div>
+      <h6 class="mb-1 small">{{ popoverAnnouncement.title }}</h6>
+      <p class="text-muted mb-2" style="font-size:0.78rem">{{ popoverAnnouncement.description }}</p>
+      @if (popoverAnnouncement.schedules && popoverAnnouncement.schedules.length > 0) {
+        <div class="d-flex flex-wrap gap-1 mb-2">
+          @for (s of popoverAnnouncement.schedules; track $index) {
+            <span class="badge text-bg-light border" style="font-size:0.65rem">
+              {{ s.weekdayLabel }} {{ s.scheduleDate }}: {{ s.blockLabel }}
+            </span>
+          }
+        </div>
+      }
+      <div class="d-flex align-items-center justify-content-between text-muted" style="font-size:0.7rem">
+        <span><i class="bi bi-person me-1"></i>{{ popoverAnnouncement.createdByName }}</span>
+        <span><i class="bi bi-clock me-1"></i>{{ popoverAnnouncement.createdAt | date:'dd/MM HH:mm' }}</span>
       </div>
     </div>
   }

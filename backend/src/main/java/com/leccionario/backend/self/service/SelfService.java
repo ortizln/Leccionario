@@ -276,6 +276,7 @@ public class SelfService {
                         return new JournalEntryResponse(
                                 log.getId(),
                                 entry.getId(),
+                                schedule.getScheduleBlock().getId(),
                                 log.getCourse().getName() + " " + log.getCourse().getParallel(),
                                 schedule.getScheduleBlock().getLabel(),
                                 schedule.getScheduleBlock().getStartTime() != null

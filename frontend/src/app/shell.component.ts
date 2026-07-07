@@ -1,7 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/auth.service';
 import { BrandingService } from './core/branding.service';
+import { WebSocketService } from './core/websocket.service';
 
 @Component({
   selector: 'app-shell',
@@ -9,9 +10,10 @@ import { BrandingService } from './core/branding.service';
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './shell.component.html'
 })
-export class ShellComponent implements OnInit {
+export class ShellComponent implements OnInit, OnDestroy {
   protected auth = inject(AuthService);
   protected brandingService = inject(BrandingService);
+  private ws = inject(WebSocketService);
   private router = inject(Router);
 
   protected academicMenuOpen = false;
@@ -27,6 +29,11 @@ export class ShellComponent implements OnInit {
     if (this.sidebarCollapsed) {
       document.body.classList.add('sidebar-collapsed');
     }
+    this.ws.connect(this.auth);
+  }
+
+  ngOnDestroy(): void {
+    this.ws.disconnect();
   }
 
   protected toggleAcademicMenu(): void {

@@ -24,6 +24,7 @@ import com.leccionario.backend.user.repository.TeacherRepository;
 import com.leccionario.backend.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -108,8 +109,7 @@ public class AnnouncementService {
         }
 
         announcement.getSchedules().clear();
-
-        Announcement saved = announcementRepository.save(announcement);
+        Announcement saved = announcementRepository.saveAndFlush(announcement);
 
         if (request.schedules() != null && !request.schedules().isEmpty()) {
             saveScheduleBlocks(saved, request.schedules());
@@ -214,9 +214,10 @@ public class AnnouncementService {
             ScheduleBlock block = scheduleBlockRepository.findById(ref.scheduleBlockId())
                     .orElseThrow(() -> new BusinessException(
                             "El bloque de horario con id " + ref.scheduleBlockId() + " no existe."));
+            LocalDate scheduleDate = LocalDate.parse(ref.scheduleDate());
             AnnouncementSchedule as = new AnnouncementSchedule();
             as.setAnnouncement(announcement);
-            as.setWeekday(ref.weekday());
+            as.setScheduleDate(scheduleDate);
             as.setScheduleBlock(block);
             announcement.getSchedules().add(as);
         }
@@ -256,13 +257,14 @@ public class AnnouncementService {
                 : userRepository.count();
 
         List<AnnouncementScheduleItem> scheduleItems = scheduleRepository
-                .findByAnnouncementIdOrderByWeekdayAscScheduleBlock_BlockOrderAsc(a.getId())
+                .findByAnnouncementIdOrderByScheduleDateAscScheduleBlock_BlockOrderAsc(a.getId())
                 .stream()
                 .map(as -> new AnnouncementScheduleItem(
                         as.getScheduleBlock().getId(),
                         as.getScheduleBlock().getLabel(),
                         as.getScheduleBlock().getStartTime().toString(),
                         as.getScheduleBlock().getEndTime().toString(),
+                        as.getScheduleDate().toString(),
                         as.getWeekday(),
                         AnnouncementScheduleItem.weekdayLabel(as.getWeekday())
                 ))

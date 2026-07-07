@@ -3,6 +3,7 @@ package com.leccionario.backend.self.dto;
 public record JournalEntryResponse(
         Long dailyLogId,
         Long entryId,
+        Long scheduleBlockId,
         String courseName,
         String scheduleLabel,
         String startTime,

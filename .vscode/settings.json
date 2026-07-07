@@ -1,4 +1,6 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
-    "java.debug.settings.onBuildFailureProceed": true
+    "java.debug.settings.onBuildFailureProceed": true,
+    "java.jdt.ls.java.home": "/home/ortizal/.local/share/jdk-17",
+    "java.import.gradle.java.home": "/home/ortizal/.local/share/jdk-17"
 }

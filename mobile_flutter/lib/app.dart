@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/config/app_config.dart';
+import 'core/network/api_client.dart';
 import 'core/storage/local_store.dart';
+import 'core/storage/secure_store.dart';
 import 'core/websocket/web_socket_service.dart';
 import 'features/auth/auth_repository.dart';
 import 'features/auth/login_page.dart';
@@ -22,6 +24,7 @@ class LeccionarioMobileApp extends StatefulWidget {
 
 class _LeccionarioMobileAppState extends State<LeccionarioMobileApp> {
   late final LocalStore _localStore;
+  late final SecureStore _secureStore;
   late final AuthRepository _authRepository;
   late final DailyLogRepository _dailyLogRepository;
   WebSocketService? _webSocketService;
@@ -53,12 +56,17 @@ class _LeccionarioMobileAppState extends State<LeccionarioMobileApp> {
     try {
       _localStore = LocalStore();
       await _localStore.init();
+      _secureStore = SecureStore();
       await AppConfig.load(_localStore);
+      await ApiClient.create(secureStore: _secureStore);
       try {
         await AppConfig.refreshBranding();
       } catch (_) {}
       _themeIndex = AppConfig.themeIndex;
-      _authRepository = AuthRepository(localStore: _localStore);
+      _authRepository = AuthRepository(
+        localStore: _localStore,
+        secureStore: _secureStore,
+      );
       _dailyLogRepository = DailyLogRepository(
         authRepository: _authRepository,
         localStore: _localStore,

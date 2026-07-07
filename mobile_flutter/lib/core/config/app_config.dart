@@ -1,7 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 import '../storage/local_store.dart';
 
@@ -89,16 +88,18 @@ class AppConfig {
   }
 
   static Future<List<InstitutionOption>> fetchInstitutions() async {
-    final response = await http
-        .get(Uri.parse('$apiBaseUrl/public/institutions'))
-        .timeout(const Duration(seconds: 8));
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('No se pudo cargar la lista de instituciones.');
+    final dio = Dio();
+    try {
+      final response = await dio
+          .get<List<dynamic>>('$apiBaseUrl/public/institutions')
+          .timeout(const Duration(seconds: 8));
+      final jsonList = response.data ?? [];
+      return jsonList
+          .map((item) => InstitutionOption.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } finally {
+      dio.close();
     }
-    final jsonList = jsonDecode(response.body) as List<dynamic>;
-    return jsonList
-        .map((item) => InstitutionOption.fromJson(item as Map<String, dynamic>))
-        .toList();
   }
 
   static Future<InstitutionBranding> refreshBranding(
@@ -107,29 +108,33 @@ class AppConfig {
     final query = selectedCode.isEmpty
         ? ''
         : '?institutionCode=${Uri.encodeQueryComponent(selectedCode)}';
-    final response = await http
-        .get(Uri.parse('$apiBaseUrl/public/branding$query'))
-        .timeout(const Duration(seconds: 8));
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('No se pudo cargar la apariencia institucional.');
+    final dio = Dio();
+    try {
+      final response = await dio
+          .get<Map<String, dynamic>>('$apiBaseUrl/public/branding$query')
+          .timeout(const Duration(seconds: 8));
+      final branding = InstitutionBranding.fromJson(response.data!);
+      _branding = branding;
+      _institutionCode = branding.institutionCode;
+      await _saveSettings();
+      return branding;
+    } finally {
+      dio.close();
     }
-    final branding = InstitutionBranding.fromJson(
-        jsonDecode(response.body) as Map<String, dynamic>);
-    _branding = branding;
-    _institutionCode = branding.institutionCode;
-    await _saveSettings();
-    return branding;
   }
 
   static Future<ServerConnectionResult> validateServerConnection(
       String value) async {
     final serverUrl = serverBaseUrlForInput(value);
-    final healthUri = Uri.parse('$serverUrl/actuator/health');
+    final healthUri = '$serverUrl/actuator/health';
+    final dio = Dio();
 
     try {
       final response =
-          await http.get(healthUri).timeout(const Duration(seconds: 6));
-      if (response.statusCode >= 200 && response.statusCode < 300) {
+          await dio.get(healthUri).timeout(const Duration(seconds: 6));
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         return ServerConnectionResult(
           ok: true,
           message: 'Conexion correcta con $serverUrl.',
@@ -148,6 +153,8 @@ class AppConfig {
         message: 'No fue posible conectar con $serverUrl.',
         resolvedApiBaseUrl: _normalizeBaseUrl(value),
       );
+    } finally {
+      dio.close();
     }
   }
 

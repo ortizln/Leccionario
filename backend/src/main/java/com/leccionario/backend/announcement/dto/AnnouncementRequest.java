@@ -15,5 +15,5 @@ public record AnnouncementRequest(
         Long courseId,
         List<ScheduleBlockRef> schedules
 ) {
-    public record ScheduleBlockRef(short weekday, Long scheduleBlockId) {}
+    public record ScheduleBlockRef(String scheduleDate, Long scheduleBlockId) {}
 }

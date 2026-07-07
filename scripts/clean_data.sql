@@ -1,49 +1,64 @@
--- ============================================================
--- Script: Limpiar datos transaccionales
--- Mantiene: academic_years, subjects, schedule_blocks, roles,
---           institutions, school_days, school_modalities,
---           demerit_categories, demerit_faltas, branding
--- ============================================================
+-- ============================================================================
+-- LECCIONARIO - Limpieza de datos de transacción
+-- Conserva: academic_years, subjects, schedule_blocks, roles, institutions,
+--           school_days, school_modalities, demerit_categories, demerit_faltas,
+--           branding, behavior_categories, behavior_offenses, demerits
+-- ============================================================================
 
--- TIER 1: Hojas (nada mas depende de estas)
-DELETE FROM evaluations;
-DELETE FROM week_student_assignments;
-DELETE FROM course_schedules;
-DELETE FROM student_demer_details;
-DELETE FROM demerit_evidences;
-DELETE FROM demerit_status_history;
-DELETE FROM student_demers;
-DELETE FROM student_demerits;
+TRUNCATE TABLE
+    evaluations,
+    demerit_status_history,
+    demerit_evidences,
+    student_demer_details,
+    student_demers,
+    announcement_recipients,
+    announcement_schedules,
+    announcements,
+    daily_log_student_incidents,
+    daily_log_student_absences,
+    daily_log_signatures,
+    daily_log_entries,
+    daily_logs,
+    lesson_plans,
+    student_demerits,
+    week_student_assignments,
+    students,
+    teachers,
+    teacher_courses,
+    teacher_subjects,
+    representatives,
+    course_schedules,
+    courses
+CASCADE;
 
--- TIER 2: Hijos de daily_logs (CASCADE borra entries/signatures/absences/incidents)
-DELETE FROM daily_logs;
+-- Resetear secuencias
+ALTER SEQUENCE evaluations_id_seq RESTART WITH 1;
+ALTER SEQUENCE daily_log_student_incidents_id_seq RESTART WITH 1;
+ALTER SEQUENCE daily_log_student_absences_id_seq RESTART WITH 1;
+ALTER SEQUENCE daily_log_signatures_id_seq RESTART WITH 1;
+ALTER SEQUENCE daily_log_entries_id_seq RESTART WITH 1;
+ALTER SEQUENCE daily_logs_id_seq RESTART WITH 1;
+ALTER SEQUENCE lesson_plans_id_seq RESTART WITH 1;
+ALTER SEQUENCE student_demerits_id_seq RESTART WITH 1;
+ALTER SEQUENCE week_student_assignments_id_seq RESTART WITH 1;
+ALTER SEQUENCE students_id_seq RESTART WITH 1;
+ALTER SEQUENCE teachers_id_seq RESTART WITH 1;
+ALTER SEQUENCE representatives_id_seq RESTART WITH 1;
+ALTER SEQUENCE course_schedules_id_seq RESTART WITH 1;
+ALTER SEQUENCE courses_id_seq RESTART WITH 1;
+ALTER SEQUENCE student_demers_id_seq RESTART WITH 1;
+ALTER SEQUENCE student_demer_details_id_seq RESTART WITH 1;
+ALTER SEQUENCE demerit_evidences_id_seq RESTART WITH 1;
+ALTER SEQUENCE demerit_status_history_id_seq RESTART WITH 1;
+ALTER SEQUENCE announcements_id_seq RESTART WITH 1;
+ALTER SEQUENCE announcement_recipients_id_seq RESTART WITH 1;
+ALTER SEQUENCE announcement_schedules_id_seq RESTART WITH 1;
 
--- TIER 3: Lesson plans
-DELETE FROM lesson_plans;
+-- Refrescar la vista materializada
+REFRESH MATERIALIZED VIEW demerit_accumulated;
 
--- TIER 4: Representantes (student_id es Long plano, sin FK formal)
-DELETE FROM representatives;
+-- Limpiar usuarios excepto admin
+DELETE FROM user_roles WHERE user_id != 1;
+DELETE FROM users WHERE id != 1;
 
--- TIER 5: Break cyclo courses <-> students
-UPDATE courses SET week_student_id = NULL;
-
--- TIER 6: Core entities
-DELETE FROM students;
-DELETE FROM teachers;
-DELETE FROM user_roles;
-DELETE FROM users;
-DELETE FROM courses;
-
--- Reset secuencias
-ALTER SEQUENCE IF EXISTS users_id_seq RESTART WITH 1;
-ALTER SEQUENCE IF EXISTS students_id_seq RESTART WITH 1;
-ALTER SEQUENCE IF EXISTS teachers_id_seq RESTART WITH 1;
-ALTER SEQUENCE IF EXISTS courses_id_seq RESTART WITH 1;
-ALTER SEQUENCE IF EXISTS representatives_id_seq RESTART WITH 1;
-ALTER SEQUENCE IF EXISTS course_schedules_id_seq RESTART WITH 1;
-ALTER SEQUENCE IF EXISTS week_student_assignments_id_seq RESTART WITH 1;
-ALTER SEQUENCE IF EXISTS daily_logs_id_seq RESTART WITH 1;
-ALTER SEQUENCE IF EXISTS lesson_plans_id_seq RESTART WITH 1;
-ALTER SEQUENCE IF EXISTS student_demers_id_seq RESTART WITH 1;
-ALTER SEQUENCE IF EXISTS student_demerits_id_seq RESTART WITH 1;
-ALTER SEQUENCE IF EXISTS evaluations_id_seq RESTART WITH 1;
+SELECT 'Limpieza completada. Datos de referencia conservados.' AS resultado;

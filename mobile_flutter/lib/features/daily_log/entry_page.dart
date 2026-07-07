@@ -194,6 +194,47 @@ class _EntryPageState extends State<EntryPage> {
     });
   }
 
+  Future<void> _applyIncidentToGroup() async {
+    final available = _incidentDrafts.where((d) => !d.selected).toList();
+    if (available.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Todos los estudiantes ya tienen novedad registrada.')),
+        );
+      }
+      return;
+    }
+
+    final result = await showModalBottomSheet<_GroupIncidentResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => _GroupIncidentSheet(
+        students: available,
+        demerits: widget.entry.demerits,
+      ),
+    );
+
+    if (result == null || result.studentIds.isEmpty) return;
+
+    setState(() {
+      for (final draft in _incidentDrafts) {
+        if (result.studentIds.contains(draft.studentId)) {
+          draft.selected = true;
+          draft.demeritId = result.demeritId;
+          draft.category = result.category;
+          draft.notes = result.notes;
+        }
+      }
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Novedad aplicada a ${result.studentIds.length} estudiante(s).')),
+      );
+    }
+  }
+
   DemeritOption? _findDemerit(int? demeritId) {
     if (demeritId == null) {
       return null;
@@ -439,6 +480,27 @@ class _EntryPageState extends State<EntryPage> {
                   style: theme.textTheme.bodyMedium?.copyWith(color: const Color(0xFF667A72)),
                 ),
                 const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _applyIncidentToGroup,
+                    icon: const Icon(Icons.group_add_outlined, size: 20),
+                    label: const Text('Aplicar novedad a grupo'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      side: const BorderSide(color: Color(0xFF0F766E)),
+                      foregroundColor: const Color(0xFF0F766E),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
+                Text(
+                  'O agrega individualmente:',
+                  style: theme.textTheme.bodySmall?.copyWith(color: const Color(0xFF667A72)),
+                ),
+                const SizedBox(height: 8),
                 TextField(
                   controller: _incidentSearchController,
                   onChanged: (_) => setState(() => _selectedIncidentStudentId = null),
@@ -708,6 +770,256 @@ abstract class _BaseStudentDraft {
 
   final int studentId;
   final String label;
+}
+
+class _GroupIncidentResult {
+  _GroupIncidentResult({
+    required this.studentIds,
+    required this.demeritId,
+    required this.category,
+    required this.notes,
+  });
+
+  final List<int> studentIds;
+  final int? demeritId;
+  final String category;
+  final String notes;
+}
+
+class _GroupIncidentSheet extends StatefulWidget {
+  const _GroupIncidentSheet({
+    required this.students,
+    required this.demerits,
+  });
+
+  final List<IncidentDraft> students;
+  final List<DemeritOption> demerits;
+
+  @override
+  State<_GroupIncidentSheet> createState() => _GroupIncidentSheetState();
+}
+
+class _GroupIncidentSheetState extends State<_GroupIncidentSheet> {
+  final Set<int> _selectedIds = {};
+  int? _selectedDemeritId;
+  String _category = 'DISCIPLINA';
+  final _notesController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  List<IncidentDraft> get _filteredStudents {
+    final q = _searchQuery.trim().toLowerCase();
+    if (q.isEmpty) return widget.students;
+    return widget.students.where((s) => s.label.toLowerCase().contains(q)).toList();
+  }
+
+  void _toggleAll() {
+    setState(() {
+      if (_selectedIds.length == widget.students.length) {
+        _selectedIds.clear();
+      } else {
+        _selectedIds.addAll(widget.students.map((s) => s.studentId));
+      }
+    });
+  }
+
+  void _submit() {
+    final demerit = widget.demerits.cast<DemeritOption?>().firstWhere(
+      (d) => d?.id == _selectedDemeritId,
+      orElse: () => null,
+    );
+    Navigator.of(context).pop(_GroupIncidentResult(
+      studentIds: _selectedIds.toList(),
+      demeritId: _selectedDemeritId,
+      category: demerit?.category ?? _category,
+      notes: _notesController.text.trim(),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final mediaQuery = MediaQuery.of(context);
+    final bottomPadding = mediaQuery.viewInsets.bottom;
+
+    return Container(
+      height: mediaQuery.size.height * 0.75,
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F766E).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.group_add_outlined, color: Color(0xFF0F766E), size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Aplicar novedad a grupo', style: theme.textTheme.titleLarge),
+                      Text(
+                        '${_selectedIds.length} de ${widget.students.length} seleccionados',
+                        style: theme.textTheme.bodySmall?.copyWith(color: const Color(0xFF667A72)),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                if (widget.demerits.isNotEmpty) ...[
+                  DropdownButtonFormField<int?>(
+                    initialValue: _selectedDemeritId,
+                    decoration: const InputDecoration(
+                      labelText: 'Demérito del catálogo',
+                      prefixIcon: Icon(Icons.gavel_outlined),
+                    ),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('Sin demérito del catálogo'),
+                      ),
+                      ...widget.demerits.map(
+                        (d) => DropdownMenuItem<int?>(
+                          value: d.id,
+                          child: Text(d.label, overflow: TextOverflow.ellipsis),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      final demerit = widget.demerits.cast<DemeritOption?>().firstWhere(
+                        (d) => d?.id == value,
+                        orElse: () => null,
+                      );
+                      setState(() {
+                        _selectedDemeritId = value;
+                        if (demerit != null) _category = demerit.category;
+                      });
+                    },
+                  ),
+                ],
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _notesController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Observación (común para todos)',
+                    prefixIcon: Icon(Icons.notes_outlined),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextField(
+              onChanged: (v) => setState(() => _searchQuery = v),
+              decoration: const InputDecoration(
+                hintText: 'Buscar estudiante...',
+                prefixIcon: Icon(Icons.search_rounded),
+                isDense: true,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _toggleAll,
+                child: Text(
+                  _selectedIds.length == widget.students.length
+                      ? 'Ninguno'
+                      : 'Todos',
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPadding + 100),
+              itemCount: _filteredStudents.length,
+              itemBuilder: (context, index) {
+                final student = _filteredStudents[index];
+                final isSelected = _selectedIds.contains(student.studentId);
+                return CheckboxListTile(
+                  value: isSelected,
+                  onChanged: (checked) {
+                    setState(() {
+                      if (checked == true) {
+                        _selectedIds.add(student.studentId);
+                      } else {
+                        _selectedIds.remove(student.studentId);
+                      }
+                    });
+                  },
+                  title: Text(
+                    student.label,
+                    style: const TextStyle(fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                );
+              },
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.fromLTRB(20, 12, 20, 16 + bottomPadding),
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor,
+              border: Border(top: BorderSide(color: theme.dividerColor)),
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _selectedIds.isEmpty ? null : _submit,
+                child: Text('Aplicar a ${_selectedIds.length} estudiante(s)'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 extension _FirstOrNullExtension<T> on Iterable<T> {

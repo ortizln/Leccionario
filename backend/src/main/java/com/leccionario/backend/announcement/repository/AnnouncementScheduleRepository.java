@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface AnnouncementScheduleRepository extends JpaRepository<AnnouncementSchedule, Long> {
 
-    List<AnnouncementSchedule> findByAnnouncementIdOrderByWeekdayAscScheduleBlock_BlockOrderAsc(Long announcementId);
+    List<AnnouncementSchedule> findByAnnouncementIdOrderByScheduleDateAscScheduleBlock_BlockOrderAsc(Long announcementId);
 
     @Modifying
     @Query("DELETE FROM AnnouncementSchedule a WHERE a.announcement.id = :announcementId")
