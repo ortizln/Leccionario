@@ -35,7 +35,7 @@ class AuthRepository {
     }
 
     try {
-      final response = await ApiClient.instance.dio.post(
+      final response = await ApiClient.instance.post(
         '/auth/login',
         data: {
           'username': normalizedUsername,

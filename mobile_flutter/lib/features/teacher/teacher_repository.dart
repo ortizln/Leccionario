@@ -14,7 +14,7 @@ class TeacherRepository {
     final session = await _session;
     if (session == null) throw Exception('Sesion no encontrada');
 
-    final response = await ApiClient.instance.dio.get(path);
+    final response = await ApiClient.instance.get(path);
     if (response.statusCode == 200) {
       return parse(response.data);
     }
@@ -22,25 +22,25 @@ class TeacherRepository {
   }
 
   Future<List<TeacherCourse>> fetchMyCourses() {
-    return _get('/api/self/my-courses', (data) {
+    return _get('/self/my-courses', (data) {
       return (data as List).map((e) => TeacherCourse.fromJson(e)).toList();
     });
   }
 
   Future<List<ScheduleEntry>> fetchMySchedule() {
-    return _get('/api/self/my-teaching-schedule', (data) {
+    return _get('/self/my-teaching-schedule', (data) {
       return (data as List).map((e) => ScheduleEntry.fromJson(e)).toList();
     });
   }
 
   Future<List<TeacherStudent>> fetchCourseStudents(int courseId) {
-    return _get('/api/self/my-courses/$courseId/students', (data) {
+    return _get('/self/my-courses/$courseId/students', (data) {
       return (data as List).map((e) => TeacherStudent.fromJson(e)).toList();
     });
   }
 
   Future<WeeklyJournal> fetchWeeklyJournal({int weekOffset = 0}) {
-    return _get('/api/self/my-weekly-journal?weekOffset=$weekOffset', (data) {
+    return _get('/self/my-weekly-journal?weekOffset=$weekOffset', (data) {
       return WeeklyJournal.fromJson(data);
     });
   }

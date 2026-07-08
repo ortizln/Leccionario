@@ -175,7 +175,7 @@ class DailyLogRepository {
   }
 
   Future<MobileCloseSummary> fetchCloseSummary(MobileCloseAction action) async {
-    final response = await ApiClient.instance.dio.get(
+    final response = await ApiClient.instance.get(
       _closePath(action),
     );
     final json = response.data as Map<String, dynamic>;
@@ -188,7 +188,7 @@ class DailyLogRepository {
     required String code,
     String? notes,
   }) async {
-    final response = await ApiClient.instance.dio.post(
+    final response = await ApiClient.instance.post(
       _closePath(action, submit: true),
       data: {
         'username': username.trim(),
@@ -207,7 +207,7 @@ class DailyLogRepository {
       throw Exception('No existe una sesion activa');
     }
 
-    final response = await ApiClient.instance.dio.get(
+    final response = await ApiClient.instance.get(
       '/daily-logs/mobile/today',
       queryParameters: {'workDate': workDate},
     );
@@ -224,7 +224,7 @@ class DailyLogRepository {
     final items = await localStore.readPending(table);
     for (final item in items) {
       try {
-        await ApiClient.instance.dio.put(
+        await ApiClient.instance.put(
           pathBuilder(item),
           data: item.payload,
         );

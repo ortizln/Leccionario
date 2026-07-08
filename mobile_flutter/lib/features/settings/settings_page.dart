@@ -146,62 +146,48 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 18),
           Text('Tema de la aplicación', style: theme.textTheme.titleLarge),
           const SizedBox(height: 12),
-          ...List.generate(AppConfig.themes.length, (index) {
-            final themeOption = AppConfig.themes[index];
-            final data = AppConfig.themeDataList[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => setState(() => _selectedThemeIndex = index),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          gradient: LinearGradient(
-                            colors: [
-                              themeOption.seedColor,
-                              themeOption.backgroundColor
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+          DropdownButtonFormField<int>(
+            initialValue: _selectedThemeIndex,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: 'Tema',
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+            items: List.generate(AppConfig.themes.length, (index) {
+              final t = AppConfig.themes[index];
+              return DropdownMenuItem(
+                value: index,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        gradient: LinearGradient(
+                          colors: [t.seedColor, t.backgroundColor],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(themeOption.name,
-                                style: theme.textTheme.titleMedium),
-                            const SizedBox(height: 4),
-                            Text(
-                                data['description'] ?? themeOption.description),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        _selectedThemeIndex == index
-                            ? Icons.check_circle_rounded
-                            : Icons.circle_outlined,
-                        color: _selectedThemeIndex == index
-                            ? themeOption.seedColor
-                            : theme.colorScheme.onSurface
-                                .withValues(alpha: 0.4),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(t.name),
+                  ],
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+            onChanged: (value) {
+              if (value != null) setState(() => _selectedThemeIndex = value);
+            },
+          ),
+          const SizedBox(height: 6),
+          Text(
+            AppConfig.themeDataList[_selectedThemeIndex]['description'] ?? '',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
           const SizedBox(height: 14),
           if (_message != null)
             Container(
