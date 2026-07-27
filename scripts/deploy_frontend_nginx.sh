@@ -9,7 +9,11 @@ WEB_ROOT="${WEB_ROOT:-/var/www/leccionario}"
 
 echo "[frontend] Instalando dependencias"
 cd "${FRONTEND_DIR}"
-npm ci
+if [ -f package-lock.json ]; then
+  npm ci
+else
+  npm install
+fi
 
 echo "[frontend] Generando build Angular (base-href: /leccionario/)"
 npx ng build --configuration production
