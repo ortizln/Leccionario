@@ -1,16 +1,15 @@
 # ---------- Stage 1: Build ----------
-FROM eclipse-temurin:17-jdk AS builder
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
-# Copy Maven wrapper and POM first (dependency cache)
-COPY backend/mvnw backend/pom.xml ./
-COPY backend/.mvn .mvn
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -q
+# Copy POM first (dependency cache)
+COPY backend/pom.xml ./pom.xml
+RUN mvn dependency:go-offline -q
 
 # Copy source and build
 COPY backend/src src
-RUN ./mvnw package -DskipTests -q
+RUN mvn package -DskipTests -q
 
 # ---------- Stage 2: Runtime ----------
 FROM eclipse-temurin:17-jre-alpine
