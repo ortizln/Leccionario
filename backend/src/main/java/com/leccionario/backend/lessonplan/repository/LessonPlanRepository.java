@@ -12,6 +12,8 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
 
     List<LessonPlan> findByLessonDateBetween(LocalDate startDate, LocalDate endDate);
 
+    List<LessonPlan> findByCourseIdAndSubjectIdAndPeriodId(Long courseId, Long subjectId, Long periodId);
+
     @Modifying
     @Query("DELETE FROM LessonPlan lp WHERE lp.course.id = :courseId")
     void deleteByCourseId(@Param("courseId") Long courseId);

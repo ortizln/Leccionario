@@ -20,10 +20,17 @@ export class AuditComponent {
   usernameFilter = '';
   moduleFilter = '';
   logs: AuditItem[] = [];
+  stats: AuditStats = { total: 0, byModule: {}, byAction: {}, byUser: {} };
 
   sort: SortState | null = null;
   filters: FilterState = {};
   displayedLogs: AuditItem[] = [];
+
+  currentPage = 0;
+  pageSize = 25;
+  totalPages = 1;
+
+  Object = Object;
 
   sortColumn(col: string): SortDir { return this.sort?.column === col ? this.sort.dir : null; }
   onSort(col: string): void {
@@ -43,26 +50,73 @@ export class AuditComponent {
 
   constructor() {
     this.loadLogs();
+    this.loadStats();
   }
 
   applyFilters(): void {
+    this.currentPage = 0;
     this.loadLogs();
+  }
+
+  clearFilters(): void {
+    this.usernameFilter = '';
+    this.moduleFilter = '';
+    this.currentPage = 0;
+    this.loadLogs();
+  }
+
+  goToPage(page: number): void {
+    this.currentPage = page;
+    this.loadLogs();
+  }
+
+  getTotalPages(): number {
+    return Math.max(1, this.totalPages);
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.getTotalPages();
+    const start = Math.max(0, this.currentPage - 2);
+    const end = Math.min(total, start + 5);
+    for (let i = start; i < end; i++) pages.push(i);
+    return pages;
+  }
+
+  getTopModule(): string {
+    if (!this.stats.byModule) return '-';
+    const entries = Object.entries(this.stats.byModule);
+    return entries.length ? entries.sort((a, b) => b[1] - a[1])[0][0] : '-';
+  }
+
+  getTopUser(): string {
+    if (!this.stats.byUser) return '-';
+    const entries = Object.entries(this.stats.byUser);
+    return entries.length ? entries.sort((a, b) => b[1] - a[1])[0][0] : '-';
+  }
+
+  private loadStats() {
+    this.http.get<AuditStats>(`${API_URL}/audit/stats`).pipe(
+      catchError(() => of({ total: 0, byModule: {}, byAction: {}, byUser: {} }))
+    ).subscribe(data => this.stats = data);
   }
 
   private loadLogs() {
     const params = new URLSearchParams();
+    params.set('page', String(this.currentPage));
+    params.set('size', String(this.pageSize));
     if (this.usernameFilter.trim()) {
       params.set('username', this.usernameFilter.trim());
     }
     if (this.moduleFilter.trim()) {
       params.set('module', this.moduleFilter.trim());
     }
-    const query = params.toString();
-    const url = query ? `${API_URL}/audit?${query}` : `${API_URL}/audit`;
-    this.http.get<Array<AuditItem>>(url).pipe(
-      catchError(() => of([]))
+    const url = `${API_URL}/audit/paginated?${params.toString()}`;
+    this.http.get<PaginatedResponse>(url).pipe(
+      catchError(() => of({ content: [], totalPages: 1 }))
     ).subscribe(data => {
-      this.logs = data;
+      this.logs = data.content || [];
+      this.totalPages = data.totalPages || 1;
       this.refreshDisplayed();
     });
   }
@@ -75,4 +129,16 @@ type AuditItem = {
   module: string;
   details: string;
   createdAt: string;
+};
+
+type AuditStats = {
+  total: number;
+  byModule: Record<string, number>;
+  byAction: Record<string, number>;
+  byUser: Record<string, number>;
+};
+
+type PaginatedResponse = {
+  content: AuditItem[];
+  totalPages: number;
 };

@@ -15,7 +15,7 @@ import { Announcement } from '../academic/academic.models';
   templateUrl: './lesson-plan.component.html',
   styleUrl: './lesson-plan.component.css'
 })
-export class LessonPlanComponent implements OnInit {
+export class LessonPlanComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);

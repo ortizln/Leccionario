@@ -14,7 +14,6 @@ import com.leccionario.backend.user.domain.Teacher;
 import com.leccionario.backend.user.repository.StudentRepository;
 import com.leccionario.backend.user.repository.TeacherRepository;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -51,6 +50,13 @@ public class StudentDemerService {
     @Transactional(readOnly = true)
     public List<StudentDemerResponse> findByTeacherAndPeriod(Long teacherId, Long periodId) {
         return repository.findByTeacherIdAndPeriodIdOrderByLogDateDesc(teacherId, periodId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentDemerResponse> findByStudentAll(Long studentId) {
+        return repository.findByStudentIdOrderByLogDateDesc(studentId).stream()
                 .map(this::toResponse)
                 .toList();
     }

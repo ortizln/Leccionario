@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: leccionario-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: leccionario
+      POSTGRES_USER: leccionario
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-leccionario_secret}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leccionario"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: leccionario-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: leccionario
+      DB_USERNAME: leccionario
+      DB_PASSWORD: ${DB_PASSWORD:-leccionario_secret}
+      JWT_SECRET: ${JWT_SECRET:-your-256-bit-secret-change-in-production}
+      SERVER_PORT: 1080
+    ports:
+      - "1080:1080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: leccionario-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+
+volumes:
+  pgdata:

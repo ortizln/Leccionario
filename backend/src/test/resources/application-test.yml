@@ -1,15 +1,33 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:leccionario;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL
     username: sa
     password:
+    driver-class-name: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: create-drop
+    show-sql: false
+    defer-datasource-initialization: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-  sql:
-    init:
-      mode: never
+        "format_sql": true
+
+server:
+  port: 0
+
+security:
+  jwt:
+    secret: test-secret-key-for-unit-tests-32chars!!
+    expiration: 86400000
+
+logging:
+  level:
+    root: WARN
+    "com.leccionario.backend": WARN
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

@@ -62,4 +62,11 @@ public class StudentDemerController {
         service.delete(id, principal.getName());
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/by-student/{studentId}")
+    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    public ResponseEntity<List<StudentDemerResponse>> findByStudentAll(
+            @PathVariable Long studentId) {
+        return ResponseEntity.ok(service.findByStudentAll(studentId));
+    }
 }

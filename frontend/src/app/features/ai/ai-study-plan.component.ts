@@ -1,0 +1,89 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../../core/api.config';
+import { AuthService } from '../../core/auth.service';
+
+@Component({
+  selector: 'app-ai-study-plan',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0"><i class="bi bi-journal-check me-2"></i>Planes de Estudio IA</h5>
+      <button class="btn btn-primary btn-sm" (click)="openForm()"><i class="bi bi-plus me-1"></i>Nuevo Plan</button>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3"><label class="form-label small">Estudiante ID</label><input type="number" class="form-control form-control-sm" [(ngModel)]="studentId"></div>
+          <div class="col-md-2"><button class="btn btn-primary btn-sm w-100" (click)="loadPlans()"><i class="bi bi-search me-1"></i>Buscar</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light"><tr><th>Titulo</th><th>Estado</th><th>Progreso</th><th>Inicio</th><th>Fin</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of plans">
+                <td>{{ p.title }}</td>
+                <td><span class="badge" [ngClass]="{'bg-secondary': p.status==='DRAFT','bg-primary': p.status==='ACTIVE','bg-success': p.status==='COMPLETED'}">{{ p.status }}</span></td>
+                <td><div class="progress" style="width:100px;height:20px"><div class="progress-bar" [style.width.%]="p.progressPercent">{{ p.progressPercent | number:'1.0-0' }}%</div></div></td>
+                <td>{{ p.startDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ p.endDate | date:'dd/MM/yyyy' }}</td>
+                <td><button class="btn btn-outline-danger btn-sm" (click)="remove(p.id!)"><i class="bi bi-trash"></i></button></td>
+              </tr>
+              <tr *ngIf="!plans.length"><td colspan="6" class="text-center text-muted">Sin planes de estudio</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade show d-block" *ngIf="showForm" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+      <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h6 class="modal-title">Nuevo Plan de Estudio</h6><button class="btn-close" (click)="showForm=false"></button></div>
+        <div class="modal-body">
+          <div class="mb-2"><label class="form-label small">Estudiante ID</label><input type="number" class="form-control form-control-sm" [(ngModel)]="form.studentId"></div>
+          <div class="mb-2"><label class="form-label small">Titulo</label><input class="form-control form-control-sm" [(ngModel)]="form.title"></div>
+          <div class="mb-2"><label class="form-label small">Descripcion</label><textarea class="form-control form-control-sm" rows="2" [(ngModel)]="form.description"></textarea></div>
+          <div class="mb-2"><label class="form-label small">Objetivos</label><textarea class="form-control form-control-sm" rows="2" [(ngModel)]="form.objectives"></textarea></div>
+          <div class="mb-2"><label class="form-label small">Actividades</label><textarea class="form-control form-control-sm" rows="2" [(ngModel)]="form.activities"></textarea></div>
+          <div class="row mb-2">
+            <div class="col"><label class="form-label small">Inicio</label><input type="date" class="form-control form-control-sm" [(ngModel)]="form.startDate"></div>
+            <div class="col"><label class="form-label small">Fin</label><input type="date" class="form-control form-control-sm" [(ngModel)]="form.endDate"></div>
+          </div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-secondary btn-sm" (click)="showForm=false">Cancelar</button><button class="btn btn-primary btn-sm" (click)="save()">Guardar</button></div>
+      </div></div>
+    </div>
+  `
+})
+export class AiStudyPlanComponent implements OnInit {
+  plans: any[] = [];
+  studentId = 0;
+  showForm = false;
+  form: any = {};
+  constructor(private http: HttpClient, private auth: AuthService) {}
+  ngOnInit() {}
+  private get instId(): number { return this.auth.institutionId() || 1; }
+
+  loadPlans() {
+    if (!this.studentId) return;
+    this.http.get<any[]>(`${API_URL}/ai/study-plans/student/${this.studentId}?institutionId=${this.instId}`).subscribe(r => this.plans = r);
+  }
+  openForm() { this.form = {status:'DRAFT', progressPercent:0}; this.showForm = true; }
+  save() {
+    this.http.post(`${API_URL}/ai/study-plans`, {...this.form, institutionId: this.instId}).subscribe(() => {
+      this.showForm = false; this.loadPlans();
+    });
+  }
+  remove(id: number) {
+    if (confirm('Eliminar plan?')) this.http.delete(`${API_URL}/ai/study-plans/${id}`).subscribe(() => this.loadPlans());
+  }
+}

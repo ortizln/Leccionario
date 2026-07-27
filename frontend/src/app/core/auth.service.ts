@@ -42,6 +42,17 @@ export class AuthService {
     return this.session()?.institutionId ?? null;
   }
 
+  userId(): number | null {
+    const t = this.token();
+    if (!t) return null;
+    try {
+      const payload = JSON.parse(atob(t.split('.')[1]));
+      return payload.userId ?? payload.sub ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   institutionCode(): string | null {
     return this.session()?.institutionCode ?? null;
   }

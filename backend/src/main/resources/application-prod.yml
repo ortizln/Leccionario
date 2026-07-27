@@ -1,0 +1,60 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:leccionario_db}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        "format_sql": false
+        jdbc:
+          "time_zone": UTC
+        generate_statistics: false
+
+server:
+  address: 0.0.0.0
+  port: ${SERVER_PORT:1080}
+  compression:
+    enabled: true
+    mime-types: text/html,text/css,application/javascript,application/json
+    min-response-size: 1024
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:change-this-secret-key-with-at-least-32-chars}
+    expiration: ${JWT_EXPIRATION:86400000}
+
+logging:
+  level:
+    root: WARN
+    "com.leccionario.backend": INFO
+    "org.springframework.security": WARN
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+branding:
+  storage:
+    path: ${BRANDING_PATH:./storage/branding}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

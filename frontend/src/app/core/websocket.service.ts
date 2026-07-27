@@ -1,9 +1,19 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject } from '@angular/core';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { Subject, Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { ToastService } from './toast.service';
 import { API_URL } from './api.config';
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  createdAt: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class WebSocketService implements OnDestroy {
@@ -12,6 +22,10 @@ export class WebSocketService implements OnDestroy {
   private personalSubject = new Subject<any>();
   private subscriptions: StompSubscription[] = [];
   private connected = false;
+  private toast = inject(ToastService);
+  private unreadCount = new Subject<number>();
+  unreadCount$ = this.unreadCount.asObservable();
+  private notifications: AppNotification[] = [];
 
   get globalNotifications$(): Observable<any> {
     return this.globalSubject.asObservable();
@@ -46,6 +60,7 @@ export class WebSocketService implements OnDestroy {
             try {
               const payload = JSON.parse(msg.body);
               this.globalSubject.next(payload);
+              this.showToast(payload);
             } catch (_) {}
           })
         );
@@ -54,6 +69,8 @@ export class WebSocketService implements OnDestroy {
             try {
               const payload = JSON.parse(msg.body);
               this.personalSubject.next(payload);
+              this.showToast(payload);
+              this.addToNotifications(payload);
             } catch (_) {}
           })
         );
@@ -96,6 +113,47 @@ export class WebSocketService implements OnDestroy {
       filter(msg => msg?.type === 'SCHEDULE'),
       map(msg => msg)
     );
+  }
+
+  getNotifications(): AppNotification[] {
+    return this.notifications;
+  }
+
+  markAllRead(): void {
+    this.notifications.forEach(n => n.read = true);
+    this.unreadCount.next(0);
+  }
+
+  markRead(id: string): void {
+    const n = this.notifications.find(x => x.id === id);
+    if (n) n.read = true;
+    this.unreadCount.next(this.notifications.filter(x => !x.read).length);
+  }
+
+  private showToast(payload: any): void {
+    const title = payload?.title || 'Notificación';
+    const msg = payload?.message || payload?.messageBody || '';
+    if (payload?.type === 'ERROR' || payload?.severity === 'ERROR') {
+      this.toast.error(`${title}: ${msg}`);
+    } else if (payload?.type === 'WARNING' || payload?.severity === 'WARNING') {
+      this.toast.warning(`${title}: ${msg}`);
+    } else {
+      this.toast.info(`${title}: ${msg}`);
+    }
+  }
+
+  private addToNotifications(payload: any): void {
+    const notif: AppNotification = {
+      id: String(Date.now()),
+      title: payload?.title || 'Notificación',
+      message: payload?.message || payload?.messageBody || '',
+      type: payload?.type || 'INFO',
+      read: false,
+      createdAt: payload?.createdAt || new Date().toISOString()
+    };
+    this.notifications.unshift(notif);
+    if (this.notifications.length > 50) this.notifications = this.notifications.slice(0, 50);
+    this.unreadCount.next(this.notifications.filter(x => !x.read).length);
   }
 
   private buildWsUrl(): string | null {

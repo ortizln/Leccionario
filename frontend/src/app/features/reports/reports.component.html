@@ -32,7 +32,7 @@
                 <p class="text-muted mb-0">Filtra por fecha, curso, materia y cumplimiento curricular.</p>
               </div>
               @if (canExportReports) {
-                <button class="btn btn-sm btn-outline-primary" type="button">Configurar filtro</button>
+                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openLessonPlanReport()"><i class="bi bi-gear me-1"></i>Abrir Leccionarios</button>
               } @else {
                 <span class="small text-muted">Consulta disponible</span>
               }
@@ -47,7 +47,7 @@
                 <p class="text-muted mb-0">Identifica cobertura de temas y observaciones relevantes.</p>
               </div>
               @if (canExportReports) {
-                <button class="btn btn-sm btn-outline-primary" type="button">Ver detalle</button>
+                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openCourseProgress()"><i class="bi bi-graph-up me-1"></i>Ver Dashboard BI</button>
               } @else {
                 <span class="small text-muted">Sin exportacion habilitada</span>
               }
@@ -62,7 +62,7 @@
                 <p class="text-muted mb-0">Consulta eventos, usuario responsable, modulo intervenido y fecha.</p>
               </div>
               @if (canViewAudit) {
-                <button class="btn btn-sm btn-outline-primary" type="button">Abrir bitacora</button>
+                <button class="btn btn-sm btn-outline-primary" type="button" (click)="openAuditLog()"><i class="bi bi-journal-text me-1"></i>Abrir Bitacora</button>
               } @else {
                 <span class="small text-muted">Restringido por perfil</span>
               }

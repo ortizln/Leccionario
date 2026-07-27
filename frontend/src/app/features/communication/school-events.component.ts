@@ -1,0 +1,79 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../../core/api.config';
+import { AuthService } from '../../core/auth.service';
+
+@Component({
+  selector: 'app-school-events',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Eventos Escolares</h5>
+      <button class="btn btn-sm btn-primary" (click)="showCreateModal=true"><i class="bi bi-plus-circle me-1"></i>Nuevo Evento</button>
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-3"><div class="card border-0 shadow-sm bg-primary text-white text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">{{ events.length }}</div><div class="small">Total Eventos</div></div></div></div>
+      <div class="col-md-3"><div class="card border-0 shadow-sm bg-success text-white text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">{{ upcomingCount }}</div><div class="small">Proximos</div></div></div></div>
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light"><tr><th>Titulo</th><th>Tipo</th><th>Fecha</th><th>Lugar</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let e of events">
+                <td class="fw-semibold">{{ e.title }}</td>
+                <td><span class="badge bg-info">{{ e.eventType || '-' }}</span></td>
+                <td>{{ e.eventDate | date:'medium' }}</td>
+                <td>{{ e.location || '-' }}</td>
+                <td><span class="badge" [class.bg-primary]="e.status==='PROGRAMADO'" [class.bg-success]="e.status==='EN_CURSO'" [class.bg-dark]="e.status==='FINALIZADO'" [class.bg-danger]="e.status==='CANCELADO'">{{ e.status }}</span></td>
+                <td><button class="btn btn-sm btn-outline-danger" (click)="deleteEvent(e.id)"><i class="bi bi-trash"></i></button></td>
+              </tr>
+              <tr *ngIf="events.length===0"><td colspan="6" class="text-center text-muted py-3">No hay eventos</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="modal d-block" *ngIf="showCreateModal" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+      <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header py-2"><h6 class="modal-title">Nuevo Evento</h6></div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12"><label class="form-label small">Titulo *</label><input class="form-control form-control-sm" [(ngModel)]="form.title"></div>
+            <div class="col-md-6"><label class="form-label small">Tipo</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.eventType"><option value="ACADEMICO">Academico</option><option value="CULTURAL">Cultural</option><option value="DEPORTIVO">Deportivo</option><option value="SOCIALIZACION">Socializacion</option><option value="REUNION">Reunion</option></select>
+            </div>
+            <div class="col-md-6"><label class="form-label small">Fecha *</label><input type="datetime-local" class="form-control form-control-sm" [(ngModel)]="form.eventDate"></div>
+            <div class="col-md-6"><label class="form-label small">Lugar</label><input class="form-control form-control-sm" [(ngModel)]="form.location"></div>
+            <div class="col-12"><label class="form-label small">Descripcion</label><textarea class="form-control form-control-sm" [(ngModel)]="form.description" rows="3"></textarea></div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-sm btn-secondary" (click)="showCreateModal=false">Cancelar</button>
+          <button class="btn btn-sm btn-primary" (click)="save()" [disabled]="!form.title || !form.eventDate">Crear</button>
+        </div>
+      </div></div>
+    </div>
+  `
+})
+export class SchoolEventsComponent implements OnInit {
+  events: any[] = [];
+  showCreateModal = false;
+  form: any = { title: '', description: '', eventDate: '', location: '', eventType: 'ACADEMICO' };
+  constructor(private http: HttpClient, private auth: AuthService) {}
+  ngOnInit() { this.load(); }
+  private get instId(): number { return this.auth.institutionId() || 1; }
+  get upcomingCount(): number { return this.events.filter(e => e.status === 'PROGRAMADO').length; }
+  load() { this.http.get<any[]>(`${API_URL}/communication/events?institutionId=${this.instId}`).subscribe({ next: r => this.events = r, error: () => {} }); }
+  save() {
+    this.http.post<any>(`${API_URL}/communication/events`, { ...this.form, institutionId: this.instId, organizerUserId: 1 }).subscribe({
+      next: () => { this.showCreateModal = false; this.load(); this.form = { title: '', description: '', eventDate: '', location: '', eventType: 'ACADEMICO' }; },
+      error: e => alert(e.error?.message || 'Error')
+    });
+  }
+  deleteEvent(id: number) { if (!confirm('Eliminar?')) return; this.http.delete(`${API_URL}/communication/events/${id}`).subscribe({ next: () => this.load() }); }
+}

@@ -1,0 +1,96 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../../core/api.config';
+import { AuthService } from '../../core/auth.service';
+
+@Component({
+  selector: 'app-training',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0 fw-bold">Capacitaciones</h4>
+    </div>
+
+    <ul class="nav nav-tabs nav-tabs-sm mb-3">
+      <li><a class="nav-link" [class.active]="tab==='courses'" (click)="tab='courses'; loadCourses()">Cursos</a></li>
+      <li><a class="nav-link" [class.active]="tab==='new'" (click)="tab='new'; resetForm()">Nuevo Curso</a></li>
+    </ul>
+
+    <div *ngIf="tab==='courses'">
+      <div class="table-responsive">
+        <table class="table table-xs table-hover">
+          <thead><tr><th>Nombre</th><th>Proveedor</th><th>Tipo</th><th>Horas</th><th>Desde</th><th>Hasta</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let c of courses">
+              <td class="fw-semibold">{{c.name}}</td><td>{{c.provider || '-'}}</td>
+              <td><span class="badge text-bg-secondary">{{c.courseType}}</span></td>
+              <td>{{c.hours || '-'}}</td><td>{{c.startDate || '-'}}</td><td>{{c.endDate || '-'}}</td>
+              <td><span class="badge" [class.text-bg-primary]="c.status==='PLANIFICADO'" [class.text-bg-info]="c.status==='EN_CURSO'" [class.text-bg-success]="c.status==='FINALIZADO'" [class.text-bg-danger]="c.status==='CANCELADO'">{{c.status}}</span></td>
+              <td><button class="btn btn-sm btn-outline-primary" (click)="edit(c)">Editar</button> <button class="btn btn-sm btn-outline-danger" (click)="deleteCourse(c.id)">X</button></td>
+            </tr>
+            <tr *ngIf="courses.length===0"><td colspan="8" class="text-muted text-center">No hay cursos</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div *ngIf="tab==='new'">
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-4"><label class="form-label form-label-sm">Nombre</label><input class="form-control form-control-sm" [(ngModel)]="f.name"></div>
+            <div class="col-md-3"><label class="form-label form-label-sm">Proveedor</label><input class="form-control form-control-sm" [(ngModel)]="f.provider"></div>
+            <div class="col-md-2"><label class="form-label form-label-sm">Tipo</label>
+              <select class="form-select form-select-sm" [(ngModel)]="f.courseType"><option value="INTERNO">Interno</option><option value="EXTERNO">Externo</option><option value="ONLINE">Online</option><option value="TALLER">Taller</option><option value="SEMINARIO">Seminario</option></select>
+            </div>
+            <div class="col-md-1"><label class="form-label form-label-sm">Horas</label><input type="number" class="form-control form-control-sm" [(ngModel)]="f.hours"></div>
+            <div class="col-md-2"><label class="form-label form-label-sm">Max Part.</label><input type="number" class="form-control form-control-sm" [(ngModel)]="f.maxParticipants"></div>
+          </div>
+          <div class="row g-2 mt-1">
+            <div class="col-md-3"><label class="form-label form-label-sm">Desde</label><input type="date" class="form-control form-control-sm" [(ngModel)]="f.startDate"></div>
+            <div class="col-md-3"><label class="form-label form-label-sm">Hasta</label><input type="date" class="form-control form-control-sm" [(ngModel)]="f.endDate"></div>
+            <div class="col-md-3"><label class="form-label form-label-sm">Estado</label>
+              <select class="form-select form-select-sm" [(ngModel)]="f.status"><option value="PLANIFICADO">Planificado</option><option value="EN_CURSO">En Curso</option><option value="FINALIZADO">Finalizado</option><option value="CANCELADO">Cancelado</option></select>
+            </div>
+          </div>
+          <div class="row g-2 mt-1">
+            <div class="col-md-6"><label class="form-label form-label-sm">Descripcion</label><textarea class="form-control form-control-sm" rows="2" [(ngModel)]="f.description"></textarea></div>
+          </div>
+          <div class="mt-2"><button class="btn btn-sm btn-primary" (click)="save()">{{editId?'Actualizar':'Crear'}} Curso</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="message" class="position-fixed bottom-0 end-0 p-3" style="z-index:1050">
+      <div class="toast show" [class.bg-success]="!isError" [class.bg-danger]="isError"><div class="toast-body text-white">{{message}}</div></div>
+    </div>
+  `
+})
+export class TrainingComponent implements OnInit {
+  tab = 'courses';
+  courses: any[] = [];
+  editId: number | null = null;
+  f: any = { courseType: 'INTERNO', status: 'PLANIFICADO' };
+  message = ''; isError = false;
+  instId = 1;
+
+  constructor(private http: HttpClient, private auth: AuthService) {}
+  ngOnInit() { this.instId = this.auth.institutionId() || 1; this.loadCourses(); }
+
+  private showMsg(m: string, e = false) { this.message = m; this.isError = e; setTimeout(() => this.message = '', 4000); }
+
+  loadCourses() { this.http.get<any[]>(`${API_URL}/hr/training/courses/institution/${this.instId}`).subscribe({ next: d => this.courses = d }); }
+
+  save() {
+    const body = { ...this.f, institutionId: this.instId };
+    const obs = this.editId ? this.http.put(`${API_URL}/hr/training/courses/${this.editId}`, body) : this.http.post(`${API_URL}/hr/training/courses`, body);
+    obs.subscribe({ next: () => { this.showMsg('Guardado'); this.tab = 'courses'; this.loadCourses(); this.resetForm(); }, error: () => this.showMsg('Error', true) });
+  }
+
+  edit(c: any) { this.editId = c.id; this.f = { ...c }; this.tab = 'new'; }
+  deleteCourse(id: number) { if (!confirm('Eliminar?')) return; this.http.delete(`${API_URL}/hr/training/courses/${id}`).subscribe({ next: () => { this.loadCourses(); } }); }
+  resetForm() { this.editId = null; this.f = { courseType: 'INTERNO', status: 'PLANIFICADO' }; }
+}

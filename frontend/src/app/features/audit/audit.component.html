@@ -6,22 +6,57 @@
         <p class="text-muted mb-0">Consulta eventos criticos del sistema y trazabilidad de acciones realizadas por usuarios.</p>
       </header>
 
+      <div class="row g-3">
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm bg-dark text-white text-center">
+            <div class="card-body py-3"><div class="fs-3 fw-bold">{{ stats.total || 0 }}</div><div class="small">Total Registros</div></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm bg-primary text-white text-center">
+            <div class="card-body py-3"><div class="fs-3 fw-bold">{{ getTopModule() }}</div><div class="small">Modulo Mas Activo</div></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm bg-success text-white text-center">
+            <div class="card-body py-3"><div class="fs-3 fw-bold">{{ getTopUser() }}</div><div class="small">Usuario Mas Activo</div></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm bg-warning text-dark text-center">
+            <div class="card-body py-3"><div class="fs-3 fw-bold">{{ stats.byModule ? Object.keys(stats.byModule).length : 0 }}</div><div class="small">Modulos Registrados</div></div>
+          </div>
+        </div>
+      </div>
+
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
           <div class="row g-3 mb-4">
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
               <input class="form-control form-control-sm" type="text" placeholder="Buscar por usuario" [(ngModel)]="usernameFilter">
             </div>
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
               <select class="form-select form-select-sm" [(ngModel)]="moduleFilter">
                 <option value="">Todos los modulos</option>
                 <option value="USER">Usuarios</option>
+                <option value="ACADEMIC">Academico</option>
                 <option value="LESSON_PLAN">Leccionario</option>
+                <option value="DAILY_LOG">Jornada</option>
+                <option value="SCHEDULE">Horarios</option>
+                <option value="DEMERIT">Demeritos</option>
+                <option value="BRANDING">Institucion</option>
+                <option value="ANNOUNCEMENT">Anuncios</option>
                 <option value="REPORT">Reportes</option>
               </select>
             </div>
-            <div class="col-12 col-md-4">
-              <button class="btn btn-sm btn-outline-primary w-100" type="button" (click)="applyFilters()"><i class="bi bi-funnel me-2"></i>Aplicar filtros</button>
+            <div class="col-12 col-md-2">
+              <button class="btn btn-sm btn-outline-primary w-100" type="button" (click)="applyFilters()"><i class="bi bi-funnel me-2"></i>Filtrar</button>
+            </div>
+            <div class="col-12 col-md-2">
+              <button class="btn btn-sm btn-outline-secondary w-100" type="button" (click)="clearFilters()"><i class="bi bi-x-lg me-1"></i>Limpiar</button>
+            </div>
+            <div class="col-12 col-md-2 text-end">
+              <span class="text-muted small">Pagina {{ currentPage + 1 }} de {{ getTotalPages() }}</span>
             </div>
           </div>
 
@@ -82,6 +117,20 @@
                 }
               </tbody>
             </table>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="totalPages > 1">
+            <button class="btn btn-sm btn-outline-primary" [disabled]="currentPage === 0" (click)="goToPage(currentPage - 1)">
+              <i class="bi bi-chevron-left me-1"></i>Anterior
+            </button>
+            <div class="d-flex gap-1">
+              <button *ngFor="let p of getPageNumbers()" class="btn btn-sm" [class.btn-primary]="p === currentPage" [class.btn-outline-primary]="p !== currentPage" (click)="goToPage(p)">
+                {{ p + 1 }}
+              </button>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" [disabled]="currentPage >= totalPages - 1" (click)="goToPage(currentPage + 1)">
+              Siguiente<i class="bi bi-chevron-right ms-1"></i>
+            </button>
           </div>
         </div>
       </div>

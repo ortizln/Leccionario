@@ -1,0 +1,329 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../../core/api.config';
+
+interface Course { id: number; name: string; }
+interface AcademicPeriod { id: number; name: string; }
+interface Student { id: number; firstName: string; lastName: string; enrollmentNumber: string; }
+
+interface AbsenceRecord {
+  id: number;
+  date: string;
+  courseName: string;
+  subjectName: string;
+  blockLabel: string;
+  absenceType: string;
+  notes: string;
+  studentId?: number;
+  studentName?: string;
+  enrollmentNumber?: string;
+}
+
+interface StudentAbsenceSummary {
+  studentId: number;
+  studentName: string;
+  enrollmentNumber: string;
+  absent: number;
+  late: number;
+  justified: number;
+  total: number;
+}
+
+@Component({
+  selector: 'app-attendance',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0 fw-bold">Asistencia</h4>
+    </div>
+
+    <ul class="nav nav-tabs nav-tabs-sm mb-3">
+      <li><a class="nav-link" [class.active]="tab==='course'" (click)="tab='course'">Por Curso</a></li>
+      <li><a class="nav-link" [class.active]="tab==='student'" (click)="tab='student'">Por Estudiante</a></li>
+    </ul>
+
+    <!-- Por Curso -->
+    <div *ngIf="tab==='course'">
+      <div class="row g-2 mb-3">
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Curso</label>
+          <select class="form-select form-select-sm" [(ngModel)]="courseId">
+            <option [ngValue]="null">Seleccionar curso...</option>
+            <option *ngFor="let c of courses" [ngValue]="c.id">{{c.name}}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Periodo</label>
+          <select class="form-select form-select-sm" [(ngModel)]="periodId">
+            <option [ngValue]="null">Seleccionar periodo...</option>
+            <option *ngFor="let p of periods" [ngValue]="p.id">{{p.name}}</option>
+          </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <button class="btn btn-sm btn-primary" (click)="loadCourseData()" [disabled]="!courseId || !periodId">Cargar</button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="row g-2 mb-3" *ngIf="courseStats">
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+            <div class="small text-muted">Total Inasistencias</div>
+            <div class="fs-5 fw-bold" style="color:#3B4436">{{courseStats.totalAbsences}}</div>
+          </div></div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+            <div class="small text-muted">Ausencias</div>
+            <div class="fs-5 fw-bold text-danger">{{courseStats.byType?.ABSENT || 0}}</div>
+          </div></div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+            <div class="small text-muted">Tardanzas</div>
+            <div class="fs-5 fw-bold text-warning">{{courseStats.byType?.LATE || 0}}</div>
+          </div></div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+            <div class="small text-muted">Justificadas</div>
+            <div class="fs-5 fw-bold text-success">{{courseStats.byType?.JUSTIFIED || 0}}</div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- Per-student summary -->
+      <div *ngIf="studentSummaries.length > 0" class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white py-2 fw-semibold small">Resumen por Estudiante</div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-xs table-hover mb-0">
+              <thead>
+                <tr><th>Estudiante</th><th>Matricula</th><th>Ausencias</th><th>Tardanzas</th><th>Justificadas</th><th>Total</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of studentSummaries">
+                  <td>{{s.studentName}}</td>
+                  <td><code>{{s.enrollmentNumber}}</code></td>
+                  <td class="text-danger">{{s.absent}}</td>
+                  <td class="text-warning">{{s.late}}</td>
+                  <td class="text-success">{{s.justified}}</td>
+                  <td><strong>{{s.total}}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed records -->
+      <div *ngIf="courseAbsences.length > 0" class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-2 fw-semibold small">Detalle de Inasistencias</div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-xs table-hover mb-0">
+              <thead>
+                <tr><th>Fecha</th><th>Estudiante</th><th>Materia</th><th>Bloque</th><th>Tipo</th><th>Notas</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let a of courseAbsences">
+                  <td>{{a.date | date:'dd/MM/yyyy'}}</td>
+                  <td>{{a.studentName}} <small class="text-muted">({{a.enrollmentNumber}})</small></td>
+                  <td>{{a.subjectName || '-'}}</td>
+                  <td>{{a.blockLabel}}</td>
+                  <td>
+                    <span class="badge" [class.text-bg-danger]="a.absenceType==='ABSENT'" [class.text-bg-warning]="a.absenceType==='LATE'" [class.text-bg-success]="a.absenceType==='JUSTIFIED'">
+                      {{absenceLabel(a.absenceType)}}
+                    </span>
+                  </td>
+                  <td class="small text-muted">{{a.notes || '-'}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Por Estudiante -->
+    <div *ngIf="tab==='student'">
+      <div class="row g-2 mb-3">
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Buscar Estudiante</label>
+          <input class="form-control form-control-sm" [(ngModel)]="searchTerm" placeholder="Nombre o matricula..." (keyup.enter)="searchStudent()">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button class="btn btn-sm btn-primary" (click)="searchStudent()" [disabled]="!searchTerm">Buscar</button>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Periodo</label>
+          <select class="form-select form-select-sm" [(ngModel)]="studentPeriodId">
+            <option [ngValue]="null">Seleccionar periodo...</option>
+            <option *ngFor="let p of periods" [ngValue]="p.id">{{p.name}}</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="searchResults.length > 0 && !selectedStudent" class="mb-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-0">
+            <table class="table table-xs mb-0">
+              <thead><tr><th>Nombre</th><th>Matricula</th><th></th></tr></thead>
+              <tbody>
+                <tr *ngFor="let s of searchResults" (click)="selectStudent(s)" style="cursor:pointer">
+                  <td>{{s.firstName}} {{s.lastName}}</td>
+                  <td><code>{{s.enrollmentNumber}}</code></td>
+                  <td><button class="btn btn-sm btn-outline-primary">Ver asistencia</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="selectedStudent">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <strong>{{selectedStudent.firstName}} {{selectedStudent.lastName}}</strong>
+            <span class="small text-muted ms-2">{{selectedStudent.enrollmentNumber}}</span>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary" (click)="selectedStudent=null; searchResults=[]">Volver</button>
+        </div>
+
+        <div class="row g-2 mb-3" *ngIf="studentStats">
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+              <div class="small text-muted">Total Inasistencias</div>
+              <div class="fs-5 fw-bold" style="color:#3B4436">{{studentStats.totalAbsences}}</div>
+            </div></div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+              <div class="small text-muted">Ausencias</div>
+              <div class="fs-5 fw-bold text-danger">{{studentStats.byType?.ABSENT || 0}}</div>
+            </div></div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+              <div class="small text-muted">Tardanzas</div>
+              <div class="fs-5 fw-bold text-warning">{{studentStats.byType?.LATE || 0}}</div>
+            </div></div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+              <div class="small text-muted">Injustificadas</div>
+              <div class="fs-5 fw-bold text-danger">{{studentStats.unjustifiedAbsences}}</div>
+            </div></div>
+          </div>
+        </div>
+
+        <div *ngIf="studentAbsences.length > 0" class="card border-0 shadow-sm">
+          <div class="card-header bg-white py-2 fw-semibold small">Historial de Inasistencias</div>
+          <div class="card-body p-0">
+            <table class="table table-xs table-hover mb-0">
+              <thead>
+                <tr><th>Fecha</th><th>Curso</th><th>Materia</th><th>Bloque</th><th>Tipo</th><th>Notas</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let a of studentAbsences">
+                  <td>{{a.date | date:'dd/MM/yyyy'}}</td>
+                  <td>{{a.courseName}}</td>
+                  <td>{{a.subjectName || '-'}}</td>
+                  <td>{{a.blockLabel}}</td>
+                  <td>
+                    <span class="badge" [class.text-bg-danger]="a.absenceType==='ABSENT'" [class.text-bg-warning]="a.absenceType==='LATE'" [class.text-bg-success]="a.absenceType==='JUSTIFIED'">
+                      {{absenceLabel(a.absenceType)}}
+                    </span>
+                  </td>
+                  <td class="small text-muted">{{a.notes || '-'}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div *ngIf="studentAbsences.length===0" class="text-center text-muted py-4">
+          Sin inasistencias registradas en este periodo
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="message" class="position-fixed bottom-0 end-0 p-3" style="z-index:1050">
+      <div class="toast show" [class.bg-success]="!messageIsError" [class.bg-danger]="messageIsError">
+        <div class="toast-body text-white">{{message}}</div>
+      </div>
+    </div>
+  `
+})
+export class AttendanceComponent implements OnInit {
+  tab = 'course';
+  courses: Course[] = [];
+  periods: AcademicPeriod[] = [];
+  searchResults: Student[] = [];
+
+  courseId: number | null = null;
+  periodId: number | null = null;
+  searchTerm = '';
+  studentPeriodId: number | null = null;
+  selectedStudent: Student | null = null;
+
+  courseStats: any = null;
+  courseAbsences: AbsenceRecord[] = [];
+  studentSummaries: StudentAbsenceSummary[] = [];
+  studentStats: any = null;
+  studentAbsences: AbsenceRecord[] = [];
+
+  message = '';
+  messageIsError = false;
+
+  constructor(private http: HttpClient) {}
+
+  ngOnInit() {
+    this.http.get<Course[]>(`${API_URL}/academic/courses`).subscribe({ next: d => this.courses = d });
+    this.http.get<AcademicPeriod[]>(`${API_URL}/academic/catalogs/academic-years`).subscribe({ next: d => this.periods = d as any });
+  }
+
+  private showMsg(msg: string, err = false) {
+    this.message = msg;
+    this.messageIsError = err;
+    setTimeout(() => this.message = '', 4000);
+  }
+
+  loadCourseData() {
+    if (!this.courseId || !this.periodId) return;
+    this.http.get(`${API_URL}/attendance/course/${this.courseId}/period/${this.periodId}/stats`)
+      .subscribe({ next: d => this.courseStats = d, error: () => this.showMsg('Error al cargar estadisticas', true) });
+    this.http.get<AbsenceRecord[]>(`${API_URL}/attendance/course/${this.courseId}/period/${this.periodId}`)
+      .subscribe({ next: d => this.courseAbsences = d, error: () => this.showMsg('Error al cargar inasistencias', true) });
+    this.http.get<StudentAbsenceSummary[]>(`${API_URL}/attendance/course/${this.courseId}/period/${this.periodId}/by-student`)
+      .subscribe({ next: d => this.studentSummaries = d, error: () => {} });
+  }
+
+  searchStudent() {
+    if (!this.searchTerm) return;
+    this.http.get<Student[]>(`${API_URL}/academic/students`, { params: { search: this.searchTerm } })
+      .subscribe({ next: d => { this.searchResults = d; this.selectedStudent = null; }, error: () => this.showMsg('Error al buscar', true) });
+  }
+
+  selectStudent(student: Student) {
+    this.selectedStudent = student;
+    this.searchResults = [];
+    if (this.studentPeriodId) this.loadStudentData(student.id);
+  }
+
+  loadStudentData(studentId: number) {
+    if (!this.studentPeriodId) return;
+    this.http.get(`${API_URL}/attendance/student/${studentId}/period/${this.studentPeriodId}/stats`)
+      .subscribe({ next: d => this.studentStats = d, error: () => {} });
+    this.http.get<AbsenceRecord[]>(`${API_URL}/attendance/student/${studentId}/period/${this.studentPeriodId}`)
+      .subscribe({ next: d => this.studentAbsences = d, error: () => this.showMsg('Error al cargar historial', true) });
+  }
+
+  absenceLabel(type: string): string {
+    const labels: Record<string, string> = { ABSENT: 'Ausente', LATE: 'Tardanza', JUSTIFIED: 'Justificada' };
+    return labels[type] || type;
+  }
+}

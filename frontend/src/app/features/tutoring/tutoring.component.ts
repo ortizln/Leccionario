@@ -1,0 +1,316 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../../core/api.config';
+import { AuthService } from '../../core/auth.service';
+
+interface Course { id: number; name: string; }
+interface AcademicPeriod { id: number; name: string; }
+interface Student { id: number; firstName: string; lastName: string; enrollmentNumber: string; }
+interface Teacher { id: number; firstName: string; lastName: string; }
+
+interface TutoringSession {
+  id: number;
+  teacherId: number;
+  teacherName: string;
+  studentId: number;
+  studentName: string;
+  enrollmentNumber: string;
+  courseId: number;
+  courseName: string;
+  academicPeriodId: number;
+  academicPeriodName: string;
+  sessionDate: string;
+  sessionTime: string;
+  durationMinutes: number;
+  sessionType: string;
+  status: string;
+  topic: string;
+  description: string;
+  recommendations: string;
+  followUpRequired: boolean;
+  followUpDate: string;
+  createdBy: string;
+  followUps: any[];
+}
+
+@Component({
+  selector: 'app-tutoring',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0 fw-bold">Tutorias</h4>
+    </div>
+
+    <ul class="nav nav-tabs nav-tabs-sm mb-3">
+      <li><a class="nav-link" [class.active]="tab==='list'" (click)="tab='list'; loadSessions()">Lista</a></li>
+      <li><a class="nav-link" [class.active]="tab==='new'" (click)="tab='new'">Nueva Sesion</a></li>
+    </ul>
+
+    <!-- Lista -->
+    <div *ngIf="tab==='list'">
+      <div class="row g-2 mb-3">
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Curso</label>
+          <select class="form-select form-select-sm" [(ngModel)]="filterCourseId" (change)="loadSessions()">
+            <option [ngValue]="null">Todos</option>
+            <option *ngFor="let c of courses" [ngValue]="c.id">{{c.name}}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Periodo</label>
+          <select class="form-select form-select-sm" [(ngModel)]="filterPeriodId" (change)="loadSessions()">
+            <option [ngValue]="null">Todos</option>
+            <option *ngFor="let p of periods" [ngValue]="p.id">{{p.name}}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="row g-2 mb-3" *ngIf="stats">
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+            <div class="small text-muted">Total</div><div class="fs-5 fw-bold" style="color:#3B4436">{{stats.total}}</div>
+          </div></div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+            <div class="small text-muted">Programadas</div><div class="fs-5 fw-bold text-primary">{{stats.programadas}}</div>
+          </div></div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+            <div class="small text-muted">Realizadas</div><div class="fs-5 fw-bold text-success">{{stats.realizadas}}</div>
+          </div></div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+            <div class="small text-muted">Canceladas</div><div class="fs-5 fw-bold text-danger">{{stats.canceladas}}</div>
+          </div></div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-xs table-hover">
+          <thead>
+            <tr><th>Fecha</th><th>Estudiante</th><th>Curso</th><th>Docente</th><th>Tema</th><th>Tipo</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of sessions">
+              <td>{{s.sessionDate | date:'dd/MM/yyyy'}} <small class="text-muted">{{s.sessionTime}}</small></td>
+              <td>{{s.studentName}}</td>
+              <td>{{s.courseName}}</td>
+              <td>{{s.teacherName}}</td>
+              <td class="small">{{s.topic}}</td>
+              <td><span class="badge text-bg-secondary">{{typeLabel(s.sessionType)}}</span></td>
+              <td>
+                <span class="badge" [class.text-bg-primary]="s.status==='PROGRAMADA'" [class.text-bg-success]="s.status==='REALIZADA'" [class.text-bg-danger]="s.status==='CANCELADA'" [class.text-bg-warning]="s.status==='REPROGRAMADA'">
+                  {{statusLabel(s.status)}}
+                </span>
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  <button *ngIf="s.status==='PROGRAMADA'" class="btn btn-sm btn-outline-success" (click)="updateStatus(s.id, 'REALIZADA')">Marcar realizada</button>
+                  <button *ngIf="s.status==='PROGRAMADA'" class="btn btn-sm btn-outline-danger" (click)="updateStatus(s.id, 'CANCELADA')">Cancelar</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="sessions.length===0"><td colspan="8" class="text-muted text-center">No hay sesiones de tutoria</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Nueva Sesion -->
+    <div *ngIf="tab==='new'">
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-3">
+              <label class="form-label form-label-sm">Curso</label>
+              <select class="form-select form-select-sm" [(ngModel)]="formCourseId" (change)="loadStudents()">
+                <option [ngValue]="null">Seleccionar...</option>
+                <option *ngFor="let c of courses" [ngValue]="c.id">{{c.name}}</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label form-label-sm">Estudiante</label>
+              <select class="form-select form-select-sm" [(ngModel)]="formStudentId">
+                <option [ngValue]="null">Seleccionar...</option>
+                <option *ngFor="let s of students" [ngValue]="s.id">{{s.firstName}} {{s.lastName}}</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label form-label-sm">Periodo</label>
+              <select class="form-select form-select-sm" [(ngModel)]="formPeriodId">
+                <option [ngValue]="null">Seleccionar...</option>
+                <option *ngFor="let p of periods" [ngValue]="p.id">{{p.name}}</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label form-label-sm">Docente Tutor</label>
+              <select class="form-select form-select-sm" [(ngModel)]="formTeacherId">
+                <option [ngValue]="null">Seleccionar...</option>
+                <option *ngFor="let t of teachers" [ngValue]="t.id">{{t.firstName}} {{t.lastName}}</option>
+              </select>
+            </div>
+          </div>
+          <div class="row g-2 mt-1">
+            <div class="col-md-2">
+              <label class="form-label form-label-sm">Fecha</label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="formDate">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label form-label-sm">Hora</label>
+              <input type="time" class="form-control form-control-sm" [(ngModel)]="formTime">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label form-label-sm">Duracion (min)</label>
+              <input type="number" class="form-control form-control-sm" [(ngModel)]="formDuration" min="15" max="120">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label form-label-sm">Tipo</label>
+              <select class="form-select form-select-sm" [(ngModel)]="formType">
+                <option value="ACADEMICA">Academica</option>
+                <option value="CONDUCTUAL">Conductual</option>
+                <option value="ORIENTACION">Orientacion</option>
+                <option value="FAMILIAR">Familiar</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label form-label-sm">Tema</label>
+              <input class="form-control form-control-sm" [(ngModel)]="formTopic" placeholder="Tema de la sesion...">
+            </div>
+          </div>
+          <div class="row g-2 mt-1">
+            <div class="col-md-6">
+              <label class="form-label form-label-sm">Descripcion</label>
+              <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="formDescription"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label form-label-sm">Recomendaciones</label>
+              <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="formRecommendations"></textarea>
+            </div>
+          </div>
+          <div class="row g-2 mt-1">
+            <div class="col-md-3">
+              <div class="form-check form-switch mt-4">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="formFollowUpRequired" id="followUpCheck">
+                <label class="form-check-label small" for="followUpCheck">Requiere seguimiento</label>
+              </div>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn btn-sm btn-primary" (click)="createSession()" [disabled]="!formStudentId || !formCourseId || !formPeriodId || !formTeacherId">Guardar Sesion</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="message" class="position-fixed bottom-0 end-0 p-3" style="z-index:1050">
+      <div class="toast show" [class.bg-success]="!messageIsError" [class.bg-danger]="messageIsError">
+        <div class="toast-body text-white">{{message}}</div>
+      </div>
+    </div>
+  `
+})
+export class TutoringComponent implements OnInit {
+  tab = 'list';
+  courses: Course[] = [];
+  periods: AcademicPeriod[] = [];
+  students: Student[] = [];
+  teachers: Teacher[] = [];
+  sessions: TutoringSession[] = [];
+  stats: any = null;
+
+  filterCourseId: number | null = null;
+  filterPeriodId: number | null = null;
+  formCourseId: number | null = null;
+  formStudentId: number | null = null;
+  formPeriodId: number | null = null;
+  formTeacherId: number | null = null;
+  formDate = '';
+  formTime = '08:00';
+  formDuration = 30;
+  formType = 'ACADEMICA';
+  formTopic = '';
+  formDescription = '';
+  formRecommendations = '';
+  formFollowUpRequired = false;
+
+  message = '';
+  messageIsError = false;
+
+  constructor(private http: HttpClient, private auth: AuthService) {}
+
+  ngOnInit() {
+    this.http.get<Course[]>(`${API_URL}/academic/courses`).subscribe({ next: d => this.courses = d });
+    this.http.get<AcademicPeriod[]>(`${API_URL}/academic/catalogs/academic-years`).subscribe({ next: d => this.periods = d as any });
+    this.http.get<Teacher[]>(`${API_URL}/academic/teachers`).subscribe({ next: d => this.teachers = d });
+    this.formDate = new Date().toISOString().split('T')[0];
+  }
+
+  private showMsg(msg: string, err = false) {
+    this.message = msg;
+    this.messageIsError = err;
+    setTimeout(() => this.message = '', 4000);
+  }
+
+  loadSessions() {
+    if (!this.filterCourseId || !this.filterPeriodId) { this.sessions = []; return; }
+    this.http.get<TutoringSession[]>(`${API_URL}/tutoring/sessions/course/${this.filterCourseId}/period/${this.filterPeriodId}`)
+      .subscribe({ next: d => this.sessions = d, error: () => this.showMsg('Error al cargar sesiones', true) });
+    this.http.get(`${API_URL}/tutoring/stats/course/${this.filterCourseId}/period/${this.filterPeriodId}`)
+      .subscribe({ next: d => this.stats = d, error: () => {} });
+  }
+
+  loadStudents() {
+    if (!this.formCourseId) { this.students = []; return; }
+    this.http.get<Student[]>(`${API_URL}/academic/students`, { params: { courseId: this.formCourseId } })
+      .subscribe({ next: d => this.students = d });
+  }
+
+  createSession() {
+    if (!this.formStudentId || !this.formCourseId || !this.formPeriodId || !this.formTeacherId) return;
+    const instId = this.auth.institutionId() || 1;
+    this.http.post(`${API_URL}/tutoring/sessions`, {
+      studentId: this.formStudentId,
+      courseId: this.formCourseId,
+      academicPeriodId: this.formPeriodId,
+      institutionId: instId,
+      teacherId: this.formTeacherId,
+      sessionDate: this.formDate,
+      sessionTime: this.formTime,
+      durationMinutes: this.formDuration,
+      sessionType: this.formType,
+      topic: this.formTopic,
+      description: this.formDescription,
+      recommendations: this.formRecommendations,
+      followUpRequired: this.formFollowUpRequired
+    }).subscribe({
+      next: () => { this.showMsg('Sesion creada'); this.tab = 'list'; this.loadSessions(); },
+      error: () => this.showMsg('Error al crear sesion', true)
+    });
+  }
+
+  updateStatus(id: number, status: string) {
+    this.http.put(`${API_URL}/tutoring/sessions/${id}/status`, null, { params: { status } })
+      .subscribe({
+        next: () => { this.showMsg('Estado actualizado'); this.loadSessions(); },
+        error: () => this.showMsg('Error al actualizar', true)
+      });
+  }
+
+  typeLabel(type: string): string {
+    const labels: Record<string, string> = { ACADEMICA: 'Academica', CONDUCTUAL: 'Conductual', ORIENTACION: 'Orientacion', FAMILIAR: 'Familiar', OTRO: 'Otro' };
+    return labels[type] || type;
+  }
+
+  statusLabel(status: string): string {
+    const labels: Record<string, string> = { PROGRAMADA: 'Programada', REALIZADA: 'Realizada', CANCELADA: 'Cancelada', REPROGRAMADA: 'Reprogramada' };
+    return labels[status] || status;
+  }
+}

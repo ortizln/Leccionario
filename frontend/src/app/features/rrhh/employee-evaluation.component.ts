@@ -1,0 +1,103 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../../core/api.config';
+import { AuthService } from '../../core/auth.service';
+
+@Component({
+  selector: 'app-employee-evaluation',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Evaluaciones de Desempeno</h5>
+      <button class="btn btn-sm btn-primary" (click)="showCreateModal=true"><i class="bi bi-plus-circle me-1"></i>Nueva Evaluacion</button>
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-primary text-white text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">{{ evaluations.length }}</div><div class="small">Total</div></div></div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-success text-white text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">{{ completedCount }}</div><div class="small">Completadas</div></div></div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-warning text-dark text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">{{ pendingCount }}</div><div class="small">Pendientes</div></div></div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light"><tr><th>Empleado</th><th>Tipo</th><th>Fecha</th><th>Nota</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let e of evaluations">
+                <td class="fw-semibold">{{ e.employee?.user?.firstName }} {{ e.employee?.user?.lastName }}</td>
+                <td>{{ e.evaluationType }}</td>
+                <td>{{ e.evaluationDate }}</td>
+                <td>{{ e.score || '-' }}</td>
+                <td><span class="badge" [class.bg-success]="e.status==='COMPLETADA'" [class.bg-warning]="e.status==='PENDIENTE'">{{ e.status }}</span></td>
+                <td><button *ngIf="e.status==='PENDIENTE'" class="btn btn-sm btn-outline-success" (click)="complete(e.id)"><i class="bi bi-check-lg"></i></button>
+                    <button class="btn btn-sm btn-outline-danger ms-1" (click)="deleteEval(e.id)"><i class="bi bi-trash"></i></button></td>
+              </tr>
+              <tr *ngIf="evaluations.length===0"><td colspan="6" class="text-center text-muted py-3">No hay evaluaciones registradas</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal d-block" *ngIf="showCreateModal" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+      <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header py-2"><h6 class="modal-title">Nueva Evaluacion</h6></div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label small">ID Empleado *</label><input type="number" class="form-control form-control-sm" [(ngModel)]="form.employeeId"></div>
+            <div class="col-md-6"><label class="form-label small">Tipo *</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.evaluationType"><option value="DOCENTE">Docente</option><option value="ADMINISTRATIVO">Administrativo</option><option value="CONVIVENCIA">Convivencia</option></select>
+            </div>
+            <div class="col-md-6"><label class="form-label small">Fecha *</label><input type="date" class="form-control form-control-sm" [(ngModel)]="form.evaluationDate"></div>
+            <div class="col-12"><label class="form-label small">Fortalezas</label><textarea class="form-control form-control-sm" [(ngModel)]="form.strengths" rows="2"></textarea></div>
+            <div class="col-12"><label class="form-label small">Mejoras</label><textarea class="form-control form-control-sm" [(ngModel)]="form.improvements" rows="2"></textarea></div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-sm btn-secondary" (click)="showCreateModal=false">Cancelar</button>
+          <button class="btn btn-sm btn-primary" (click)="save()" [disabled]="!form.employeeId || !form.evaluationDate">Crear</button>
+        </div>
+      </div></div>
+    </div>
+  `
+})
+export class EmployeeEvaluationComponent implements OnInit {
+  evaluations: any[] = [];
+  showCreateModal = false;
+  form: any = { employeeId: null, evaluationType: 'DOCENTE', evaluationDate: '', strengths: '', improvements: '' };
+
+  constructor(private http: HttpClient, private auth: AuthService) {}
+  ngOnInit() { this.load(); }
+  private get instId(): number { return this.auth.institutionId() || 1; }
+
+  get completedCount(): number { return this.evaluations.filter(e => e.status === 'COMPLETADA').length; }
+  get pendingCount(): number { return this.evaluations.filter(e => e.status === 'PENDIENTE').length; }
+
+  load() {
+    this.http.get<any[]>(`${API_URL}/hr/evaluations?institutionId=${this.instId}`).subscribe({ next: r => this.evaluations = r, error: () => {} });
+  }
+  save() {
+    this.http.post<any>(`${API_URL}/hr/evaluations`, { ...this.form, employee: { id: this.form.employeeId }, institutionId: this.instId }).subscribe({
+      next: () => { this.showCreateModal = false; this.load(); },
+      error: e => alert(e.error?.message || 'Error')
+    });
+  }
+  complete(id: number) {
+    const score = prompt('Nota (0.0 - 10.0):');
+    if (score) this.http.post<any>(`${API_URL}/hr/evaluations/${id}/complete?score=${score}`, {}).subscribe({ next: () => this.load() });
+  }
+  deleteEval(id: number) {
+    if (!confirm('Eliminar evaluacion?')) return;
+    this.http.delete(`${API_URL}/hr/evaluations/${id}`).subscribe({ next: () => this.load() });
+  }
+}

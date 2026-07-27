@@ -1,28 +1,46 @@
 package com.leccionario.backend.audit.web;
 
-import com.leccionario.backend.audit.dto.AuditLogResponse;
-import com.leccionario.backend.audit.service.AuditService;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
+import com.leccionario.backend.audit.AuditLog;
+import com.leccionario.backend.audit.AuditLogRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/audit")
-@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+@Tag(name = "Auditoría")
 public class AuditController {
 
-    private final AuditService auditService;
+    private final AuditLogRepository repository;
 
+    public AuditController(AuditLogRepository repository) { this.repository = repository; }
+
+    @Operation(summary = "Listar registros de auditoría")
     @GetMapping
-    @PreAuthorize("hasAuthority('AUDIT_VIEW')")
-    public ResponseEntity<List<AuditLogResponse>> findLogs(
-            @RequestParam(required = false) String username,
-            @RequestParam(required = false) String module) {
-        return ResponseEntity.ok(auditService.findLogs(username, module));
+    public ResponseEntity<Page<AuditLog>> findAll(@RequestParam Long institutionId,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(repository.findByInstitutionIdOrderByCreatedAtDesc(institutionId)
+            .isEmpty() ? Page.empty() : repository.findAll(PageRequest.of(page, size)));
+    }
+
+    @Operation(summary = "Obtener auditoría de una entidad específica")
+    @GetMapping("/entity/{entityType}/{entityId}")
+    public ResponseEntity<?> getEntityAudit(@PathVariable String entityType, @PathVariable Long entityId) {
+        return ResponseEntity.ok(repository.findByEntityTypeAndEntityIdOrderByCreatedAtDesc(entityType, entityId));
+    }
+
+    @Operation(summary = "Estadísticas de auditoría")
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getStats(@RequestParam Long institutionId) {
+        Map<String, Object> stats = new java.util.LinkedHashMap<>();
+        stats.put("byAction", repository.countByAction(institutionId));
+        stats.put("byEntity", repository.countByEntityType(institutionId));
+        stats.put("totalLogs", repository.count());
+        return ResponseEntity.ok(stats);
     }
 }

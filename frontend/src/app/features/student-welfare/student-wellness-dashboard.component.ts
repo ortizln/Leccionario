@@ -1,0 +1,161 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../../core/api.config';
+import { AuthService } from '../../core/auth.service';
+
+@Component({
+  selector: 'app-student-wellness-dashboard',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0"><i class="bi bi-heart me-2"></i>Bienestar Estudiantil - Resumen</h5>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-primary text-white text-center">
+          <div class="card-body py-3">
+            <div class="fs-3 fw-bold">{{ stats.totalScholarships }}</div>
+            <div class="small">Becas Activas</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-success text-white text-center">
+          <div class="card-body py-3">
+            <div class="fs-3 fw-bold">{{ stats.totalClubs }}</div>
+            <div class="small">Clubes</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-info text-white text-center">
+          <div class="card-body py-3">
+            <div class="fs-3 fw-bold">{{ stats.totalTransport }}</div>
+            <div class="small">Rutas Transporte</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-warning text-dark text-center">
+          <div class="card-body py-3">
+            <div class="fs-3 fw-bold">{{ stats.totalInsurance }}</div>
+            <div class="small">Seguros Activos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-clipboard2-pulse me-2"></i>Salud Estudiantil</h6></div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="small">Registros de salud</span><span class="badge bg-primary">{{ stats.healthRecords }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="small">Evaluaciones psicologicas</span><span class="badge bg-info">{{ stats.psychEvaluations }}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="small">Vacunas registradas</span><span class="badge bg-success">{{ stats.vaccinations }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-people me-2"></i>Clubes y Actividades</h6></div>
+          <div class="card-body">
+            <div *ngFor="let club of clubsList" class="d-flex justify-content-between mb-2">
+              <span class="small">{{ club.name }}</span>
+              <span class="badge bg-secondary">{{ club.memberCount || 0 }} miembros</span>
+            </div>
+            <p *ngIf="clubsList.length===0" class="text-muted small mb-0">Sin clubes registrados</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-award me-2"></i>Becas por Tipo</h6></div>
+          <div class="card-body">
+            <div *ngFor="let s of scholarshipsList" class="d-flex justify-content-between mb-2">
+              <span class="small">{{ s.type }}</span>
+              <span class="badge bg-primary">{{ s.count }}</span>
+            </div>
+            <p *ngIf="scholarshipsList.length===0" class="text-muted small mb-0">Sin becas registradas</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-bus-front me-2"></i>Transporte</h6></div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="small">Estudiantes en transporte</span><span class="badge bg-info">{{ stats.transportStudents }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="small">Rutas activas</span><span class="badge bg-success">{{ stats.activeRoutes }}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="small">Estudiantes sin asignar</span><span class="badge bg-warning text-dark">{{ stats.unassignedTransport }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+})
+export class StudentWellnessDashboardComponent implements OnInit {
+  stats: any = {
+    totalScholarships: 0, totalClubs: 0, totalTransport: 0, totalInsurance: 0,
+    healthRecords: 0, psychEvaluations: 0, vaccinations: 0, transportStudents: 0,
+    activeRoutes: 0, unassignedTransport: 0, totalStudents: 0, criticalCases: 0,
+    completedVaccinations: 0
+  };
+  clubsList: any[] = [];
+  scholarshipsList: any[] = [];
+
+  constructor(private http: HttpClient, private auth: AuthService) {}
+  ngOnInit() { this.load(); }
+
+  private get instId(): number { return this.auth.institutionId() || 1; }
+
+  load() {
+    this.http.get<any>(`${API_URL}/student-wellness/overview?institutionId=${this.instId}`).subscribe({
+      next: r => {
+        this.stats.totalStudents = r.totalStudents || 0;
+        this.stats.psychEvaluations = r.totalEvaluations || 0;
+        this.stats.criticalCases = r.criticalCases || 0;
+        this.stats.totalInsurance = r.activeInsurances || 0;
+        this.stats.vaccinations = r.totalVaccinations || 0;
+        this.stats.completedVaccinations = r.completedVaccinations || 0;
+        this.stats.healthRecords = r.totalStudents || 0;
+      },
+      error: () => {}
+    });
+    this.http.get<any[]>(`${API_URL}/clubs/institution/${this.instId}`).subscribe({
+      next: r => { this.clubsList = r; this.stats.totalClubs = r.length; },
+      error: () => {}
+    });
+    this.http.get<any[]>(`${API_URL}/scholarships/types/institution/${this.instId}`).subscribe({
+      next: (r: any) => {
+        const list = Array.isArray(r) ? r : [];
+        this.stats.totalScholarships = list.length;
+        const typeMap = new Map<string, number>();
+        list.forEach((s: any) => { const t = s.scholarshipTypeName || 'General'; typeMap.set(t, (typeMap.get(t) || 0) + 1); });
+        this.scholarshipsList = Array.from(typeMap.entries()).map(([type, count]) => ({ type, count }));
+      },
+      error: () => {}
+    });
+    this.http.get<any>(`${API_URL}/transport/stats?institutionId=${this.instId}`).subscribe({
+      next: r => { this.stats.totalTransport = r.totalRoutes || 0; this.stats.activeRoutes = r.activeRoutes || 0; this.stats.transportStudents = r.totalStudents || 0; this.stats.unassignedTransport = r.unassigned || 0; },
+      error: () => {}
+    });
+  }
+}

@@ -1,0 +1,166 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../../core/api.config';
+
+@Component({
+  selector: 'app-book-loans-management',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0"><i class="bi bi-bookmark-check me-2"></i>Gestion de Prestamos</h5>
+      <button class="btn btn-sm btn-outline-success" (click)="exportCSV()"><i class="bi bi-download me-1"></i>Exportar</button>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-warning text-dark text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">{{ activeLoans }}</div><div class="small">Activos</div></div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-danger text-white text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">{{ overdueLoans }}</div><div class="small">Vencidos</div></div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-success text-white text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">{{ returnedLoans }}</div><div class="small">Devueltos</div></div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-info text-white text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">{{ pendingReservations }}</div><div class="small">Reservas Pend.</div></div></div>
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item"><a class="nav-link" [class.active]="tab==='active'" (click)="tab='active'" role="button">Activos</a></li>
+      <li class="nav-item"><a class="nav-link" [class.active]="tab==='overdue'" (click)="tab='overdue'" role="button">Vencidos</a></li>
+      <li class="nav-item"><a class="nav-link" [class.active]="tab==='returned'" (click)="tab='returned'" role="button">Devueltos</a></li>
+    </ul>
+
+    @if (tab === 'active') {
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead class="table-light"><tr><th>#</th><th>Libro</th><th>Estudiante</th><th>Prestamo</th><th>Vence</th><th>Dias Restantes</th><th></th></tr></thead>
+              <tbody>
+                <tr *ngFor="let l of activeList" [class.table-danger]="getDaysLeft(l.dueDate)<0">
+                  <td>{{ l.id }}</td>
+                  <td>{{ l.bookId }}</td>
+                  <td>{{ l.studentId }}</td>
+                  <td>{{ l.loanDate | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ l.dueDate | date:'dd/MM/yyyy' }}</td>
+                  <td>
+                    <span *ngIf="getDaysLeft(l.dueDate)>=0" class="badge bg-success">{{ getDaysLeft(l.dueDate) }} dias</span>
+                    <span *ngIf="getDaysLeft(l.dueDate)<0" class="badge bg-danger">{{ getDaysLeft(l.dueDate) * -1 }} dias vencido</span>
+                  </td>
+                  <td><button class="btn btn-sm btn-outline-success" (click)="returnBook(l.id)" title="Devolver"><i class="bi bi-arrow-return-left"></i></button></td>
+                </tr>
+                <tr *ngIf="activeList.length===0"><td colspan="7" class="text-center text-muted py-3">Sin prestamos activos</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (tab === 'overdue') {
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead class="table-light"><tr><th>#</th><th>Libro</th><th>Estudiante</th><th>Prestamo</th><th>Vencio</th><th>Dias Vencido</th><th></th></tr></thead>
+              <tbody>
+                <tr *ngFor="let l of overdueList" class="table-danger">
+                  <td>{{ l.id }}</td>
+                  <td>{{ l.bookId }}</td>
+                  <td>{{ l.studentId }}</td>
+                  <td>{{ l.loanDate | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ l.dueDate | date:'dd/MM/yyyy' }}</td>
+                  <td><span class="badge bg-danger">{{ getDaysOverdue(l.dueDate) }} dias</span></td>
+                  <td><button class="btn btn-sm btn-outline-success" (click)="returnBook(l.id)"><i class="bi bi-arrow-return-left"></i> Devolver</button></td>
+                </tr>
+                <tr *ngIf="overdueList.length===0"><td colspan="7" class="text-center text-muted py-3">No hay prestamos vencidos</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (tab === 'returned') {
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead class="table-light"><tr><th>#</th><th>Libro</th><th>Estudiante</th><th>Prestamo</th><th>Devolucion</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let l of returnedList">
+                  <td>{{ l.id }}</td>
+                  <td>{{ l.bookId }}</td>
+                  <td>{{ l.studentId }}</td>
+                  <td>{{ l.loanDate | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ l.returnDate | date:'dd/MM/yyyy' }}</td>
+                </tr>
+                <tr *ngIf="returnedList.length===0"><td colspan="5" class="text-center text-muted py-3">No hay devoluciones</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+  `
+})
+export class BookLoansManagementComponent implements OnInit {
+  tab = 'active';
+  activeList: any[] = [];
+  overdueList: any[] = [];
+  returnedList: any[] = [];
+  activeLoans = 0;
+  overdueLoans = 0;
+  returnedLoans = 0;
+  pendingReservations = 0;
+
+  constructor(private http: HttpClient) {}
+  ngOnInit() { this.load(); }
+
+  load() {
+    this.http.get<any[]>(`${API_URL}/library/loans/active`).subscribe({
+      next: r => { this.activeList = r; this.activeLoans = r.length; },
+      error: () => {}
+    });
+    this.http.get<any[]>(`${API_URL}/library/loans/overdue`).subscribe({
+      next: r => { this.overdueList = r; this.overdueLoans = r.length; },
+      error: () => {}
+    });
+    this.http.get<any[]>(`${API_URL}/library/reservations/pending`).subscribe({
+      next: r => this.pendingReservations = r.length,
+      error: () => {}
+    });
+  }
+
+  getDaysLeft(dueDate: string): number {
+    const due = new Date(dueDate);
+    const now = new Date();
+    return Math.ceil((due.getTime() - now.getTime()) / 86400000);
+  }
+
+  getDaysOverdue(dueDate: string): number {
+    const due = new Date(dueDate);
+    const now = new Date();
+    return Math.floor((now.getTime() - due.getTime()) / 86400000);
+  }
+
+  returnBook(id: number) {
+    if (!confirm('Confirmar devolucion?')) return;
+    this.http.post(`${API_URL}/library/loans/${id}/return`, {}).subscribe({ next: () => this.load() });
+  }
+
+  exportCSV() {
+    let csv = 'ID,Libro,Estudiante,Prestamo,Vence,Estado\n';
+    [...this.activeList, ...this.overdueList, ...this.returnedList].forEach(l => {
+      csv += `${l.id},${l.bookId},${l.studentId},${l.loanDate},${l.dueDate},${l.status}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'prestamos.csv'; a.click();
+  }
+}

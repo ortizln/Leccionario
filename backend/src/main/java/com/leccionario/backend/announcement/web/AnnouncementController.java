@@ -4,7 +4,6 @@ import com.leccionario.backend.announcement.dto.AnnouncementRequest;
 import com.leccionario.backend.announcement.dto.AnnouncementResponse;
 import com.leccionario.backend.announcement.service.AnnouncementService;
 import com.leccionario.backend.schedule.dto.ScheduleBlockResponse;
-import com.leccionario.backend.schedule.domain.ScheduleBlock;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.List;

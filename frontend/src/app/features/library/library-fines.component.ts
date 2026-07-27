@@ -1,0 +1,99 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../../core/api.config';
+import { AuthService } from '../../core/auth.service';
+
+@Component({
+  selector: 'app-library-fines',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Multas de Biblioteca</h5>
+      <button class="btn btn-sm btn-primary" (click)="showCalcModal=true"><i class="bi bi-calculator me-1"></i>Calcular Multa</button>
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-danger text-white text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">{{ pendingCount }}</div><div class="small">Pendientes</div></div></div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-success text-white text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">{{ paidCount }}</div><div class="small">Pagadas</div></div></div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-primary text-white text-center"><div class="card-body py-3"><div class="fs-3 fw-bold">\${{ totalAmount | number:'1.2-2' }}</div><div class="small">Total Multas</div></div></div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light"><tr><th>Estudiante</th><th>Dias</th><th>Monto</th><th>Razon</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let f of fines">
+                <td class="fw-semibold">ID: {{ f.studentId }}</td>
+                <td>{{ f.daysOverdue }}</td>
+                <td>\${{ f.fineAmount | number:'1.2-2' }}</td>
+                <td>{{ f.reason || '-' }}</td>
+                <td><span class="badge" [class.bg-danger]="f.status==='PENDIENTE'" [class.bg-success]="f.status==='PAGADA'" [class.bg-secondary]="f.status==='CONDONADA'">{{ f.status }}</span></td>
+                <td>
+                  <button *ngIf="f.status==='PENDIENTE'" class="btn btn-sm btn-outline-success me-1" (click)="pay(f.id)"><i class="bi bi-check-lg"></i></button>
+                  <button *ngIf="f.status==='PENDIENTE'" class="btn btn-sm btn-outline-secondary" (click)="forgive(f.id)"><i class="bi bi-x-lg"></i></button>
+                </td>
+              </tr>
+              <tr *ngIf="fines.length===0"><td colspan="6" class="text-center text-muted py-3">No hay multas registradas</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal d-block" *ngIf="showCalcModal" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+      <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header py-2"><h6 class="modal-title">Calcular Multa</h6></div>
+        <div class="modal-body">
+          <label class="form-label small">ID del Prestamo *</label>
+          <input type="number" class="form-control form-control-sm" [(ngModel)]="loanId">
+          <small class="text-muted">Se calculara automaticamente: $0.50 por dia de atraso</small>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-sm btn-secondary" (click)="showCalcModal=false">Cancelar</button>
+          <button class="btn btn-sm btn-primary" (click)="calculate()" [disabled]="!loanId">Calcular</button>
+        </div>
+      </div></div>
+    </div>
+  `
+})
+export class LibraryFinesComponent implements OnInit {
+  fines: any[] = [];
+  showCalcModal = false;
+  loanId: number | null = null;
+
+  constructor(private http: HttpClient, private auth: AuthService) {}
+  ngOnInit() { this.load(); }
+  private get instId(): number { return this.auth.institutionId() || 1; }
+
+  get pendingCount(): number { return this.fines.filter(f => f.status === 'PENDIENTE').length; }
+  get paidCount(): number { return this.fines.filter(f => f.status === 'PAGADA').length; }
+  get totalAmount(): number { return this.fines.reduce((s, f) => s + (f.fineAmount || 0), 0); }
+
+  load() {
+    this.http.get<any[]>(`${API_URL}/library/fines?institutionId=${this.instId}`).subscribe({ next: r => this.fines = r, error: () => {} });
+  }
+  calculate() {
+    this.http.post<any>(`${API_URL}/library/fines/calculate/${this.loanId}`, {}).subscribe({
+      next: () => { this.showCalcModal = false; this.loanId = null; this.load(); },
+      error: e => alert(e.error?.message || 'Error al calcular multa')
+    });
+  }
+  pay(id: number) {
+    this.http.post<any>(`${API_URL}/library/fines/${id}/pay`, {}).subscribe({ next: () => this.load() });
+  }
+  forgive(id: number) {
+    if (!confirm('Condonar esta multa?')) return;
+    this.http.post<any>(`${API_URL}/library/fines/${id}/forgive`, {}).subscribe({ next: () => this.load() });
+  }
+}

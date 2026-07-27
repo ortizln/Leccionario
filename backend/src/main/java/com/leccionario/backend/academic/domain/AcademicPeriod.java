@@ -14,8 +14,17 @@ import lombok.Setter;
 @Table(name = "academic_periods")
 public class AcademicPeriod extends BaseEntity {
 
+    @Column(name = "institution_id")
+    private Long institutionId;
+
     @Column(nullable = false, length = 120)
     private String name;
+
+    @Column(length = 20)
+    private String code;
+
+    @Column(name = "period_type", length = 30)
+    private String periodType = "BIMESTRE";
 
     @Column(nullable = false)
     private LocalDate startDate;

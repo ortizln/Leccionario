@@ -11,6 +11,7 @@ public interface StudentDemerRepository extends JpaRepository<StudentDemer, Long
     List<StudentDemer> findByStudentIdAndPeriodIdOrderByLogDateDesc(Long studentId, Long periodId);
     List<StudentDemer> findByCourseIdAndPeriodIdOrderByLogDateDesc(Long courseId, Long periodId);
     List<StudentDemer> findByTeacherIdAndPeriodIdOrderByLogDateDesc(Long teacherId, Long periodId);
+    List<StudentDemer> findByStudentIdOrderByLogDateDesc(Long studentId);
 
     @Modifying
     @Query("DELETE FROM StudentDemer sd WHERE sd.course.id = :courseId")

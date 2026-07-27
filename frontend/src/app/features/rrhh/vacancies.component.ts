@@ -1,0 +1,85 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../../core/api.config';
+import { AuthService } from '../../core/auth.service';
+
+@Component({
+  selector: 'app-vacancies',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0"><i class="bi bi-person-workspace me-2"></i>Vacantes</h5>
+      <button class="btn btn-primary btn-sm" (click)="openForm()"><i class="bi bi-plus me-1"></i>Nueva Vacante</button>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light"><tr><th>Titulo</th><th>Departamento</th><th>Tipo</th><th>Vacantes</th><th>Estado</th><th>Fecha Cierre</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let v of vacancies">
+                <td>{{ v.title }}</td>
+                <td>{{ v.department }}</td>
+                <td><span class="badge bg-info">{{ v.positionType }}</span></td>
+                <td>{{ v.positionsAvailable }}</td>
+                <td><span class="badge" [ngClass]="{'bg-success': v.status==='OPEN','bg-secondary': v.status==='CLOSED'}">{{ v.status }}</span></td>
+                <td>{{ v.closingDate | date:'dd/MM/yyyy' }}</td>
+                <td><button class="btn btn-outline-danger btn-sm" (click)="remove(v.id!)"><i class="bi bi-trash"></i></button></td>
+              </tr>
+              <tr *ngIf="!vacancies.length"><td colspan="7" class="text-center text-muted">Sin vacantes</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade show d-block" *ngIf="showForm" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+      <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h6 class="modal-title">{{ form.id ? 'Editar' : 'Nueva' }} Vacante</h6><button class="btn-close" (click)="showForm=false"></button></div>
+        <div class="modal-body">
+          <div class="mb-2"><label class="form-label small">Titulo</label><input class="form-control form-control-sm" [(ngModel)]="form.title"></div>
+          <div class="mb-2"><label class="form-label small">Descripcion</label><textarea class="form-control form-control-sm" rows="2" [(ngModel)]="form.description"></textarea></div>
+          <div class="row mb-2">
+            <div class="col"><label class="form-label small">Departamento</label><input class="form-control form-control-sm" [(ngModel)]="form.department"></div>
+            <div class="col"><label class="form-label small">Tipo</label><select class="form-select form-select-sm" [(ngModel)]="form.positionType"><option>FULL_TIME</option><option>PART_TIME</option><option>TEMPORARY</option></select></div>
+          </div>
+          <div class="row mb-2">
+            <div class="col"><label class="form-label small">Vacantes</label><input type="number" class="form-control form-control-sm" [(ngModel)]="form.positionsAvailable"></div>
+            <div class="col"><label class="form-label small">Fecha Cierre</label><input type="date" class="form-control form-control-sm" [(ngModel)]="form.closingDate"></div>
+          </div>
+          <div class="mb-2"><label class="form-label small">Requisitos</label><input class="form-control form-control-sm" [(ngModel)]="form.requirements"></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-secondary btn-sm" (click)="showForm=false">Cancelar</button><button class="btn btn-primary btn-sm" (click)="save()">Guardar</button></div>
+      </div></div>
+    </div>
+  `
+})
+export class VacanciesComponent implements OnInit {
+  vacancies: any[] = [];
+  showForm = false;
+  form: any = {};
+  constructor(private http: HttpClient, private auth: AuthService) {}
+  ngOnInit() { this.load(); }
+  private get instId(): number { return this.auth.institutionId() || 1; }
+
+  load() {
+    this.http.get<any[]>(`${API_URL}/hr/vacancies?institutionId=${this.instId}`).subscribe(r => this.vacancies = r);
+  }
+  openForm(v?: any) {
+    this.form = v ? {...v} : {positionType:'FULL_TIME', positionsAvailable:1, status:'OPEN'};
+    this.showForm = true;
+  }
+  save() {
+    const req = this.form.id
+      ? this.http.put(`${API_URL}/hr/vacancies/${this.form.id}`, {...this.form, institutionId: this.instId})
+      : this.http.post(`${API_URL}/hr/vacancies`, {...this.form, institutionId: this.instId});
+    req.subscribe(() => { this.showForm = false; this.load(); });
+  }
+  remove(id: number) {
+    if (confirm('Eliminar vacante?')) this.http.delete(`${API_URL}/hr/vacancies/${id}`).subscribe(() => this.load());
+  }
+}

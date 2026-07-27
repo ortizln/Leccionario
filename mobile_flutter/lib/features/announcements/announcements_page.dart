@@ -17,9 +17,21 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
   String? _error;
 
   static const _typeConfig = {
-    'EVENT': {'icon': Icons.event, 'color': Color(0xFF81B29A), 'label': 'Evento'},
-    'TASK': {'icon': Icons.assignment, 'color': Color(0xFF3B4436), 'label': 'Tarea'},
-    'ALERT': {'icon': Icons.warning_amber, 'color': Color(0xFFE07A5F), 'label': 'Alerta'},
+    'EVENT': {
+      'icon': Icons.event,
+      'color': Color(0xFF81B29A),
+      'label': 'Evento'
+    },
+    'TASK': {
+      'icon': Icons.assignment,
+      'color': Color(0xFF3B4436),
+      'label': 'Tarea'
+    },
+    'ALERT': {
+      'icon': Icons.warning_amber,
+      'color': Color(0xFFE07A5F),
+      'label': 'Alerta'
+    },
   };
 
   static const _priorityConfig = {
@@ -36,9 +48,17 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
   Future<void> _load() async {
     try {
       final list = await widget.repo.fetchMyAnnouncements();
-      if (mounted) setState(() { _announcements = list; _loading = false; });
+      if (mounted)
+        setState(() {
+          _announcements = list;
+          _loading = false;
+        });
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
     }
   }
 
@@ -46,16 +66,24 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
     if (ann.read) return;
     await widget.repo.markAsRead(ann.id);
     setState(() {
-        final idx = _announcements.indexWhere((a) => a.id == ann.id);
-        if (idx >= 0) {
-          _announcements[idx] = Announcement(
-            id: ann.id, title: ann.title, description: ann.description,
-            type: ann.type, priority: ann.priority, eventDate: ann.eventDate,
-            eventEndDate: ann.eventEndDate, courseId: ann.courseId,
-            courseName: ann.courseName, createdByName: ann.createdByName,
-            createdAt: ann.createdAt, recipientCount: ann.recipientCount, read: true,
-            schedules: ann.schedules,
-          );
+      final idx = _announcements.indexWhere((a) => a.id == ann.id);
+      if (idx >= 0) {
+        _announcements[idx] = Announcement(
+          id: ann.id,
+          title: ann.title,
+          description: ann.description,
+          type: ann.type,
+          priority: ann.priority,
+          eventDate: ann.eventDate,
+          eventEndDate: ann.eventEndDate,
+          courseId: ann.courseId,
+          courseName: ann.courseName,
+          createdByName: ann.createdByName,
+          createdAt: ann.createdAt,
+          recipientCount: ann.recipientCount,
+          read: true,
+          schedules: ann.schedules,
+        );
       }
     });
   }
@@ -70,7 +98,8 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       slivers: [
         _buildHeader(cs, tt),
         if (_loading)
-          const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
+          const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()))
         else if (_error != null)
           SliverFillRemaining(child: _buildError(cs))
         else if (_announcements.isEmpty)
@@ -107,7 +136,8 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.campaign, color: Colors.white, size: 28),
+                  child:
+                      const Icon(Icons.campaign, color: Colors.white, size: 28),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -148,9 +178,13 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
           children: [
             Icon(Icons.cloud_off_rounded, size: 64, color: cs.error),
             const SizedBox(height: 16),
-            Text('Error al cargar anuncios', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const Text('Error al cargar anuncios',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 24),
-            FilledButton.icon(onPressed: _load, icon: const Icon(Icons.refresh), label: const Text('Reintentar')),
+            FilledButton.icon(
+                onPressed: _load,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reintentar')),
           ],
         ),
       ),
@@ -166,16 +200,19 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
           children: [
             Icon(Icons.campaign_outlined, size: 64, color: cs.outline),
             const SizedBox(height: 16),
-            Text('Sin anuncios', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            Text('Sin anuncios',
+                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text('No hay anuncios disponibles', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+            Text('No hay anuncios disponibles',
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAnnouncementCard(Announcement ann, ColorScheme cs, TextTheme tt) {
+  Widget _buildAnnouncementCard(
+      Announcement ann, ColorScheme cs, TextTheme tt) {
     final typeCfg = _typeConfig[ann.type] ?? _typeConfig['EVENT']!;
     final priorityCfg = _priorityConfig[ann.priority];
 
@@ -202,7 +239,8 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                     width: 5,
                     decoration: BoxDecoration(
                       color: typeCfg['color'] as Color,
-                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+                      borderRadius: const BorderRadius.horizontal(
+                          left: Radius.circular(16)),
                     ),
                   ),
                   Expanded(
@@ -214,19 +252,26 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: (typeCfg['color'] as Color).withValues(alpha: 0.12),
+                                  color: (typeCfg['color'] as Color)
+                                      .withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(typeCfg['icon'] as IconData, size: 14, color: typeCfg['color'] as Color),
+                                    Icon(typeCfg['icon'] as IconData,
+                                        size: 14,
+                                        color: typeCfg['color'] as Color),
                                     const SizedBox(width: 4),
                                     Text(
                                       typeCfg['label'] as String,
-                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: typeCfg['color'] as Color),
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: typeCfg['color'] as Color),
                                     ),
                                   ],
                                 ),
@@ -234,36 +279,49 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                               if (priorityCfg != null) ...[
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: (priorityCfg['color'] as Color).withValues(alpha: 0.15),
+                                    color: (priorityCfg['color'] as Color)
+                                        .withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
                                     priorityCfg['label'] as String,
-                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: (priorityCfg['color'] as Color)),
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: (priorityCfg['color'] as Color)),
                                   ),
                                 ),
                               ],
                               if (ann.courseName != null) ...[
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: cs.secondaryContainer,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  child: Text(ann.courseName!, style: TextStyle(fontSize: 10, color: cs.onSecondaryContainer)),
+                                  child: Text(ann.courseName!,
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          color: cs.onSecondaryContainer)),
                                 ),
                               ] else ...[
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: cs.tertiaryContainer,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  child: Text('General', style: TextStyle(fontSize: 10, color: cs.onTertiaryContainer)),
+                                  child: Text('General',
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          color: cs.onTertiaryContainer)),
                                 ),
                               ],
                               if (!ann.read) ...[
@@ -282,12 +340,14 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                           const SizedBox(height: 10),
                           Text(
                             ann.title,
-                            style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                            style: tt.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             ann.description,
-                            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                            style: tt.bodySmall
+                                ?.copyWith(color: cs.onSurfaceVariant),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -296,9 +356,13 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.person_outline, size: 12, color: cs.onSurfaceVariant),
+                              Icon(Icons.person_outline,
+                                  size: 12, color: cs.onSurfaceVariant),
                               const SizedBox(width: 4),
-                              Text(ann.createdByName, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11)),
+                              Text(ann.createdByName,
+                                  style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                      fontSize: 11)),
                             ],
                           ),
                         ],
@@ -327,16 +391,20 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
         children: [
           for (final weekday in sortedKeys)
             ...grouped[weekday]!.map((s) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: cs.primaryContainer.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                '${s.weekdayLabel} ${s.blockLabel}',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.onPrimaryContainer),
-              ),
-            )),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '${s.weekdayLabel} ${s.blockLabel}',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onPrimaryContainer),
+                  ),
+                )),
         ],
       );
     }
@@ -345,7 +413,9 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
         children: [
           Icon(Icons.calendar_today, size: 12, color: cs.onSurfaceVariant),
           const SizedBox(width: 4),
-          Text(ann.eventDate!, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11)),
+          Text(ann.eventDate!,
+              style: tt.bodySmall
+                  ?.copyWith(color: cs.onSurfaceVariant, fontSize: 11)),
         ],
       );
     }

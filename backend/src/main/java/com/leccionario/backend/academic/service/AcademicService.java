@@ -61,7 +61,6 @@ import com.leccionario.backend.user.repository.StudentRepository;
 import com.leccionario.backend.user.repository.TeacherRepository;
 import com.leccionario.backend.user.repository.UserRepository;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
