@@ -9,7 +9,7 @@ WEB_ROOT="${WEB_ROOT:-/var/www/leccionario}"
 
 echo "[frontend] Instalando dependencias"
 cd "${FRONTEND_DIR}"
-npm install
+npm install --legacy-peer-deps
 
 echo "[frontend] Generando build Angular (base-href: /leccionario/)"
 npx ng build --configuration production
