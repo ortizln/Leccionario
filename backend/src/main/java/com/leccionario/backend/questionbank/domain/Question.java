@@ -43,16 +43,16 @@ public class Question extends BaseEntity {
     @Column(name = "correct_answer", columnDefinition = "text")
     private String correctAnswer;
 
-    @Column(length = 500)
+    @Column(name = "option_a", length = 500)
     private String optionA;
 
-    @Column(length = 500)
+    @Column(name = "option_b", length = 500)
     private String optionB;
 
-    @Column(length = 500)
+    @Column(name = "option_c", length = 500)
     private String optionC;
 
-    @Column(length = 500)
+    @Column(name = "option_d", length = 500)
     private String optionD;
 
     @Column(columnDefinition = "text")
