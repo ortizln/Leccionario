@@ -1,18 +1,42 @@
 -- ============================================================================
--- LECCIONARIO - Limpieza de datos de transacción
+-- LECCIONARIO - Limpieza de datos de transaccion
 -- Conserva: academic_years, subjects, schedule_blocks, roles, institutions,
 --           school_days, school_modalities, demerit_categories, demerit_faltas,
---           branding, behavior_categories, behavior_offenses, demerits
+--           branding, behavior_categories, behavior_offenses, demerits,
+--           grade_scales, evaluation_types, merit_categories, question_categories,
+--           certificate_templates, scholarship_types, book_categories, asset_categories
 -- ============================================================================
 
 TRUNCATE TABLE
-    payroll_entries,
-    payrolls,
+    recovery_exams,
+    competencies,
+    rubrics,
+    asset_warranties,
+    scheduled_notifications,
+    audit_logs,
+    ai_study_plans,
+    ai_learning_styles,
     ai_student_profiles,
     ai_anomalies,
     ai_recommendations,
     ai_predictions,
     ai_models,
+    employee_benefits,
+    employee_actions,
+    training_contents,
+    vacancies,
+    employee_evaluations,
+    employee_attendances,
+    financial_discounts,
+    suppliers,
+    library_fines,
+    purchase_orders,
+    asset_custodians,
+    circulars,
+    school_events,
+    payroll_entries,
+    payrolls,
+    holidays,
     communication_group_members,
     communication_groups,
     parent_communications,
@@ -43,6 +67,7 @@ TRUNCATE TABLE
     clubs,
     scholarship_applications,
     scholarship_types,
+    psychological_evaluations,
     student_insurance,
     student_vaccinations,
     student_health_records,
@@ -68,7 +93,6 @@ TRUNCATE TABLE
     tutoring_follow_ups,
     tutoring_sessions,
     student_merits,
-    merit_categories,
     certificate_details,
     certificates,
     report_card_details,
@@ -76,6 +100,8 @@ TRUNCATE TABLE
     grade_history,
     period_grades,
     grades,
+    evaluation_types,
+    grade_scales,
     evaluations,
     demerit_status_history,
     demerit_evidences,
@@ -102,13 +128,35 @@ TRUNCATE TABLE
 CASCADE;
 
 -- Resetear secuencias
-ALTER SEQUENCE payroll_entries_id_seq RESTART WITH 1;
-ALTER SEQUENCE payrolls_id_seq RESTART WITH 1;
+ALTER SEQUENCE recovery_exams_id_seq RESTART WITH 1;
+ALTER SEQUENCE competencies_id_seq RESTART WITH 1;
+ALTER SEQUENCE rubrics_id_seq RESTART WITH 1;
+ALTER SEQUENCE asset_warranties_id_seq RESTART WITH 1;
+ALTER SEQUENCE scheduled_notifications_id_seq RESTART WITH 1;
+ALTER SEQUENCE audit_logs_id_seq RESTART WITH 1;
+ALTER SEQUENCE ai_study_plans_id_seq RESTART WITH 1;
+ALTER SEQUENCE ai_learning_styles_id_seq RESTART WITH 1;
 ALTER SEQUENCE ai_student_profiles_id_seq RESTART WITH 1;
 ALTER SEQUENCE ai_anomalies_id_seq RESTART WITH 1;
 ALTER SEQUENCE ai_recommendations_id_seq RESTART WITH 1;
 ALTER SEQUENCE ai_predictions_id_seq RESTART WITH 1;
 ALTER SEQUENCE ai_models_id_seq RESTART WITH 1;
+ALTER SEQUENCE employee_benefits_id_seq RESTART WITH 1;
+ALTER SEQUENCE employee_actions_id_seq RESTART WITH 1;
+ALTER SEQUENCE training_contents_id_seq RESTART WITH 1;
+ALTER SEQUENCE vacancies_id_seq RESTART WITH 1;
+ALTER SEQUENCE employee_evaluations_id_seq RESTART WITH 1;
+ALTER SEQUENCE employee_attendances_id_seq RESTART WITH 1;
+ALTER SEQUENCE financial_discounts_id_seq RESTART WITH 1;
+ALTER SEQUENCE suppliers_id_seq RESTART WITH 1;
+ALTER SEQUENCE library_fines_id_seq RESTART WITH 1;
+ALTER SEQUENCE purchase_orders_id_seq RESTART WITH 1;
+ALTER SEQUENCE asset_custodians_id_seq RESTART WITH 1;
+ALTER SEQUENCE circulars_id_seq RESTART WITH 1;
+ALTER SEQUENCE school_events_id_seq RESTART WITH 1;
+ALTER SEQUENCE payroll_entries_id_seq RESTART WITH 1;
+ALTER SEQUENCE payrolls_id_seq RESTART WITH 1;
+ALTER SEQUENCE holidays_id_seq RESTART WITH 1;
 ALTER SEQUENCE communication_group_members_id_seq RESTART WITH 1;
 ALTER SEQUENCE communication_groups_id_seq RESTART WITH 1;
 ALTER SEQUENCE parent_communications_id_seq RESTART WITH 1;
@@ -139,6 +187,7 @@ ALTER SEQUENCE club_memberships_id_seq RESTART WITH 1;
 ALTER SEQUENCE clubs_id_seq RESTART WITH 1;
 ALTER SEQUENCE scholarship_applications_id_seq RESTART WITH 1;
 ALTER SEQUENCE scholarship_types_id_seq RESTART WITH 1;
+ALTER SEQUENCE psychological_evaluations_id_seq RESTART WITH 1;
 ALTER SEQUENCE student_insurance_id_seq RESTART WITH 1;
 ALTER SEQUENCE student_vaccinations_id_seq RESTART WITH 1;
 ALTER SEQUENCE student_health_records_id_seq RESTART WITH 1;
@@ -172,6 +221,8 @@ ALTER SEQUENCE report_cards_id_seq RESTART WITH 1;
 ALTER SEQUENCE grade_history_id_seq RESTART WITH 1;
 ALTER SEQUENCE period_grades_id_seq RESTART WITH 1;
 ALTER SEQUENCE grades_id_seq RESTART WITH 1;
+ALTER SEQUENCE evaluation_types_id_seq RESTART WITH 1;
+ALTER SEQUENCE grade_scales_id_seq RESTART WITH 1;
 ALTER SEQUENCE evaluations_id_seq RESTART WITH 1;
 ALTER SEQUENCE daily_log_student_incidents_id_seq RESTART WITH 1;
 ALTER SEQUENCE daily_log_student_absences_id_seq RESTART WITH 1;
@@ -194,11 +245,7 @@ ALTER SEQUENCE announcements_id_seq RESTART WITH 1;
 ALTER SEQUENCE announcement_recipients_id_seq RESTART WITH 1;
 ALTER SEQUENCE announcement_schedules_id_seq RESTART WITH 1;
 
--- Limpiar feriados
-DELETE FROM holidays;
-ALTER SEQUENCE holidays_id_seq RESTART WITH 1;
-
--- Refrescar la vista materializada
+-- Refrescar vistas materializadas
 REFRESH MATERIALIZED VIEW demerit_accumulated;
 REFRESH MATERIALIZED VIEW v_dashboard_courses;
 REFRESH MATERIALIZED VIEW v_dashboard_enrollments;

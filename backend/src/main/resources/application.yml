@@ -2,7 +2,7 @@ spring:
   application:
     name: leccionario-backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/leccionario_db
+    url: jdbc:postgresql://localhost:5432/leccionario
     username: postgres
     password: 12345
   jpa:

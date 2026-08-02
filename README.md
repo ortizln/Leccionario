@@ -53,7 +53,7 @@ Sistema full-stack para la gestión del leccionario estudiantil digital, orienta
 
 ### Backend
 
-1. Crear una base de datos PostgreSQL llamada `leccionario_db`.
+1. Crear una base de datos PostgreSQL llamada `leccionario`.
 2. Revisar `backend/src/main/resources/application.yml`.
 3. Ajustar usuario, contraseña, puerto o secreto JWT según el entorno local.
 4. Desde `backend/`, ejecutar `mvn spring-boot:run`.
@@ -61,7 +61,7 @@ Sistema full-stack para la gestión del leccionario estudiantil digital, orienta
 Configuración actual relevante:
 
 - puerto backend: `1080`
-- URL de base de datos: `jdbc:postgresql://localhost:5432/leccionario_db`
+- URL de base de datos: `jdbc:postgresql://localhost:5432/leccionario`
 
 Datos semilla generados al arranque:
 

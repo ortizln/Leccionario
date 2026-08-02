@@ -312,7 +312,7 @@ Archivo principal:
 Configuración actual:
 
 - PostgreSQL en `localhost:5432`
-- base `leccionario_db`
+- base `leccionario`
 - puerto HTTP `1080`
 - `ddl-auto=update`
 - secreto JWT configurado en archivo

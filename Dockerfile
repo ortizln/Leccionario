@@ -19,8 +19,8 @@ WORKDIR /app
 # Copy built JAR
 COPY --from=builder /app/target/*.jar app.jar
 
-# Copy SQL migrations for reference
-COPY backend/src/main/resources/db/migration /app/migrations
+# Copy consolidated schema for reference
+COPY docs/sql/schema_full.sql /app/schema_full.sql
 
 # Run on port 1080
 EXPOSE 1080

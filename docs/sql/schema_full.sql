@@ -1,8 +1,7 @@
 -- ============================================================================
--- LECCIONARIO - Schema completo consolidado (V1 → V14)
+-- LECCIONARIO - Schema completo consolidado (V1 → V40)
 -- PostgreSQL 15+
--- Generado: 2026-07-06
--- Incluye: schema base + migraciones V8-V14 + campos JPA entity
+-- Generado: 2026-08-02
 -- ============================================================================
 
 -- ============================================================================
@@ -174,7 +173,7 @@ CREATE TABLE courses (
     sub_level           VARCHAR(20),
     grade               INTEGER,
     capacity            INTEGER,
-    week_student_id     BIGINT REFERENCES students(id),
+    week_student_id     BIGINT,
     academic_year_id    BIGINT REFERENCES academic_years(id),
     school_day_id       BIGINT REFERENCES school_days(id),
     school_modality_id  BIGINT REFERENCES school_modalities(id),
@@ -994,7 +993,7 @@ CREATE TABLE enrollments (
     id                  BIGSERIAL PRIMARY KEY,
     student_id          BIGINT NOT NULL REFERENCES students(id),
     course_id           BIGINT NOT NULL REFERENCES courses(id),
-    period_id           BIGINT NOT NULL REFERENCES periods(id),
+    period_id           BIGINT NOT NULL REFERENCES academic_periods(id),
     enrollment_number   VARCHAR(20) NOT NULL,
     parallel_code       VARCHAR(5),
     status              VARCHAR(15) NOT NULL DEFAULT 'ACTIVE'
@@ -1050,7 +1049,7 @@ CREATE TABLE curricular_adaptations (
     goals               TEXT,
     strategies          TEXT,
     evaluation_adjustments TEXT,
-    period_id           BIGINT REFERENCES periods(id),
+    period_id           BIGINT REFERENCES academic_periods(id),
     status              VARCHAR(15) NOT NULL DEFAULT 'ACTIVE'
                         CHECK (status IN ('ACTIVE', 'REVIEWED', 'COMPLETED')),
     created_by          VARCHAR(100),
@@ -1899,14 +1898,14 @@ SELECT
 FROM courses c
 LEFT JOIN enrollments e ON e.course_id = c.id AND e.status = 'ACTIVA'
 LEFT JOIN period_grades pg ON pg.course_id = c.id
-LEFT JOIN periods p ON p.id = pg.period_id
+LEFT JOIN academic_periods p ON p.id = pg.period_id
 GROUP BY c.id, c.name, p.id, p.name;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS v_dashboard_enrollments AS
 SELECT p.id AS period_id, p.name AS period_name, COUNT(*) AS total_enrollments,
     COUNT(CASE WHEN e.status = 'ACTIVA' THEN 1 END) AS active_enrollments,
     COUNT(CASE WHEN e.status = 'RETIRADO' THEN 1 END) AS withdrawn
-FROM enrollments e JOIN periods p ON p.id = e.period_id GROUP BY p.id, p.name;
+FROM enrollments e JOIN academic_periods p ON p.id = e.period_id GROUP BY p.id, p.name;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS v_dashboard_finance AS
 SELECT institution_id, DATE_TRUNC('month', invoice_date) AS month, COUNT(*) AS total_invoices,
@@ -2197,3 +2196,411 @@ CREATE TABLE IF NOT EXISTS holidays (
 
 CREATE INDEX idx_holidays_institution ON holidays(institution_id);
 CREATE INDEX idx_holidays_date ON holidays(holiday_date);
+
+-- ============================================================================
+-- V34: EMPLOYEE ATTENDANCE, EVALUATIONS, FINANCIAL DISCOUNTS, SUPPLIERS, LIBRARY FINES
+-- ============================================================================
+
+CREATE TABLE employee_attendances (
+    id                  BIGSERIAL PRIMARY KEY,
+    employee_id         BIGINT NOT NULL REFERENCES employees(id),
+    attendance_date     DATE NOT NULL,
+    check_in_time       TIME,
+    check_out_time      TIME,
+    status              VARCHAR(20) NOT NULL DEFAULT 'PRESENTE',
+    observations        VARCHAR(500),
+    institution_id      BIGINT NOT NULL,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_emp_att_employee ON employee_attendances(employee_id);
+CREATE INDEX idx_emp_att_inst_date ON employee_attendances(institution_id, attendance_date);
+
+CREATE TABLE employee_evaluations (
+    id                      BIGSERIAL PRIMARY KEY,
+    employee_id             BIGINT NOT NULL REFERENCES employees(id),
+    evaluation_type         VARCHAR(50) NOT NULL,
+    evaluation_date         DATE NOT NULL,
+    score                   DECIMAL(3,1),
+    status                  VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE',
+    strengths               VARCHAR(500),
+    improvements            VARCHAR(500),
+    comments                VARCHAR(500),
+    institution_id          BIGINT NOT NULL,
+    evaluated_by_user_id    BIGINT NOT NULL,
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_emp_eval_employee ON employee_evaluations(employee_id);
+CREATE INDEX idx_emp_eval_inst ON employee_evaluations(institution_id);
+
+CREATE TABLE financial_discounts (
+    id              BIGSERIAL PRIMARY KEY,
+    name            VARCHAR(100) NOT NULL,
+    description     VARCHAR(300),
+    discount_type   VARCHAR(30) NOT NULL,
+    value           DECIMAL(10,2) NOT NULL,
+    status          VARCHAR(30) NOT NULL DEFAULT 'ACTIVO',
+    valid_from      DATE,
+    valid_until     DATE,
+    institution_id  BIGINT NOT NULL,
+    student_id      BIGINT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_fin_disc_inst ON financial_discounts(institution_id);
+CREATE INDEX idx_fin_disc_student ON financial_discounts(student_id);
+
+CREATE TABLE suppliers (
+    id              BIGSERIAL PRIMARY KEY,
+    name            VARCHAR(150) NOT NULL,
+    ruc             VARCHAR(20),
+    contact_name    VARCHAR(100),
+    phone           VARCHAR(20),
+    email           VARCHAR(100),
+    address         VARCHAR(200),
+    status          VARCHAR(30) NOT NULL DEFAULT 'ACTIVO',
+    institution_id  BIGINT NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_supplier_inst ON suppliers(institution_id);
+
+CREATE TABLE library_fines (
+    id              BIGSERIAL PRIMARY KEY,
+    loan_id         BIGINT NOT NULL REFERENCES book_loans(id),
+    student_id      BIGINT NOT NULL,
+    fine_amount     DECIMAL(10,2) NOT NULL,
+    days_overdue    INT NOT NULL,
+    status          VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE',
+    paid_date       DATE,
+    reason          VARCHAR(200),
+    institution_id  BIGINT NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_lib_fine_student ON library_fines(student_id);
+CREATE INDEX idx_lib_fine_inst ON library_fines(institution_id);
+
+-- ============================================================================
+-- V35: ASSET CUSTODIANS, PURCHASE ORDERS, CIRCULARS, SCHOOL EVENTS
+-- ============================================================================
+
+CREATE TABLE asset_custodians (
+    id              BIGSERIAL PRIMARY KEY,
+    asset_id        BIGINT NOT NULL REFERENCES assets(id),
+    employee_id     BIGINT NOT NULL,
+    assigned_date   DATE NOT NULL,
+    returned_date   DATE,
+    status          VARCHAR(20) NOT NULL DEFAULT 'ASIGNADO',
+    observations    VARCHAR(300),
+    institution_id  BIGINT NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_custodian_asset ON asset_custodians(asset_id);
+CREATE INDEX idx_custodian_inst ON asset_custodians(institution_id);
+
+CREATE TABLE purchase_orders (
+    id                      BIGSERIAL PRIMARY KEY,
+    order_number            VARCHAR(30) NOT NULL,
+    supplier_id             BIGINT REFERENCES suppliers(id),
+    order_date              DATE NOT NULL,
+    expected_date           DATE,
+    total_amount            DECIMAL(12,2) DEFAULT 0,
+    status                  VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE',
+    description             VARCHAR(300),
+    institution_id          BIGINT NOT NULL,
+    requested_by_user_id    BIGINT NOT NULL,
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_purchase_order_inst ON purchase_orders(institution_id);
+
+CREATE TABLE circulars (
+    id                      BIGSERIAL PRIMARY KEY,
+    title                   VARCHAR(200) NOT NULL,
+    content                 VARCHAR(2000) NOT NULL,
+    category                VARCHAR(50),
+    publish_date            DATE NOT NULL,
+    status                  VARCHAR(30) NOT NULL DEFAULT 'PUBLICADA',
+    institution_id          BIGINT NOT NULL,
+    author_user_id          BIGINT NOT NULL,
+    requires_acknowledge    BOOLEAN DEFAULT FALSE,
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_circular_inst ON circulars(institution_id);
+
+CREATE TABLE school_events (
+    id                  BIGSERIAL PRIMARY KEY,
+    title               VARCHAR(200) NOT NULL,
+    description         VARCHAR(1000),
+    event_date          TIMESTAMPTZ NOT NULL,
+    end_date            TIMESTAMPTZ,
+    location            VARCHAR(100),
+    event_type          VARCHAR(30),
+    status              VARCHAR(30) NOT NULL DEFAULT 'PROGRAMADO',
+    institution_id      BIGINT NOT NULL,
+    organizer_user_id   BIGINT NOT NULL,
+    is_public           BOOLEAN DEFAULT TRUE,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_event_inst ON school_events(institution_id);
+
+-- ============================================================================
+-- V36: VACANCIES, TRAINING CONTENT, EMPLOYEE ACTIONS, EMPLOYEE BENEFITS
+-- ============================================================================
+
+CREATE TABLE vacancies (
+    id                      BIGSERIAL PRIMARY KEY,
+    title                   VARCHAR(200) NOT NULL,
+    description             TEXT,
+    department              VARCHAR(50) NOT NULL,
+    position_type           VARCHAR(50) DEFAULT 'FULL_TIME',
+    status                  VARCHAR(50) DEFAULT 'OPEN',
+    positions_available     INTEGER DEFAULT 1,
+    published_date          DATE DEFAULT CURRENT_DATE,
+    closing_date            DATE,
+    requirements            VARCHAR(500),
+    institution_id          BIGINT NOT NULL,
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_vacancies_institution ON vacancies(institution_id);
+CREATE INDEX idx_vacancies_status ON vacancies(status);
+
+CREATE TABLE training_contents (
+    id                  BIGSERIAL PRIMARY KEY,
+    course_id           BIGINT NOT NULL,
+    title               VARCHAR(200) NOT NULL,
+    description         VARCHAR(1000),
+    content_type        VARCHAR(30) DEFAULT 'LESSON',
+    sort_order          INTEGER DEFAULT 0,
+    content             TEXT,
+    resource_url        VARCHAR(500),
+    duration_minutes    INTEGER,
+    institution_id      BIGINT NOT NULL,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_training_contents_course ON training_contents(course_id);
+
+CREATE TABLE employee_actions (
+    id              BIGSERIAL PRIMARY KEY,
+    employee_id     BIGINT NOT NULL,
+    action_type     VARCHAR(50) NOT NULL,
+    description     VARCHAR(500) NOT NULL,
+    action_date     DATE DEFAULT CURRENT_DATE,
+    observations    VARCHAR(500),
+    severity        VARCHAR(50) DEFAULT 'LEVE',
+    institution_id  BIGINT NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_employee_actions_employee ON employee_actions(employee_id);
+CREATE INDEX idx_employee_actions_institution ON employee_actions(institution_id);
+
+CREATE TABLE employee_benefits (
+    id              BIGSERIAL PRIMARY KEY,
+    employee_id     BIGINT NOT NULL,
+    benefit_type    VARCHAR(100) NOT NULL,
+    description     VARCHAR(200) NOT NULL,
+    value           DECIMAL(10,2) NOT NULL,
+    frequency       VARCHAR(20) DEFAULT 'MONTHLY',
+    is_active       BOOLEAN DEFAULT TRUE,
+    institution_id  BIGINT NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_employee_benefits_employee ON employee_benefits(employee_id);
+CREATE INDEX idx_employee_benefits_institution ON employee_benefits(institution_id);
+
+-- ============================================================================
+-- V37: AI LEARNING STYLES & STUDY PLANS
+-- ============================================================================
+
+CREATE TABLE ai_learning_styles (
+    id                  BIGSERIAL PRIMARY KEY,
+    student_id          BIGINT NOT NULL,
+    institution_id      BIGINT NOT NULL,
+    dominant_style      VARCHAR(50) DEFAULT 'VISUAL',
+    visual_score        DECIMAL(5,4) DEFAULT 0,
+    auditory_score      DECIMAL(5,4) DEFAULT 0,
+    kinesthetic_score   DECIMAL(5,4) DEFAULT 0,
+    reading_score       DECIMAL(5,4) DEFAULT 0,
+    assessment_count    INTEGER DEFAULT 0,
+    observations        TEXT,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(student_id, institution_id)
+);
+
+CREATE TABLE ai_study_plans (
+    id                  BIGSERIAL PRIMARY KEY,
+    student_id          BIGINT NOT NULL,
+    institution_id      BIGINT NOT NULL,
+    title               VARCHAR(200),
+    description         TEXT,
+    objectives          TEXT,
+    activities          TEXT,
+    resources           TEXT,
+    status              VARCHAR(30) DEFAULT 'DRAFT',
+    start_date          DATE,
+    end_date            DATE,
+    progress_percent    DECIMAL(5,2) DEFAULT 0,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_ai_ls_student ON ai_learning_styles(student_id);
+CREATE INDEX idx_ai_ls_institution ON ai_learning_styles(institution_id);
+CREATE INDEX idx_ai_sp_student ON ai_study_plans(student_id);
+CREATE INDEX idx_ai_sp_institution ON ai_study_plans(institution_id);
+CREATE INDEX idx_ai_sp_status ON ai_study_plans(status);
+
+-- ============================================================================
+-- V38: ASSET WARRANTIES
+-- ============================================================================
+
+CREATE TABLE asset_warranties (
+    id              BIGSERIAL PRIMARY KEY,
+    asset_id        BIGINT NOT NULL,
+    provider        VARCHAR(200) NOT NULL,
+    start_date      DATE,
+    end_date        DATE,
+    warranty_type   VARCHAR(50) DEFAULT 'ESTANDAR',
+    terms           TEXT,
+    status          VARCHAR(20) DEFAULT 'VIGENTE',
+    institution_id  BIGINT NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_asset_warranties_asset ON asset_warranties(asset_id);
+CREATE INDEX idx_asset_warranties_institution ON asset_warranties(institution_id);
+CREATE INDEX idx_asset_warranties_end ON asset_warranties(end_date);
+
+-- ============================================================================
+-- V39: AUDIT LOGS & SCHEDULED NOTIFICATIONS
+-- ============================================================================
+
+CREATE TABLE audit_logs (
+    id              BIGSERIAL PRIMARY KEY,
+    action          VARCHAR(50) NOT NULL,
+    entity_type     VARCHAR(100) NOT NULL,
+    entity_id       BIGINT,
+    entity_name     VARCHAR(100),
+    user_id         BIGINT,
+    username        VARCHAR(100),
+    institution_id  BIGINT,
+    details         TEXT,
+    old_values      TEXT,
+    new_values      TEXT,
+    status          VARCHAR(50) DEFAULT 'EXITOSO',
+    ip_address      VARCHAR(50),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_audit_logs_institution ON audit_logs(institution_id);
+CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);
+CREATE INDEX idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
+CREATE INDEX idx_audit_logs_action ON audit_logs(action);
+
+CREATE TABLE scheduled_notifications (
+    id                  BIGSERIAL PRIMARY KEY,
+    notification_type   VARCHAR(50) NOT NULL,
+    title               VARCHAR(200) NOT NULL,
+    message             TEXT NOT NULL,
+    target_type         VARCHAR(30) NOT NULL,
+    target_id           BIGINT,
+    institution_id      BIGINT NOT NULL,
+    schedule_cron       VARCHAR(100),
+    is_active           BOOLEAN DEFAULT TRUE,
+    last_run            TIMESTAMPTZ,
+    next_run            TIMESTAMPTZ,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_scheduled_notif_institution ON scheduled_notifications(institution_id);
+CREATE INDEX idx_scheduled_notif_active ON scheduled_notifications(is_active);
+
+-- ============================================================================
+-- V40: RUBRICS, COMPETENCIES, RECOVERY EXAMS + ACADEMIC PERIODS EXTENSIONS
+-- ============================================================================
+
+ALTER TABLE academic_periods ADD COLUMN IF NOT EXISTS institution_id BIGINT;
+ALTER TABLE academic_periods ADD COLUMN IF NOT EXISTS code VARCHAR(20);
+ALTER TABLE academic_periods ADD COLUMN IF NOT EXISTS period_type VARCHAR(30) DEFAULT 'BIMESTRE';
+ALTER TABLE academic_periods ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT FALSE;
+
+CREATE INDEX IF NOT EXISTS idx_academic_periods_institution ON academic_periods(institution_id);
+CREATE INDEX IF NOT EXISTS idx_academic_periods_dates ON academic_periods(start_date, end_date);
+
+CREATE TABLE rubrics (
+    id              BIGSERIAL PRIMARY KEY,
+    institution_id  BIGINT NOT NULL,
+    name            VARCHAR(200) NOT NULL,
+    description     TEXT,
+    criteria        JSONB NOT NULL DEFAULT '[]',
+    total_points    NUMERIC(5,2) DEFAULT 100,
+    created_by      VARCHAR(100),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_rubrics_institution ON rubrics(institution_id);
+
+CREATE TABLE competencies (
+    id                  BIGSERIAL PRIMARY KEY,
+    institution_id      BIGINT NOT NULL,
+    code                VARCHAR(20) NOT NULL,
+    name                VARCHAR(200) NOT NULL,
+    description         TEXT,
+    competency_type     VARCHAR(30) NOT NULL DEFAULT 'GENERALES',
+    area                VARCHAR(100),
+    grade_level         VARCHAR(50),
+    is_active           BOOLEAN DEFAULT TRUE,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_competencies_institution ON competencies(institution_id);
+CREATE INDEX idx_competencies_type ON competencies(competency_type);
+
+CREATE TABLE recovery_exams (
+    id                      BIGSERIAL PRIMARY KEY,
+    institution_id          BIGINT NOT NULL,
+    student_id              BIGINT NOT NULL,
+    course_id               BIGINT NOT NULL,
+    subject_id              BIGINT NOT NULL,
+    original_evaluation_id  BIGINT,
+    exam_type               VARCHAR(30) NOT NULL DEFAULT 'SUPLETORIO',
+    scheduled_date          DATE NOT NULL,
+    score                   NUMERIC(5,2),
+    status                  VARCHAR(20) DEFAULT 'PENDIENTE',
+    notes                   TEXT,
+    created_by              VARCHAR(100),
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_recovery_exams_institution ON recovery_exams(institution_id);
+CREATE INDEX idx_recovery_exams_student ON recovery_exams(student_id);
+CREATE INDEX idx_recovery_exams_status ON recovery_exams(status);
