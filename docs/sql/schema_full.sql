@@ -515,15 +515,16 @@ CREATE TABLE student_demers (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE student_demer_details (
+CREATE TABLE student_demer_details (CREATE TABLE student_demer_details (
     id                  BIGSERIAL PRIMARY KEY,
     student_demer_id    BIGINT NOT NULL REFERENCES student_demers(id) ON DELETE CASCADE,
     falta_id            BIGINT NOT NULL REFERENCES demerit_faltas(id),
     quantity            SMALLINT NOT NULL DEFAULT 1,
     score               SMALLINT NOT NULL,
     subtotal            SMALLINT NOT NULL,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE TABLE demerit_evidences (
     id                  BIGSERIAL PRIMARY KEY,
@@ -890,15 +891,16 @@ CREATE TABLE certificates (
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE certificate_details (
+CREATE TABLE certificate_details (CREATE TABLE certificate_details (
     id                  BIGSERIAL PRIMARY KEY,
     certificate_id      BIGINT NOT NULL REFERENCES certificates(id) ON DELETE CASCADE,
     subject_name        VARCHAR(150),
     score               DECIMAL(5,2),
     status              VARCHAR(20),
     observation         VARCHAR(300),
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE INDEX idx_cert_templates_institution ON certificate_templates(institution_id);
 CREATE INDEX idx_certificates_institution ON certificates(institution_id);
@@ -1177,7 +1179,7 @@ CREATE INDEX idx_dece_cases_type ON dece_cases(case_type);
 CREATE INDEX idx_dece_cases_status ON dece_cases(status);
 CREATE INDEX idx_dece_cases_priority ON dece_cases(priority);
 
-CREATE TABLE dece_follow_ups (
+CREATE TABLE dece_follow_ups (CREATE TABLE dece_follow_ups (
     id                  BIGSERIAL PRIMARY KEY,
     case_id             BIGINT NOT NULL REFERENCES dece_cases(id) ON DELETE CASCADE,
     date                DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -1185,8 +1187,9 @@ CREATE TABLE dece_follow_ups (
     actions_taken       TEXT,
     next_steps          TEXT,
     created_by          VARCHAR(100),
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE INDEX idx_dece_follow_ups_case ON dece_follow_ups(case_id);
 
@@ -1367,7 +1370,7 @@ CREATE TABLE employment_contracts (
 CREATE INDEX idx_contracts_employee ON employment_contracts(employee_id);
 CREATE INDEX idx_contracts_status ON employment_contracts(status);
 
-CREATE TABLE vacation_periods (
+CREATE TABLE vacation_periods (CREATE TABLE vacation_periods (
     id                  BIGSERIAL PRIMARY KEY,
     employee_id         BIGINT NOT NULL REFERENCES employees(id),
     year                INT NOT NULL,
@@ -1375,8 +1378,9 @@ CREATE TABLE vacation_periods (
     used_days           INT NOT NULL DEFAULT 0,
     pending_days        INT GENERATED ALWAYS AS (total_days - used_days) STORED,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_vacation_period UNIQUE (employee_id, year)
-);
+    CONSTRAINT uq_vacation_period UNIQUE (employee_id, year),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE TABLE vacation_requests (
     id                  BIGSERIAL PRIMARY KEY,
@@ -1439,7 +1443,7 @@ CREATE TABLE training_courses (
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE training_enrollments (
+CREATE TABLE training_enrollments (CREATE TABLE training_enrollments (
     id                  BIGSERIAL PRIMARY KEY,
     course_id           BIGINT NOT NULL REFERENCES training_courses(id) ON DELETE CASCADE,
     employee_id         BIGINT NOT NULL REFERENCES employees(id),
@@ -1450,8 +1454,9 @@ CREATE TABLE training_enrollments (
     status              VARCHAR(15) NOT NULL DEFAULT 'INSCRITO'
                         CHECK (status IN ('INSCRITO', 'EN_CURSO', 'COMPLETADO', 'ABANDONO')),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_training_enrollment UNIQUE (course_id, employee_id)
-);
+    CONSTRAINT uq_training_enrollment UNIQUE (course_id, employee_id),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE INDEX idx_training_courses_institution ON training_courses(institution_id);
 CREATE INDEX idx_training_enrollments_course ON training_enrollments(course_id);
@@ -1484,7 +1489,7 @@ CREATE TABLE student_health_records (
     CONSTRAINT uq_student_health UNIQUE (student_id)
 );
 
-CREATE TABLE student_vaccinations (
+CREATE TABLE student_vaccinations (CREATE TABLE student_vaccinations (
     id                  BIGSERIAL PRIMARY KEY,
     student_id          BIGINT NOT NULL REFERENCES students(id),
     vaccine_name        VARCHAR(150) NOT NULL,
@@ -1497,8 +1502,9 @@ CREATE TABLE student_vaccinations (
     status              VARCHAR(15) NOT NULL DEFAULT 'COMPLETADA'
                         CHECK (status IN ('COMPLETADA', 'PENDIENTE', 'PROGRAMADA')),
     notes               TEXT,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE INDEX idx_student_health_student ON student_health_records(student_id);
 CREATE INDEX idx_student_vaccinations_student ON student_vaccinations(student_id);
@@ -1599,7 +1605,7 @@ CREATE TABLE clubs (
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE club_memberships (
+CREATE TABLE club_memberships (CREATE TABLE club_memberships (
     id                  BIGSERIAL PRIMARY KEY,
     club_id             BIGINT NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
     student_id          BIGINT NOT NULL REFERENCES students(id),
@@ -1609,8 +1615,9 @@ CREATE TABLE club_memberships (
     status              VARCHAR(15) NOT NULL DEFAULT 'ACTIVO'
                         CHECK (status IN ('ACTIVO', 'INACTIVO', 'RETIRADO')),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_club_membership UNIQUE (club_id, student_id)
-);
+    CONSTRAINT uq_club_membership UNIQUE (club_id, student_id),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE INDEX idx_clubs_institution ON clubs(institution_id);
 CREATE INDEX idx_club_memberships_club ON club_memberships(club_id);
@@ -1640,7 +1647,7 @@ CREATE TABLE transport_routes (
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE transport_assignments (
+CREATE TABLE transport_assignments (CREATE TABLE transport_assignments (
     id                  BIGSERIAL PRIMARY KEY,
     route_id            BIGINT NOT NULL REFERENCES transport_routes(id),
     student_id          BIGINT NOT NULL REFERENCES students(id),
@@ -1654,8 +1661,9 @@ CREATE TABLE transport_assignments (
     status              VARCHAR(15) NOT NULL DEFAULT 'ACTIVO'
                         CHECK (status IN ('ACTIVO', 'INACTIVO', 'SUSPENDIDO')),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_transport_assignment UNIQUE (route_id, student_id, academic_year_id)
-);
+    CONSTRAINT uq_transport_assignment UNIQUE (route_id, student_id, academic_year_id),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE INDEX idx_transport_routes_institution ON transport_routes(institution_id);
 CREATE INDEX idx_transport_assignments_route ON transport_assignments(route_id);
@@ -1685,7 +1693,7 @@ CREATE TABLE cash_registers (
     CONSTRAINT uq_cash_register UNIQUE (institution_id, register_date, status)
 );
 
-CREATE TABLE cash_transactions (
+CREATE TABLE cash_transactions (CREATE TABLE cash_transactions (
     id                BIGSERIAL PRIMARY KEY,
     register_id       BIGINT NOT NULL REFERENCES cash_registers(id) ON DELETE CASCADE,
     transaction_type  VARCHAR(10) NOT NULL CHECK (transaction_type IN ('INGRESO', 'EGRESO')),
@@ -1697,8 +1705,9 @@ CREATE TABLE cash_transactions (
     student_id        BIGINT,
     invoice_id        BIGINT,
     created_by        VARCHAR(100),
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE TABLE invoices (
     id                BIGSERIAL PRIMARY KEY,
@@ -1725,15 +1734,16 @@ CREATE TABLE invoices (
     CONSTRAINT uq_invoice_number UNIQUE (institution_id, invoice_number)
 );
 
-CREATE TABLE invoice_items (
+CREATE TABLE invoice_items (CREATE TABLE invoice_items (
     id            BIGSERIAL PRIMARY KEY,
     invoice_id    BIGINT NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
     description   VARCHAR(300) NOT NULL,
     quantity      DECIMAL(8,2) NOT NULL DEFAULT 1,
     unit_price    DECIMAL(10,2) NOT NULL,
     subtotal      DECIMAL(12,2) NOT NULL,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE TABLE tuition_plans (
     id              BIGSERIAL PRIMARY KEY,
@@ -1762,7 +1772,7 @@ CREATE TABLE student_tuitions (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE tuition_payments (
+CREATE TABLE tuition_payments (CREATE TABLE tuition_payments (
     id                    BIGSERIAL PRIMARY KEY,
     student_tuition_id    BIGINT NOT NULL REFERENCES student_tuitions(id),
     invoice_id            BIGINT,
@@ -1772,8 +1782,9 @@ CREATE TABLE tuition_payments (
     reference             VARCHAR(100),
     notes                 TEXT,
     created_by            VARCHAR(100),
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE TABLE accounts_receivable (
     id                BIGSERIAL PRIMARY KEY,
@@ -1866,7 +1877,7 @@ CREATE TABLE assets (
     CONSTRAINT uq_asset_code UNIQUE (institution_id, code)
 );
 
-CREATE TABLE asset_assignments (
+CREATE TABLE asset_assignments (CREATE TABLE asset_assignments (
     id                BIGSERIAL PRIMARY KEY,
     asset_id          BIGINT NOT NULL REFERENCES assets(id),
     assigned_to       VARCHAR(150),
@@ -1876,8 +1887,9 @@ CREATE TABLE asset_assignments (
     status            VARCHAR(15) NOT NULL DEFAULT 'ACTIVA'
                       CHECK (status IN ('ACTIVA', 'DEVUELTA', 'CANCELADA')),
     notes             TEXT,
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE TABLE asset_maintenances (
     id                BIGSERIAL PRIMARY KEY,
@@ -1907,14 +1919,15 @@ CREATE INDEX idx_asset_maintenances_status ON asset_maintenances(status);
 -- V27: BIBLIOTECA
 -- ============================================================================
 
-CREATE TABLE book_categories (
+CREATE TABLE book_categories (CREATE TABLE book_categories (
     id              BIGSERIAL PRIMARY KEY,
     institution_id  BIGINT NOT NULL,
     name            VARCHAR(100) NOT NULL,
     description     TEXT,
     parent_id       BIGINT REFERENCES book_categories(id),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE TABLE books (
     id                BIGSERIAL PRIMARY KEY,
@@ -1939,7 +1952,7 @@ CREATE TABLE books (
     updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE book_loans (
+CREATE TABLE book_loans (CREATE TABLE book_loans (
     id              BIGSERIAL PRIMARY KEY,
     book_id         BIGINT NOT NULL REFERENCES books(id),
     student_id      BIGINT,
@@ -1951,10 +1964,11 @@ CREATE TABLE book_loans (
                     CHECK (status IN ('ACTIVO', 'DEVUELTO', 'VENCIDO', 'PERDIDO')),
     notes           TEXT,
     created_by      VARCHAR(100),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
-CREATE TABLE book_reservations (
+CREATE TABLE book_reservations (CREATE TABLE book_reservations (
     id                BIGSERIAL PRIMARY KEY,
     book_id           BIGINT NOT NULL REFERENCES books(id),
     student_id        BIGINT,
@@ -1963,8 +1977,9 @@ CREATE TABLE book_reservations (
     expiry_date       DATE NOT NULL,
     status            VARCHAR(15) NOT NULL DEFAULT 'PENDIENTE'
                       CHECK (status IN ('PENDIENTE', 'COMPLETADA', 'CANCELADA', 'VENCIDA')),
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE INDEX idx_books_institution ON books(institution_id);
 CREATE INDEX idx_books_category ON books(category_id);
@@ -2036,7 +2051,7 @@ CREATE TABLE notification_templates (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE notifications (
+CREATE TABLE notifications (CREATE TABLE notifications (
     id                BIGSERIAL PRIMARY KEY,
     institution_id    BIGINT NOT NULL,
     template_id       BIGINT REFERENCES notification_templates(id),
@@ -2050,10 +2065,11 @@ CREATE TABLE notifications (
     read_status       BOOLEAN DEFAULT FALSE,
     read_at           TIMESTAMPTZ,
     sent_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
-CREATE TABLE internal_messages (
+CREATE TABLE internal_messages (CREATE TABLE internal_messages (
     id                BIGSERIAL PRIMARY KEY,
     institution_id    BIGINT NOT NULL,
     sender_id         BIGINT NOT NULL,
@@ -2064,18 +2080,20 @@ CREATE TABLE internal_messages (
     read_status       BOOLEAN DEFAULT FALSE,
     read_at           TIMESTAMPTZ,
     parent_message_id BIGINT REFERENCES internal_messages(id),
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
-CREATE TABLE message_recipients (
+CREATE TABLE message_recipients (CREATE TABLE message_recipients (
     id              BIGSERIAL PRIMARY KEY,
     message_id      BIGINT NOT NULL REFERENCES internal_messages(id) ON DELETE CASCADE,
     user_id         BIGINT NOT NULL,
     read_status     BOOLEAN DEFAULT FALSE,
     read_at         TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_message_recipient UNIQUE (message_id, user_id)
-);
+    CONSTRAINT uq_message_recipient UNIQUE (message_id, user_id),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE TABLE parent_communications (
     id                BIGSERIAL PRIMARY KEY,
@@ -2096,23 +2114,25 @@ CREATE TABLE parent_communications (
     updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE communication_groups (
+CREATE TABLE communication_groups (CREATE TABLE communication_groups (
     id              BIGSERIAL PRIMARY KEY,
     institution_id  BIGINT NOT NULL,
     name            VARCHAR(100) NOT NULL,
     description     TEXT,
     group_type      VARCHAR(20) NOT NULL DEFAULT 'PERSONALIZADO'
                     CHECK (group_type IN ('CURSO', 'PARALELO', 'DOCENTES', 'PADRES', 'PERSONALIZADO')),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
-CREATE TABLE communication_group_members (
+CREATE TABLE communication_group_members (CREATE TABLE communication_group_members (
     id              BIGSERIAL PRIMARY KEY,
     group_id        BIGINT NOT NULL REFERENCES communication_groups(id) ON DELETE CASCADE,
     user_id         BIGINT NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_group_member UNIQUE (group_id, user_id)
-);
+    CONSTRAINT uq_group_member UNIQUE (group_id, user_id),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE INDEX idx_notifications_user ON notifications(user_id);
 CREATE INDEX idx_notifications_institution ON notifications(institution_id);
@@ -2157,10 +2177,11 @@ CREATE TABLE ai_predictions (
     explanation     TEXT,
     status          VARCHAR(15) NOT NULL DEFAULT 'VIGENTE'
                     CHECK (status IN ('VIGENTE', 'CONFIRMADA', 'RECHAZADA', 'VENCIDA')),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE ai_recommendations (
+CREATE TABLE ai_recommendations (CREATE TABLE ai_recommendations (
     id              BIGSERIAL PRIMARY KEY,
     model_id        BIGINT REFERENCES ai_models(id),
     institution_id  BIGINT NOT NULL,
@@ -2174,8 +2195,9 @@ CREATE TABLE ai_recommendations (
     status          VARCHAR(15) NOT NULL DEFAULT 'PENDIENTE'
                     CHECK (status IN ('PENDIENTE', 'ACEPTADA', 'RECHAZADA', 'APLICADA')),
     applied_at      TIMESTAMPTZ,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+););
 
 CREATE TABLE ai_anomalies (
     id              BIGSERIAL PRIMARY KEY,
