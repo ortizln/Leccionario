@@ -16,7 +16,8 @@ npx ng build --configuration production
 
 echo "[frontend] Publicando archivos en ${WEB_ROOT}"
 mkdir -p "${WEB_ROOT}"
-rsync -av --delete "${DIST_DIR}/" "${WEB_ROOT}/"
+rm -rf "${WEB_ROOT:?}"/*
+cp -r "${DIST_DIR}/"* "${WEB_ROOT}/"
 
 echo "[frontend] Verificando configuracion Nginx existente"
 if [ -f /etc/nginx/sites-available/control-servidor ]; then
