@@ -118,13 +118,17 @@ CREATE TABLE academic_years (
 );
 
 CREATE TABLE academic_periods (
-    id          BIGSERIAL PRIMARY KEY,
-    name        VARCHAR(120) NOT NULL,
-    start_date  DATE NOT NULL,
-    end_date    DATE NOT NULL,
-    active      BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id              BIGSERIAL PRIMARY KEY,
+    name            VARCHAR(120) NOT NULL,
+    start_date      DATE NOT NULL,
+    end_date        DATE NOT NULL,
+    active          BOOLEAN NOT NULL DEFAULT TRUE,
+    institution_id  BIGINT,
+    code            VARCHAR(20),
+    period_type     VARCHAR(30) DEFAULT 'BIMESTRE',
+    is_active       BOOLEAN DEFAULT FALSE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================================
@@ -2189,7 +2193,8 @@ CREATE TABLE ai_anomalies (
                     CHECK (status IN ('DETECTADA', 'INVESTIGANDO', 'RESUELTA', 'FALSO_POSITIVO')),
     resolved_at     TIMESTAMPTZ,
     notes           TEXT,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE ai_student_profiles (
@@ -2631,10 +2636,7 @@ CREATE INDEX idx_scheduled_notif_active ON scheduled_notifications(is_active);
 -- V40: RUBRICS, COMPETENCIES, RECOVERY EXAMS + ACADEMIC PERIODS EXTENSIONS
 -- ============================================================================
 
-ALTER TABLE academic_periods ADD COLUMN IF NOT EXISTS institution_id BIGINT;
-ALTER TABLE academic_periods ADD COLUMN IF NOT EXISTS code VARCHAR(20);
-ALTER TABLE academic_periods ADD COLUMN IF NOT EXISTS period_type VARCHAR(30) DEFAULT 'BIMESTRE';
-ALTER TABLE academic_periods ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT FALSE;
+-- V40: Rubrics, competencies, recovery exams + academic_periods indexes
 
 CREATE INDEX IF NOT EXISTS idx_academic_periods_institution ON academic_periods(institution_id);
 CREATE INDEX IF NOT EXISTS idx_academic_periods_dates ON academic_periods(start_date, end_date);
