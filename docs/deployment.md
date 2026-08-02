@@ -28,9 +28,9 @@ Variables principales:
 Ejemplo Linux:
 
 ```bash
-export DB_URL='jdbc:postgresql://192.168.1.20:5432/leccionario_db'
+export DB_URL='jdbc:postgresql://192.168.1.43:5432/leccionario_db'
 export DB_USERNAME='postgres'
-export DB_PASSWORD='12345'
+export DB_PASSWORD='086411421'
 export JWT_SECRET='cambia-esta-clave-por-una-mucho-mas-segura'
 ./scripts/deploy_backend_docker.sh
 ```
@@ -38,9 +38,9 @@ export JWT_SECRET='cambia-esta-clave-por-una-mucho-mas-segura'
 Ejemplo PowerShell:
 
 ```powershell
-$env:DB_URL = 'jdbc:postgresql://192.168.1.20:5432/leccionario_db'
+$env:DB_URL = 'jdbc:postgresql://192.168.1.43:5432/leccionario_db'
 $env:DB_USERNAME = 'postgres'
-$env:DB_PASSWORD = '12345'
+$env:DB_PASSWORD = '086411421'
 $env:JWT_SECRET = 'cambia-esta-clave-por-una-mucho-mas-segura'
 .\scripts\deploy_backend_docker.ps1
 ```

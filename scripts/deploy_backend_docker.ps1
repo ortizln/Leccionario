@@ -8,7 +8,7 @@ $HostPort = if ($env:HOST_PORT) { $env:HOST_PORT } else { '1080' }
 $ContainerPort = if ($env:CONTAINER_PORT) { $env:CONTAINER_PORT } else { '1080' }
 $DbUrl = if ($env:DB_URL) { $env:DB_URL } else { 'jdbc:postgresql://host.docker.internal:5432/leccionario_db' }
 $DbUsername = if ($env:DB_USERNAME) { $env:DB_USERNAME } else { 'postgres' }
-$DbPassword = if ($env:DB_PASSWORD) { $env:DB_PASSWORD } else { '12345' }
+$DbPassword = if ($env:DB_PASSWORD) { $env:DB_PASSWORD } else { '086411421' }
 $JwtSecret = if ($env:JWT_SECRET) { $env:JWT_SECRET } else { 'change-this-secret-key-with-at-least-32-chars' }
 $SpringProfilesActive = if ($env:SPRING_PROFILES_ACTIVE) { $env:SPRING_PROFILES_ACTIVE } else { '' }
 
