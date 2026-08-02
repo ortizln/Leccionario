@@ -33,8 +33,8 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: leccionario
-      DB_USERNAME: leccionario
-      DB_PASSWORD: ${DB_PASSWORD:-leccionario_secret}
+      DB_USER: leccionario
+      DB_PASS: ${DB_PASSWORD:-leccionario_secret}
       JWT_SECRET: ${JWT_SECRET:-your-256-bit-secret-change-in-production}
       SERVER_PORT: 1080
     ports:
