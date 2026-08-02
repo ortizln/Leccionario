@@ -378,8 +378,19 @@ CREATE TABLE daily_log_student_absences (
 );
 
 -- ============================================================================
--- 18. NOVEDADES / INCIDENTES DEL LECCIONARIO
+-- 18. DEMÉRITOS (catálogo simple) + NOVEDADES / INCIDENTES DEL LECCIONARIO
 -- ============================================================================
+
+CREATE TABLE demerits (
+    id          BIGSERIAL PRIMARY KEY,
+    code        VARCHAR(30) NOT NULL UNIQUE,
+    category    VARCHAR(80) NOT NULL,
+    description VARCHAR(300) NOT NULL,
+    score       SMALLINT NOT NULL,
+    active      BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 CREATE TABLE daily_log_student_incidents (
     id                  BIGSERIAL PRIMARY KEY,
@@ -454,22 +465,7 @@ CREATE TABLE student_demerits (
 );
 
 -- ============================================================================
--- 21. DEMÉRITOS (catálogo simple)
--- ============================================================================
-
-CREATE TABLE demerits (
-    id          BIGSERIAL PRIMARY KEY,
-    code        VARCHAR(30) NOT NULL UNIQUE,
-    category    VARCHAR(80) NOT NULL,
-    description VARCHAR(300) NOT NULL,
-    score       SMALLINT NOT NULL,
-    active      BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- ============================================================================
--- 22. NUEVO MÓDULO DE DEMÉRITOS (V9)
+-- 21. NUEVO MÓDULO DE DEMÉRITOS (V9)
 -- ============================================================================
 
 CREATE TABLE demerit_categories (
@@ -579,7 +575,7 @@ CREATE UNIQUE INDEX idx_demerit_accumulated_pk
     ON demerit_accumulated (student_id, period_id);
 
 -- ============================================================================
--- 23. EVALUACIONES
+-- 23. EVALUACIONES + SISTEMA DE CALIFICACIONES (V15)
 -- ============================================================================
 
 CREATE TABLE evaluations (
@@ -589,9 +585,99 @@ CREATE TABLE evaluations (
     evaluation_type VARCHAR(120) NOT NULL,
     score           NUMERIC(5,2) NOT NULL,
     feedback        VARCHAR(500),
+    academic_period_id  BIGINT REFERENCES academic_periods(id),
+    evaluation_type_id  BIGINT,
+    evaluation_date     DATE,
+    weight              DECIMAL(5,2) DEFAULT 1.00,
+    max_score           DECIMAL(5,2) DEFAULT 10.00,
+    scale_id            BIGINT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE grade_scales (
+    id              BIGSERIAL PRIMARY KEY,
+    institution_id  BIGINT NOT NULL REFERENCES institutions(id),
+    name            VARCHAR(100) NOT NULL,
+    scale_type      VARCHAR(20) NOT NULL CHECK (scale_type IN ('NUMERIC_10', 'NUMERIC_100', 'LETTER', 'COMPETENCY')),
+    min_value       DECIMAL(5,2) NOT NULL DEFAULT 0,
+    max_value       DECIMAL(5,2) NOT NULL DEFAULT 10,
+    pass_value      DECIMAL(5,2) NOT NULL DEFAULT 7,
+    is_default      BOOLEAN NOT NULL DEFAULT FALSE,
+    active          BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_grade_scale_name_inst UNIQUE (institution_id, name)
+);
+
+CREATE TABLE evaluation_types (
+    id              BIGSERIAL PRIMARY KEY,
+    institution_id  BIGINT NOT NULL REFERENCES institutions(id),
+    name            VARCHAR(100) NOT NULL,
+    code            VARCHAR(30) NOT NULL,
+    description     VARCHAR(300),
+    weight_pct      DECIMAL(5,2) NOT NULL DEFAULT 100.00,
+    active          BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_eval_type_code_inst UNIQUE (institution_id, code)
+);
+
+CREATE TABLE grades (
+    id              BIGSERIAL PRIMARY KEY,
+    evaluation_id   BIGINT NOT NULL REFERENCES evaluations(id) ON DELETE CASCADE,
+    student_id      BIGINT NOT NULL REFERENCES students(id),
+    score           DECIMAL(5,2) NOT NULL,
+    comment         VARCHAR(500),
+    graded_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    graded_by       VARCHAR(100),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_grade_eval_student UNIQUE (evaluation_id, student_id)
+);
+
+CREATE TABLE period_grades (
+    id                  BIGSERIAL PRIMARY KEY,
+    student_id          BIGINT NOT NULL REFERENCES students(id),
+    course_id           BIGINT NOT NULL REFERENCES courses(id),
+    subject_id          BIGINT NOT NULL REFERENCES subjects(id),
+    academic_period_id  BIGINT NOT NULL REFERENCES academic_periods(id),
+    average_score       DECIMAL(5,2),
+    status              VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'FAILED', 'RECOVERY')),
+    teacher_notes       VARCHAR(500),
+    calculated_at       TIMESTAMPTZ,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_period_grade UNIQUE (student_id, course_id, subject_id, academic_period_id)
+);
+
+CREATE TABLE grade_history (
+    id              BIGSERIAL PRIMARY KEY,
+    grade_id        BIGINT NOT NULL REFERENCES grades(id) ON DELETE CASCADE,
+    old_score       DECIMAL(5,2),
+    new_score       DECIMAL(5,2) NOT NULL,
+    changed_by      VARCHAR(100) NOT NULL,
+    changed_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    reason          VARCHAR(300)
+);
+
+ALTER TABLE evaluations
+    ADD CONSTRAINT fk_evaluations_scale FOREIGN KEY (scale_id) REFERENCES grade_scales(id);
+ALTER TABLE evaluations
+    ADD CONSTRAINT fk_evaluations_eval_type FOREIGN KEY (evaluation_type_id) REFERENCES evaluation_types(id);
+
+CREATE INDEX idx_evaluations_period ON evaluations(academic_period_id);
+CREATE INDEX idx_evaluations_type ON evaluations(evaluation_type_id);
+CREATE INDEX idx_evaluations_date ON evaluations(evaluation_date);
+CREATE INDEX idx_grade_scales_institution ON grade_scales(institution_id);
+CREATE INDEX idx_eval_types_institution ON evaluation_types(institution_id);
+CREATE INDEX idx_grades_student ON grades(student_id);
+CREATE INDEX idx_grades_evaluation ON grades(evaluation_id);
+CREATE INDEX idx_period_grades_student ON period_grades(student_id);
+CREATE INDEX idx_period_grades_course ON period_grades(course_id);
+CREATE INDEX idx_period_grades_subject ON period_grades(subject_id);
+CREATE INDEX idx_period_grades_period ON period_grades(academic_period_id);
+CREATE INDEX idx_grade_history_grade ON grade_history(grade_id);
 
 -- ============================================================================
 -- 24. ANUNCIOS (V12-V14)
@@ -873,14 +959,14 @@ LEFT JOIN (
     GROUP BY sm.student_id, sm.course_id, sm.academic_period_id
 ) merit ON merit.student_id = s.id AND merit.course_id = c.id AND merit.academic_period_id = ap.id
 LEFT JOIN (
-    SELECT sd.student_id, sd.course_id, sd.academic_period_id,
-           SUM(df.demerit_points) AS total_points, COUNT(*) AS demerit_count
+    SELECT sd.student_id, sd.course_id, sd.period_id,
+           SUM(df.score) AS total_points, COUNT(*) AS demerit_count
     FROM student_demers sd
     JOIN student_demer_details sdd ON sdd.student_demer_id = sd.id
     JOIN demerit_faltas df ON df.id = sdd.falta_id
-    WHERE sd.status = 'ACTIVE'
-    GROUP BY sd.student_id, sd.course_id, sd.academic_period_id
-) demerit ON demerit.student_id = s.id AND demerit.course_id = c.id AND demerit.academic_period_id = ap.id;
+    WHERE sd.status NOT IN ('ANULADO')
+    GROUP BY sd.student_id, sd.course_id, sd.period_id
+) demerit ON demerit.student_id = s.id AND demerit.course_id = c.id AND demerit.period_id = ap.id;
 
 CREATE INDEX idx_merit_categories_institution ON merit_categories(institution_id);
 CREATE INDEX idx_student_merits_student ON student_merits(student_id);
@@ -1892,19 +1978,19 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS v_dashboard_courses AS
 SELECT
     c.id AS course_id, c.name AS course_name, p.id AS period_id, p.name AS period_name,
     COUNT(DISTINCT e.student_id) AS enrolled_students,
-    ROUND(AVG(pg.score), 2) AS average_score,
-    COUNT(CASE WHEN pg.score < 7 THEN 1 END) AS failing_count,
-    COUNT(CASE WHEN pg.score >= 7 THEN 1 END) AS passing_count
+    ROUND(AVG(pg.average_score), 2) AS average_score,
+    COUNT(CASE WHEN pg.average_score < 7 THEN 1 END) AS failing_count,
+    COUNT(CASE WHEN pg.average_score >= 7 THEN 1 END) AS passing_count
 FROM courses c
-LEFT JOIN enrollments e ON e.course_id = c.id AND e.status = 'ACTIVA'
+LEFT JOIN enrollments e ON e.course_id = c.id AND e.status = 'ACTIVE'
 LEFT JOIN period_grades pg ON pg.course_id = c.id
-LEFT JOIN academic_periods p ON p.id = pg.period_id
+LEFT JOIN academic_periods p ON p.id = pg.academic_period_id
 GROUP BY c.id, c.name, p.id, p.name;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS v_dashboard_enrollments AS
 SELECT p.id AS period_id, p.name AS period_name, COUNT(*) AS total_enrollments,
-    COUNT(CASE WHEN e.status = 'ACTIVA' THEN 1 END) AS active_enrollments,
-    COUNT(CASE WHEN e.status = 'RETIRADO' THEN 1 END) AS withdrawn
+    COUNT(CASE WHEN e.status = 'ACTIVE' THEN 1 END) AS active_enrollments,
+    COUNT(CASE WHEN e.status = 'WITHDRAWN' THEN 1 END) AS withdrawn
 FROM enrollments e JOIN academic_periods p ON p.id = e.period_id GROUP BY p.id, p.name;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS v_dashboard_finance AS
