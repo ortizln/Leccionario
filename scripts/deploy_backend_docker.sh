@@ -78,7 +78,7 @@ SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE:-prod}"
 
 echo "[backend] Base de datos: ${DB_HOST}:${DB_PORT}/${DB_NAME}"
 echo "[backend] Construyendo imagen Docker ${IMAGE_NAME}"
-docker build -t "${IMAGE_NAME}" -f "${ROOT_DIR}/Dockerfile" "${ROOT_DIR}"
+docker build --build-arg BUILD_DATE="$(date +%s)" -t "${IMAGE_NAME}" -f "${ROOT_DIR}/Dockerfile" "${ROOT_DIR}"
 
 if docker ps -a --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
   echo "[backend] Eliminando contenedor previo ${CONTAINER_NAME}"

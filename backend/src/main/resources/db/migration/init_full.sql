@@ -2255,7 +2255,7 @@ CREATE INDEX idx_question_categories_institution ON question_categories(institut
 
 -- --- Institucion ---
 INSERT INTO institutions (name, code, district, circuit, address, created_at, updated_at)
-VALUES ('Colegio Leccionario', 'INST001', 'Quito', 'Centro', 'Av. Principal 123', NOW(), NOW())
+VALUES ('Colegio Leccionario', '1799999999001', 'Quito', 'Centro', 'Av. Principal 123', NOW(), NOW())
 ON CONFLICT (code) DO NOTHING;
 
 -- --- Ano academico ---
@@ -2286,7 +2286,7 @@ ON CONFLICT DO NOTHING;
 -- --- Periodo academico ---
 INSERT INTO academic_periods (institution_id, name, code, period_type, start_date, end_date, active, created_at, updated_at)
 SELECT i.id, 'Periodo Lectivo 2026', 'P1-2026', 'ANUAL', '2026-04-01', '2027-01-31', TRUE, NOW(), NOW()
-FROM institutions i WHERE i.code = 'INST001'
+FROM institutions i WHERE i.code = '1799999999001'
 AND NOT EXISTS (SELECT 1 FROM academic_periods WHERE code = 'P1-2026');
 
 -- --- Roles (7 roles) ---
@@ -2426,7 +2426,7 @@ INSERT INTO users (username, email, password, identification, first_name, last_n
 SELECT 'admin', 'admin@leccionario.local',
        '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi',
        '0101010101', 'Administrador', 'General', TRUE, i.id, NOW(), NOW()
-FROM institutions i WHERE i.code = 'INST001'
+FROM institutions i WHERE i.code = '1799999999001'
 AND NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
 
 -- --- Asignar rol ADMINISTRADOR al usuario admin ---
