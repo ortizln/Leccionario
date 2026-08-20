@@ -8,7 +8,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/hr/permissions")
-@CrossOrigin(origins = "*")
 public class StaffPermissionController {
 
     private final StaffPermissionRepository repository;

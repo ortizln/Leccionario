@@ -3,9 +3,11 @@ package com.leccionario.backend.institution.service;
 import com.leccionario.backend.institution.domain.Shift;
 import com.leccionario.backend.institution.repository.ShiftRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
+@Transactional
 public class ShiftService {
 
     private final ShiftRepository shiftRepository;

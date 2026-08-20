@@ -9,7 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/library")
-@CrossOrigin(origins = "*")
 public class LibraryController {
 
     private final LibraryService libraryService;

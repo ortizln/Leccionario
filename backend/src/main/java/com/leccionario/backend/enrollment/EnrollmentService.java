@@ -1,12 +1,16 @@
 package com.leccionario.backend.enrollment;
 
 import com.leccionario.backend.enrollment.dto.EnrollmentDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
@@ -43,6 +47,10 @@ public class EnrollmentService {
     public List<EnrollmentDTO> findByPeriod(Long periodId) {
         return enrollmentRepository.findByPeriodIdOrderByEnrollmentNumberDesc(periodId)
             .stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    public Page<EnrollmentDTO> findByPeriod(Long periodId, Pageable pageable) {
+        return enrollmentRepository.findByPeriodId(periodId, pageable).map(this::toDTO);
     }
 
     public List<EnrollmentDTO> findByStudent(Long studentId) {

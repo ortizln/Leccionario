@@ -2,10 +2,12 @@ package com.leccionario.backend.adaptation;
 
 import com.leccionario.backend.adaptation.dto.AdaptationDTO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class AdaptationService {
 
     private final CurricularAdaptationRepository adaptationRepository;

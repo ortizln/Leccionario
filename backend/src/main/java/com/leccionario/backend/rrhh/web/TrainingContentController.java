@@ -8,7 +8,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/hr/training-content")
-@CrossOrigin(origins = "*")
 public class TrainingContentController {
     private final TrainingContentService service;
     public TrainingContentController(TrainingContentService service) { this.service = service; }

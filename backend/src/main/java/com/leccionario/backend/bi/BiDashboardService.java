@@ -2,10 +2,12 @@ package com.leccionario.backend.bi;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 
 @Service
+@Transactional
 public class BiDashboardService {
 
     private final JdbcTemplate jdbc;

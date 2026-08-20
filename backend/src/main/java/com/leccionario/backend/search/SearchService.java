@@ -2,11 +2,13 @@ package com.leccionario.backend.search;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Service
+@Transactional
 public class SearchService {
 
     private final JdbcTemplate jdbc;

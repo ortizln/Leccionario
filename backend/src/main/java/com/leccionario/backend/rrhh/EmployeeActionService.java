@@ -1,9 +1,11 @@
 package com.leccionario.backend.rrhh;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
+@Transactional
 public class EmployeeActionService {
     private final EmployeeActionRepository repo;
     public EmployeeActionService(EmployeeActionRepository repo) { this.repo = repo; }

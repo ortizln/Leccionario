@@ -3,10 +3,12 @@ package com.leccionario.backend.institution.service;
 import com.leccionario.backend.institution.domain.SchoolCalendarEvent;
 import com.leccionario.backend.institution.repository.SchoolCalendarEventRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
 @Service
+@Transactional
 public class SchoolCalendarService {
 
     private final SchoolCalendarEventRepository calendarRepository;

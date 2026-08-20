@@ -2,6 +2,10 @@ package com.leccionario.backend.enrollment.web;
 
 import com.leccionario.backend.enrollment.Enrollment;
 import com.leccionario.backend.enrollment.EnrollmentService;
+import com.leccionario.backend.enrollment.dto.EnrollmentDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -39,8 +43,10 @@ public class EnrollmentController {
     }
 
     @GetMapping("/period/{periodId}")
-    public ResponseEntity<?> findByPeriod(@PathVariable Long periodId) {
-        return ResponseEntity.ok(enrollmentService.findByPeriod(periodId));
+    public ResponseEntity<Page<EnrollmentDTO>> findByPeriod(
+            @PathVariable Long periodId,
+            @PageableDefault(size = 50) Pageable pageable) {
+        return ResponseEntity.ok(enrollmentService.findByPeriod(periodId, pageable));
     }
 
     @GetMapping("/student/{studentId}")

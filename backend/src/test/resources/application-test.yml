@@ -12,6 +12,8 @@ spring:
     properties:
       hibernate:
         "format_sql": true
+  flyway:
+    enabled: false
 
 server:
   port: 0
@@ -20,6 +22,7 @@ security:
   jwt:
     secret: test-secret-key-for-unit-tests-32chars!!
     expiration: 86400000
+    refresh-expiration: 604800000
 
 logging:
   level:
@@ -31,3 +34,6 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+
+cors:
+  allowed-origins: http://localhost:4200

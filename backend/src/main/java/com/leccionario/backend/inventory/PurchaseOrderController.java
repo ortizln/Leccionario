@@ -6,7 +6,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/inventory/purchase-orders")
-@CrossOrigin(origins = "*")
 public class PurchaseOrderController {
     private final PurchaseOrderService service;
     public PurchaseOrderController(PurchaseOrderService service) { this.service = service; }

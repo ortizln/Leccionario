@@ -6,7 +6,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/inventory/suppliers")
-@CrossOrigin(origins = "*")
 public class SupplierController {
     private final SupplierService service;
     public SupplierController(SupplierService service) { this.service = service; }

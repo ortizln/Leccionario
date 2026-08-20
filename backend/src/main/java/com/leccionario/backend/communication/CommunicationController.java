@@ -9,8 +9,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/communication")
-@CrossOrigin(origins = "*")
-@Tag(name = "Comunicación")
+@Tag(name = "ComunicaciÃ³n")
 public class CommunicationController {
 
     private final CommunicationService communicationService;
@@ -21,7 +20,7 @@ public class CommunicationController {
         this.portalService = portalService;
     }
 
-    @Operation(summary = "Resumen del portal de comunicación")
+    @Operation(summary = "Resumen del portal de comunicaciÃ³n")
     @GetMapping("/portal")
     public ResponseEntity<Map<String, Object>> getPortalSummary(@RequestParam Long institutionId) {
         return ResponseEntity.ok(portalService.getPortalSummary(institutionId));
@@ -33,19 +32,19 @@ public class CommunicationController {
         return ResponseEntity.ok(communicationService.getUserNotifications(userId));
     }
 
-    @Operation(summary = "Contar notificaciones no leídas")
+    @Operation(summary = "Contar notificaciones no leÃ­das")
     @GetMapping("/notifications/unread-count")
     public ResponseEntity<Long> getUnreadCount(@RequestParam Long userId) {
         return ResponseEntity.ok(communicationService.getUnreadCount(userId));
     }
 
-    @Operation(summary = "Marcar notificación como leída")
+    @Operation(summary = "Marcar notificaciÃ³n como leÃ­da")
     @PostMapping("/notifications/{id}/read")
     public ResponseEntity<Notification> markAsRead(@PathVariable Long id) {
         return ResponseEntity.ok(communicationService.markAsRead(id));
     }
 
-    @Operation(summary = "Crear una nueva notificación")
+    @Operation(summary = "Crear una nueva notificaciÃ³n")
     @PostMapping("/notifications")
     public ResponseEntity<Notification> createNotification(@RequestBody Notification notif) {
         return ResponseEntity.ok(communicationService.createNotification(notif));
@@ -77,7 +76,7 @@ public class CommunicationController {
         return ResponseEntity.ok(communicationService.sendMessage(msg, recipients));
     }
 
-    @Operation(summary = "Marcar mensaje como leído")
+    @Operation(summary = "Marcar mensaje como leÃ­do")
     @PostMapping("/messages/{id}/read")
     public ResponseEntity<Void> markMessageRead(@PathVariable Long id, @RequestParam Long userId) {
         communicationService.markMessageRead(id, userId);
@@ -90,37 +89,37 @@ public class CommunicationController {
         return ResponseEntity.ok(communicationService.getStudentCommunications(studentId));
     }
 
-    @Operation(summary = "Crear comunicación con padres")
+    @Operation(summary = "Crear comunicaciÃ³n con padres")
     @PostMapping("/parent-comm")
     public ResponseEntity<ParentCommunication> createParentCommunication(@RequestBody ParentCommunication pc) {
         return ResponseEntity.ok(communicationService.createParentCommunication(pc));
     }
 
-    @Operation(summary = "Responder a una comunicación con padres")
+    @Operation(summary = "Responder a una comunicaciÃ³n con padres")
     @PostMapping("/parent-comm/{id}/respond")
     public ResponseEntity<ParentCommunication> respondToCommunication(@PathVariable Long id, @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(communicationService.respondToCommunication(id, body.get("response")));
     }
 
-    @Operation(summary = "Listar grupos de comunicación")
+    @Operation(summary = "Listar grupos de comunicaciÃ³n")
     @GetMapping("/groups")
     public ResponseEntity<List<CommunicationGroup>> findAllGroups(@RequestParam Long institutionId) {
         return ResponseEntity.ok(communicationService.findAllGroups(institutionId));
     }
 
-    @Operation(summary = "Crear un grupo de comunicación")
+    @Operation(summary = "Crear un grupo de comunicaciÃ³n")
     @PostMapping("/groups")
     public ResponseEntity<CommunicationGroup> createGroup(@RequestBody CommunicationGroup group) {
         return ResponseEntity.ok(communicationService.createGroup(group));
     }
 
-    @Operation(summary = "Actualizar un grupo de comunicación")
+    @Operation(summary = "Actualizar un grupo de comunicaciÃ³n")
     @PutMapping("/groups/{id}")
     public ResponseEntity<CommunicationGroup> updateGroup(@PathVariable Long id, @RequestBody CommunicationGroup group) {
         return ResponseEntity.ok(communicationService.updateGroup(id, group));
     }
 
-    @Operation(summary = "Eliminar un grupo de comunicación")
+    @Operation(summary = "Eliminar un grupo de comunicaciÃ³n")
     @DeleteMapping("/groups/{id}")
     public ResponseEntity<Void> deleteGroup(@PathVariable Long id) {
         communicationService.deleteGroup(id);

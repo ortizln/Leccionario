@@ -6,7 +6,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/inventory/custodians")
-@CrossOrigin(origins = "*")
 public class AssetCustodianController {
     private final AssetCustodianService service;
     public AssetCustodianController(AssetCustodianService service) { this.service = service; }

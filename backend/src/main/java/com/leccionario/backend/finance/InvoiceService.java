@@ -17,6 +17,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class InvoiceService {
@@ -32,6 +34,10 @@ public class InvoiceService {
     public List<InvoiceResponse> findAll(Long institutionId) {
         return invoiceRepository.findByInstitutionIdOrderByInvoiceDateDesc(institutionId).stream()
                 .map(this::toResponse).toList();
+    }
+
+    public Page<InvoiceResponse> findAll(Long institutionId, Pageable pageable) {
+        return invoiceRepository.findByInstitutionId(institutionId, pageable).map(this::toResponse);
     }
 
     public List<InvoiceResponse> findByStudent(Long studentId) {

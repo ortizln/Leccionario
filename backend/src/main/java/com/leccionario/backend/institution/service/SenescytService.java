@@ -3,9 +3,11 @@ package com.leccionario.backend.institution.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 
 @Service
+@Transactional
 public class SenescytService {
 
     private static final Logger log = LoggerFactory.getLogger(SenescytService.class);

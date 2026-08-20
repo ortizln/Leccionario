@@ -8,12 +8,20 @@ $HostPort = if ($env:HOST_PORT) { $env:HOST_PORT } else { '1080' }
 $ContainerPort = if ($env:CONTAINER_PORT) { $env:CONTAINER_PORT } else { '1080' }
 $DbUrl = if ($env:DB_URL) { $env:DB_URL } else { 'jdbc:postgresql://host.docker.internal:5432/leccionario' }
 $DbUsername = if ($env:DB_USERNAME) { $env:DB_USERNAME } else { 'postgres' }
-$DbPassword = if ($env:DB_PASSWORD) { $env:DB_PASSWORD } else { '086411421' }
-$JwtSecret = if ($env:JWT_SECRET) { $env:JWT_SECRET } else { 'change-this-secret-key-with-at-least-32-chars' }
+if (-not $env:DB_PASSWORD) {
+    Write-Error "ERROR: DB_PASSWORD no esta definido. Exporta la variable de entorno antes de ejecutar."
+    exit 1
+}
+$DbPassword = $env:DB_PASSWORD
+if (-not $env:JWT_SECRET) {
+    Write-Error "ERROR: JWT_SECRET no esta definido. Exporta la variable de entorno antes de ejecutar."
+    exit 1
+}
+$JwtSecret = $env:JWT_SECRET
 $SpringProfilesActive = if ($env:SPRING_PROFILES_ACTIVE) { $env:SPRING_PROFILES_ACTIVE } else { '' }
 
 Write-Host "[backend] Construyendo imagen Docker $ImageName"
-docker build -t $ImageName -f (Join-Path $RootDir 'backend\Dockerfile') (Join-Path $RootDir 'backend')
+docker build -t $ImageName -f (Join-Path $RootDir 'Dockerfile') $RootDir
 
 $Existing = docker ps -a --format '{{.Names}}' | Where-Object { $_ -eq $ContainerName }
 if ($Existing) {

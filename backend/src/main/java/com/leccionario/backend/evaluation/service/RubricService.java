@@ -2,9 +2,11 @@ package com.leccionario.backend.evaluation.service;
 
 import com.leccionario.backend.evaluation.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
+@Transactional
 public class RubricService {
 
     private final RubricRepository repository;

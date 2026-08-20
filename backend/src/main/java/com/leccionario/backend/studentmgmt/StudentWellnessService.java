@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Transactional
 public class StudentWellnessService {
 
     private final PsychologicalEvaluationRepository psychRepo;

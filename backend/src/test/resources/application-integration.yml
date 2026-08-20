@@ -1,33 +1,46 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/leccionario_test
-    username: postgres
-    password: postgres
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop
-    show-sql: false
-    defer-datasource-initialization: true
+      ddl-auto: validate
+    show-sql: true
     properties:
       hibernate:
         "format_sql": true
+        jdbc:
+          "time_zone": UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 
 server:
   port: 0
 
 security:
   jwt:
-    secret: test-secret-key-for-unit-tests-32chars!!
+    secret: test-integration-secret-key-32chars!!
     expiration: 86400000
+    refresh-expiration: 604800000
 
 logging:
   level:
     root: WARN
-    "com.leccionario.backend": WARN
+    "com.leccionario.backend": INFO
+    "org.hibernate.SQL": DEBUG
 
 springdoc:
   api-docs:
     enabled: false
   swagger-ui:
     enabled: false
+
+cors:
+  allowed-origins: http://localhost:4200
+
+mail:
+  host: localhost
+  port: 25
+  username:
+  password:

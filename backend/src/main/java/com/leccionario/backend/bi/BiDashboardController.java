@@ -9,7 +9,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bi")
-@CrossOrigin(origins = "*")
 @Tag(name = "Business Intelligence")
 public class BiDashboardController {
 
@@ -33,7 +32,7 @@ public class BiDashboardController {
         return ResponseEntity.ok(biDashboardService.attendanceDashboard(institutionId));
     }
 
-    @Operation(summary = "Dashboard de matrículas")
+    @Operation(summary = "Dashboard de matrÃ­culas")
     @GetMapping("/enrollments")
     public ResponseEntity<List<Map<String, Object>>> enrollmentDashboard(@RequestParam Long institutionId) {
         return ResponseEntity.ok(biDashboardService.enrollmentDashboard(institutionId));
@@ -94,13 +93,13 @@ public class BiDashboardController {
         return ResponseEntity.ok(biDashboardService.getTeacherRanking(institutionId));
     }
 
-    @Operation(summary = "Distribución de estudiantes")
+    @Operation(summary = "DistribuciÃ³n de estudiantes")
     @GetMapping("/student-distribution")
     public ResponseEntity<List<Map<String, Object>>> getStudentDistribution(@RequestParam Long institutionId) {
         return ResponseEntity.ok(biDashboardService.getStudentDistribution(institutionId));
     }
 
-    @Operation(summary = "Distribución de calificaciones")
+    @Operation(summary = "DistribuciÃ³n de calificaciones")
     @GetMapping("/grade-distribution")
     public ResponseEntity<Map<String, Object>> getGradeDistribution(@RequestParam Long institutionId) {
         return ResponseEntity.ok(biDashboardService.getGradeDistribution(institutionId));
@@ -118,19 +117,19 @@ public class BiDashboardController {
         return ResponseEntity.ok(biDashboardService.getFinancialSummary(institutionId));
     }
 
-    @Operation(summary = "Estadísticas de comunicación")
+    @Operation(summary = "EstadÃ­sticas de comunicaciÃ³n")
     @GetMapping("/communication-stats")
     public ResponseEntity<Map<String, Object>> getCommunicationStats(@RequestParam Long institutionId) {
         return ResponseEntity.ok(biDashboardService.getCommunicationStats(institutionId));
     }
 
-    @Operation(summary = "Estadísticas de conducta")
+    @Operation(summary = "EstadÃ­sticas de conducta")
     @GetMapping("/conducta-stats")
     public ResponseEntity<Map<String, Object>> getConductaStats(@RequestParam Long institutionId) {
         return ResponseEntity.ok(biDashboardService.getConductaStats(institutionId));
     }
 
-    @Operation(summary = "Resumen de nómina")
+    @Operation(summary = "Resumen de nÃ³mina")
     @GetMapping("/payroll-summary")
     public ResponseEntity<Map<String, Object>> getPayrollSummary(@RequestParam Long institutionId) {
         return ResponseEntity.ok(biDashboardService.getPayrollSummary(institutionId));
@@ -314,7 +313,7 @@ public class BiDashboardController {
         return ResponseEntity.ok(result);
     }
 
-    @Operation(summary = "Gráfico de distribución de calificaciones")
+    @Operation(summary = "GrÃ¡fico de distribuciÃ³n de calificaciones")
     @GetMapping("/charts/grade-distribution")
     public ResponseEntity<Map<String, Object>> gradeDistributionChart(@RequestParam Long institutionId) {
         Map<String, Object> dist = biDashboardService.getGradeDistribution(institutionId);
@@ -334,7 +333,7 @@ public class BiDashboardController {
         return ResponseEntity.ok(chart);
     }
 
-    @Operation(summary = "Gráfico de tendencia de asistencia")
+    @Operation(summary = "GrÃ¡fico de tendencia de asistencia")
     @GetMapping("/charts/attendance-trend")
     public ResponseEntity<Map<String, Object>> attendanceTrendChart(@RequestParam Long institutionId) {
         java.util.List<Map<String, Object>> trend = biDashboardService.getAttendanceTrend(institutionId);
@@ -345,7 +344,7 @@ public class BiDashboardController {
         return ResponseEntity.ok(chart);
     }
 
-    @Operation(summary = "Gráfico de matrículas por curso")
+    @Operation(summary = "GrÃ¡fico de matrÃ­culas por curso")
     @GetMapping("/charts/enrollment-by-course")
     public ResponseEntity<Map<String, Object>> enrollmentByCourseChart(@RequestParam Long institutionId) {
         java.util.List<Map<String, Object>> dist = biDashboardService.getStudentDistribution(institutionId);
@@ -355,7 +354,7 @@ public class BiDashboardController {
         return ResponseEntity.ok(chart);
     }
 
-    @Operation(summary = "Gráfico de resumen financiero")
+    @Operation(summary = "GrÃ¡fico de resumen financiero")
     @GetMapping("/charts/financial-summary")
     public ResponseEntity<Map<String, Object>> financialSummaryChart(@RequestParam Long institutionId) {
         java.util.List<Map<String, Object>> summary = biDashboardService.getFinancialSummary(institutionId);

@@ -1,9 +1,11 @@
 package com.leccionario.backend.ai;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class AiLearningStyleService {
     private final AiLearningStyleRepository repo;
     public AiLearningStyleService(AiLearningStyleRepository repo) { this.repo = repo; }

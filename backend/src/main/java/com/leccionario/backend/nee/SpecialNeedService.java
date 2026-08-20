@@ -2,11 +2,13 @@ package com.leccionario.backend.nee;
 
 import com.leccionario.backend.nee.dto.SpecialNeedDTO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class SpecialNeedService {
 
     private final SpecialNeedRepository specialNeedRepository;

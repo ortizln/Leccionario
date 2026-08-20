@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.iml
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Backend build
+backend/target
+backend/.mvn
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/.angular
+
+# Mobile
+mobile_flutter/build
+mobile_flutter/.dart_tool
+mobile_flutter/.flutter-plugins
+mobile_flutter/.flutter-plugins-dependencies
+
+# Documentation
+docs
+*.md
+LICENSE
+
+# Scripts
+scripts
+
+# Storage
+storage
+
+# Docker
+docker-compose.yml
+docker-compose.override.yml
+Dockerfile
+Dockerfile.frontend
+
+# WhatsApp images
+WhatsApp Image*
+
+# OS files
+.DS_Store
+Thumbs.db

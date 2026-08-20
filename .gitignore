@@ -12,3 +12,22 @@ node_modules/
 
 # Logs
 *.log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Android / Flutter
+local.properties
+*.keystore
+*.jks
+
+# IDE
+.vscode/settings.json
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db

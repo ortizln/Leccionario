@@ -8,7 +8,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/institution")
-@CrossOrigin(origins = "*")
 public class InstitutionIntegrationController {
 
     private final SenescytService senescytService;

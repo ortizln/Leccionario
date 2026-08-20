@@ -8,7 +8,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/hr/actions")
-@CrossOrigin(origins = "*")
 public class EmployeeActionController {
     private final EmployeeActionService service;
     public EmployeeActionController(EmployeeActionService service) { this.service = service; }

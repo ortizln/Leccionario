@@ -7,7 +7,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/finance/credit-notes")
-@CrossOrigin(origins = "*")
 public class CreditNoteController {
 
     private final CreditNoteService creditNoteService;

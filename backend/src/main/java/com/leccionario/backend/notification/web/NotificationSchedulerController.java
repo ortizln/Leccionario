@@ -9,7 +9,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/notification-scheduler")
-@CrossOrigin(origins = "*")
 @Tag(name = "Programador de Notificaciones")
 public class NotificationSchedulerController {
 
@@ -26,7 +25,7 @@ public class NotificationSchedulerController {
         return ResponseEntity.ok(Map.of("status", "ok", "task", "attendance-reminders"));
     }
 
-    @Operation(summary = "Disparar alertas de préstamos vencidos manualmente")
+    @Operation(summary = "Disparar alertas de prÃ©stamos vencidos manualmente")
     @PostMapping("/trigger/overdue-loans")
     public ResponseEntity<Map<String, String>> triggerOverdueLoans() {
         scheduler.sendOverdueLoanAlerts();
@@ -40,7 +39,7 @@ public class NotificationSchedulerController {
         return ResponseEntity.ok(Map.of("status", "ok", "task", "monthly-finance"));
     }
 
-    @Operation(summary = "Disparar verificación de garantías por vencer manualmente")
+    @Operation(summary = "Disparar verificaciÃ³n de garantÃ­as por vencer manualmente")
     @PostMapping("/trigger/warranty-alerts")
     public ResponseEntity<Map<String, String>> triggerWarrantyAlerts() {
         scheduler.checkExpiringWarranties();

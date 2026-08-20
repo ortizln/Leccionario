@@ -7,12 +7,21 @@ IMAGE_NAME="${IMAGE_NAME:-leccionario-backend:latest}"
 CONTAINER_NAME="${CONTAINER_NAME:-leccionario-backend}"
 HOST_PORT="${HOST_PORT:-1080}"
 CONTAINER_PORT="${CONTAINER_PORT:-1080}"
-DB_HOST="${DB_HOST:-192.168.1.43}"
+DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
 DB_NAME="${DB_NAME:-leccionario}"
 DB_USER="${DB_USER:-postgres}"
-DB_PASS="${DB_PASS:-086411421}"
-JWT_SECRET="${JWT_SECRET:-change-this-secret-key-with-at-least-32-chars}"
+
+if [ -z "${DB_PASS:-}" ]; then
+  echo "ERROR: DB_PASS no esta definido. Exporta la variable de entorno antes de ejecutar."
+  exit 1
+fi
+
+if [ -z "${JWT_SECRET:-}" ]; then
+  echo "ERROR: JWT_SECRET no esta definido. Exporta la variable de entorno antes de ejecutar."
+  exit 1
+fi
+
 SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE:-prod}"
 
 echo "[backend] Construyendo imagen Docker ${IMAGE_NAME}"

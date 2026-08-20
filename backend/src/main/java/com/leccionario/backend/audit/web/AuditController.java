@@ -12,15 +12,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/audit")
-@CrossOrigin(origins = "*")
-@Tag(name = "Auditoría")
+@Tag(name = "AuditorÃ­a")
 public class AuditController {
 
     private final AuditLogRepository repository;
 
     public AuditController(AuditLogRepository repository) { this.repository = repository; }
 
-    @Operation(summary = "Listar registros de auditoría")
+    @Operation(summary = "Listar registros de auditorÃ­a")
     @GetMapping
     public ResponseEntity<Page<AuditLog>> findAll(@RequestParam Long institutionId,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
@@ -28,13 +27,13 @@ public class AuditController {
             .isEmpty() ? Page.empty() : repository.findAll(PageRequest.of(page, size)));
     }
 
-    @Operation(summary = "Obtener auditoría de una entidad específica")
+    @Operation(summary = "Obtener auditorÃ­a de una entidad especÃ­fica")
     @GetMapping("/entity/{entityType}/{entityId}")
     public ResponseEntity<?> getEntityAudit(@PathVariable String entityType, @PathVariable Long entityId) {
         return ResponseEntity.ok(repository.findByEntityTypeAndEntityIdOrderByCreatedAtDesc(entityType, entityId));
     }
 
-    @Operation(summary = "Estadísticas de auditoría")
+    @Operation(summary = "EstadÃ­sticas de auditorÃ­a")
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getStats(@RequestParam Long institutionId) {
         Map<String, Object> stats = new java.util.LinkedHashMap<>();

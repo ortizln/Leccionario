@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -18,14 +19,27 @@ public class JwtService {
     private String secret;
 
     @Value("${security.jwt.expiration}")
-    private long expiration;
+    private long accessExpiration;
 
-    public String generateToken(UserDetails userDetails) {
+    @Value("${security.jwt.refresh-expiration}")
+    private long refreshExpiration;
+
+    public String generateAccessToken(UserDetails userDetails) {
         return Jwts.builder()
-                .claims(Map.of("roles", userDetails.getAuthorities()))
+                .claims(Map.of("type", "access", "roles", userDetails.getAuthorities()))
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + accessExpiration))
+                .signWith(getSignInKey())
+                .compact();
+    }
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        return Jwts.builder()
+                .claims(Map.of("type", "refresh", "jti", UUID.randomUUID().toString()))
+                .subject(userDetails.getUsername())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + refreshExpiration))
                 .signWith(getSignInKey())
                 .compact();
     }
@@ -37,6 +51,15 @@ public class JwtService {
     public boolean isTokenValid(String token, UserDetails userDetails) {
         return extractUsername(token).equals(userDetails.getUsername())
                 && extractAllClaims(token).getExpiration().after(new Date());
+    }
+
+    public boolean isRefreshToken(String token) {
+        Claims claims = extractAllClaims(token);
+        return "refresh".equals(claims.get("type", String.class));
+    }
+
+    public boolean isTokenExpired(String token) {
+        return extractAllClaims(token).getExpiration().before(new Date());
     }
 
     private Claims extractAllClaims(String token) {

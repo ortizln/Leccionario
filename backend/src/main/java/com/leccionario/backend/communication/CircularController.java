@@ -6,7 +6,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/communication/circulars")
-@CrossOrigin(origins = "*")
 public class CircularController {
     private final CircularService service;
     public CircularController(CircularService service) { this.service = service; }

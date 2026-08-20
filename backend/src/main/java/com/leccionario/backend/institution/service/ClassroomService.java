@@ -3,11 +3,13 @@ package com.leccionario.backend.institution.service;
 import com.leccionario.backend.institution.domain.Classroom;
 import com.leccionario.backend.institution.repository.ClassroomRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class ClassroomService {
 
     private final ClassroomRepository classroomRepository;

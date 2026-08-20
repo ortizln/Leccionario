@@ -1,10 +1,12 @@
 package com.leccionario.backend.communication;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class CommunicationPortalService {
 
     private final NotificationRepository notificationRepo;

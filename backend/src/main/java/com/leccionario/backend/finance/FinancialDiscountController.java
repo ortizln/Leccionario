@@ -6,7 +6,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/finance/discounts")
-@CrossOrigin(origins = "*")
 public class FinancialDiscountController {
     private final FinancialDiscountService service;
     public FinancialDiscountController(FinancialDiscountService service) { this.service = service; }

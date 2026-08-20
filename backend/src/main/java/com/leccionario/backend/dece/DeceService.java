@@ -2,12 +2,14 @@ package com.leccionario.backend.dece;
 
 import com.leccionario.backend.dece.dto.DeceCaseDTO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class DeceService {
 
     private final DeceCaseRepository deceCaseRepository;

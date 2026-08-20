@@ -3,6 +3,7 @@ package com.leccionario.backend.institution.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +17,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@Transactional
 public class ElectronicSignatureService {
 
     private static final Logger log = LoggerFactory.getLogger(ElectronicSignatureService.class);

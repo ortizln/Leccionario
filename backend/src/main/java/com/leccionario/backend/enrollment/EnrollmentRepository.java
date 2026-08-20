@@ -1,5 +1,7 @@
 package com.leccionario.backend.enrollment;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import java.util.List;
@@ -8,6 +10,8 @@ import java.util.Optional;
 public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     List<Enrollment> findByPeriodIdOrderByEnrollmentNumberDesc(Long periodId);
+
+    Page<Enrollment> findByPeriodId(Long periodId, Pageable pageable);
 
     List<Enrollment> findByStudentIdOrderByEnrollmentDateDesc(Long studentId);
 

@@ -1,5 +1,8 @@
 package com.leccionario.backend.finance;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/finance/invoices")
-@CrossOrigin(origins = "*")
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
@@ -21,8 +23,10 @@ public class InvoiceController {
     }
 
     @GetMapping
-    public ResponseEntity<List<InvoiceResponse>> findAll(@RequestParam Long institutionId) {
-        return ResponseEntity.ok(invoiceService.findAll(institutionId));
+    public ResponseEntity<Page<InvoiceResponse>> findAll(
+            @RequestParam Long institutionId,
+            @PageableDefault(size = 50) Pageable pageable) {
+        return ResponseEntity.ok(invoiceService.findAll(institutionId, pageable));
     }
 
     @GetMapping("/{id}")

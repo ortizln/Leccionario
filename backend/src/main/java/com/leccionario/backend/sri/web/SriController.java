@@ -9,7 +9,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/sri")
-@CrossOrigin(origins = "*")
 @Tag(name = "SRI - Servicio de Rentas Internas")
 public class SriController {
 

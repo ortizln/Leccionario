@@ -6,7 +6,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/communication/events")
-@CrossOrigin(origins = "*")
 public class SchoolEventController {
     private final SchoolEventService service;
     public SchoolEventController(SchoolEventService service) { this.service = service; }

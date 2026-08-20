@@ -9,11 +9,17 @@ if "%HOST_PORT%"=="" set "HOST_PORT=1080"
 if "%CONTAINER_PORT%"=="" set "CONTAINER_PORT=1080"
 if "%DB_URL%"=="" set "DB_URL=jdbc:postgresql://host.docker.internal:5432/leccionario"
 if "%DB_USERNAME%"=="" set "DB_USERNAME=postgres"
-if "%DB_PASSWORD%"=="" set "DB_PASSWORD=12345"
-if "%JWT_SECRET%"=="" set "JWT_SECRET=change-this-secret-key-with-at-least-32-chars"
+if "%DB_PASSWORD%"=="" (
+    echo ERROR: DB_PASSWORD no esta definido. Exporta la variable de entorno antes de ejecutar.
+    exit /b 1
+)
+if "%JWT_SECRET%"=="" (
+    echo ERROR: JWT_SECRET no esta definido. Exporta la variable de entorno antes de ejecutar.
+    exit /b 1
+)
 
 echo [backend] Construyendo imagen Docker %IMAGE_NAME%
-docker build -t %IMAGE_NAME% -f "%ROOT_DIR%\backend\Dockerfile" "%ROOT_DIR%\backend"
+docker build -t %IMAGE_NAME% -f "%ROOT_DIR%\Dockerfile" "%ROOT_DIR%"
 if errorlevel 1 exit /b 1
 
 for /f "delims=" %%i in ('docker ps -a --format "{{.Names}}"') do (

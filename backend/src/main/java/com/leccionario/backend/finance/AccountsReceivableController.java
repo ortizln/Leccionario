@@ -7,7 +7,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/finance/accounts-receivable")
-@CrossOrigin(origins = "*")
 public class AccountsReceivableController {
 
     private final AccountsReceivableService accountsReceivableService;
