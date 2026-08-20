@@ -12,6 +12,50 @@ if [ -f "${SCRIPT_DIR}/.env" ]; then
   set +a
 fi
 
+# Si falta DB_PASS, pedir interactivamente y guardar en .env
+if [ -z "${DB_PASS:-}" ]; then
+  echo "============================================"
+  echo "  Configuracion inicial del backend"
+  echo "============================================"
+  read -rp "  DB_HOST [192.168.1.43]: " _db_host; _db_host="${_db_host:-192.168.1.43}"
+  read -rp "  DB_PORT [5432]: " _db_port; _db_port="${_db_port:-5432}"
+  read -rp "  DB_NAME [leccionario]: " _db_name; _db_name="${_db_name:-leccionario}"
+  read -rp "  DB_USER [postgres]: " _db_user; _db_user="${_db_user:-postgres}"
+  read -rsp "  DB_PASS: " _db_pass; echo
+  read -rsp "  JWT_SECRET [leccionario-secret-2026]: " _jwt; _jwt="${_jwt:-leccionario-secret-2026}"
+
+  DB_HOST="$_db_host"
+  DB_PORT="$_db_port"
+  DB_NAME="$_db_name"
+  DB_USER="$_db_user"
+  DB_PASS="$_db_pass"
+  JWT_SECRET="$_jwt"
+  HOST_PORT="${HOST_PORT:-1080}"
+  CONTAINER_PORT="${CONTAINER_PORT:-1080}"
+  SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE:-prod}"
+
+  # Guardar para proximas ejecuciones
+  ENV_FILE="${SCRIPT_DIR}/.env"
+  if touch "$ENV_FILE" 2>/dev/null; then
+    cat > "$ENV_FILE" <<SETEOF
+DB_HOST=${DB_HOST}
+DB_PORT=${DB_PORT}
+DB_NAME=${DB_NAME}
+DB_USER=${DB_USER}
+DB_PASS=${DB_PASS}
+JWT_SECRET=${JWT_SECRET}
+HOST_PORT=${HOST_PORT}
+CONTAINER_PORT=${CONTAINER_PORT}
+SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+SETEOF
+    chmod 600 "$ENV_FILE"
+    echo "[backend] Configuracion guardada en ${ENV_FILE}"
+  else
+    echo "[backend] No se pudo guardar .env (permisos). Las variables se usaran solo esta vez."
+  fi
+  echo "============================================"
+fi
+
 IMAGE_NAME="${IMAGE_NAME:-leccionario-backend:latest}"
 CONTAINER_NAME="${CONTAINER_NAME:-leccionario-backend}"
 HOST_PORT="${HOST_PORT:-1080}"
@@ -21,22 +65,14 @@ DB_PORT="${DB_PORT:-5432}"
 DB_NAME="${DB_NAME:-leccionario}"
 DB_USER="${DB_USER:-postgres}"
 
-if [ -z "${DB_PASS:-}" ]; then
-  echo "ERROR: DB_PASS no esta definido."
-  echo "  Opcione A: Exporta la variable: export DB_PASS=tu_password"
-  echo "  Opcione B: Crea el archivo scripts/.env con DB_PASS=tu_password"
-  exit 1
-fi
-
 if [ -z "${JWT_SECRET:-}" ]; then
   echo "ERROR: JWT_SECRET no esta definido."
-  echo "  Opcione A: Exporta la variable: export JWT_SECRET=tu_secreto"
-  echo "  Opcione B: Crea el archivo scripts/.env con JWT_SECRET=tu_secreto"
   exit 1
 fi
 
 SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE:-prod}"
 
+echo "[backend] Base de datos: ${DB_HOST}:${DB_PORT}/${DB_NAME}"
 echo "[backend] Construyendo imagen Docker ${IMAGE_NAME}"
 docker build -t "${IMAGE_NAME}" -f "${ROOT_DIR}/Dockerfile" "${ROOT_DIR}"
 
