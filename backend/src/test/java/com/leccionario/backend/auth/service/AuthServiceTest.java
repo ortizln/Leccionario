@@ -3,7 +3,7 @@ package com.leccionario.backend.auth.service;
 import com.leccionario.backend.auth.dto.AuthRequest;
 import com.leccionario.backend.auth.dto.AuthResponse;
 import com.leccionario.backend.security.JwtService;
-import com.leccionario.backend.user.domain.Institution;
+import com.leccionario.backend.institution.domain.Institution;
 import com.leccionario.backend.user.domain.Role;
 import com.leccionario.backend.user.domain.User;
 import com.leccionario.backend.user.repository.TeacherRepository;
