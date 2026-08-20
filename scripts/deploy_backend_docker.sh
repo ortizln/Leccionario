@@ -16,13 +16,17 @@ fi
 if [ -z "${DB_PASS:-}" ]; then
   echo "============================================"
   echo "  Configuracion inicial del backend"
+  echo "  (Enter acepta valor entre parentesis)"
   echo "============================================"
   read -rp "  DB_HOST [192.168.1.43]: " _db_host; _db_host="${_db_host:-192.168.1.43}"
   read -rp "  DB_PORT [5432]: " _db_port; _db_port="${_db_port:-5432}"
   read -rp "  DB_NAME [leccionario]: " _db_name; _db_name="${_db_name:-leccionario}"
   read -rp "  DB_USER [postgres]: " _db_user; _db_user="${_db_user:-postgres}"
-  read -rsp "  DB_PASS: " _db_pass; echo
-  read -rsp "  JWT_SECRET [leccionario-secret-2026]: " _jwt; _jwt="${_jwt:-leccionario-secret-2026}"
+  while [ -z "${_db_pass:-}" ]; do
+    read -rsp "  DB_PASS (obligatorio): " _db_pass; echo
+    [ -z "${_db_pass:-}" ] && echo "  [!] Debe ingresar la contrasena"
+  done
+  read -rp "  JWT_SECRET [leccionario-secret-2026]: " _jwt; _jwt="${_jwt:-leccionario-secret-2026}"
 
   DB_HOST="$_db_host"
   DB_PORT="$_db_port"

@@ -19,8 +19,8 @@ WORKDIR /app
 # Copy built JAR
 COPY --from=builder /app/target/*.jar app.jar
 
-# Copy consolidated schema for reference
-COPY docs/sql/schema_full.sql /app/schema_full.sql
+# Copy Flyway migration for reference
+COPY backend/src/main/resources/db/migration/ /app/db/migration/
 
 # Run on port 1080
 EXPOSE 1080
