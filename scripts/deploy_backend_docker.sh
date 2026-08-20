@@ -98,6 +98,7 @@ docker run -d \
   -e "DB_PASS=${DB_PASS}" \
   -e "JWT_SECRET=${JWT_SECRET}" \
   -e "SERVER_PORT=${CONTAINER_PORT}" \
+  -e "CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}" \
   "${IMAGE_NAME}"
 
 echo "[backend] Despliegue completado"

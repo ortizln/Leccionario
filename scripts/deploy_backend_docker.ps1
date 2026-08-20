@@ -41,6 +41,7 @@ $DbUser = if ($env:DB_USER) { $env:DB_USER } else { 'postgres' }
 $DbUrl = "jdbc:postgresql://${DbHost}:${DbPort}/${DbName}"
 
 $SpringProfilesActive = if ($env:SPRING_PROFILES_ACTIVE) { $env:SPRING_PROFILES_ACTIVE } else { '' }
+$CorsAllowedOrigins = if ($env:CORS_ALLOWED_ORIGINS) { $env:CORS_ALLOWED_ORIGINS } else { 'http://localhost:4200' }
 
 Write-Host "[backend] Base de datos: ${DbHost}:${DbPort}/${DbName}"
 Write-Host "[backend] Construyendo imagen Docker $ImageName"
@@ -60,7 +61,8 @@ $RunArgs = @(
     '-e', "SPRING_DATASOURCE_URL=$DbUrl",
     '-e', "SPRING_DATASOURCE_USERNAME=$DbUser",
     '-e', "SPRING_DATASOURCE_PASSWORD=$DbPassword",
-    '-e', "SECURITY_JWT_SECRET=$JwtSecret"
+    '-e', "SECURITY_JWT_SECRET=$JwtSecret",
+    '-e', "CORS_ALLOWED_ORIGINS=$CorsAllowedOrigins"
 )
 
 if ($SpringProfilesActive) {
