@@ -2,6 +2,15 @@
 set -eu
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Cargar .env si existe
+if [ -f "${SCRIPT_DIR}/.env" ]; then
+  echo "[backend] Cargando variables desde ${SCRIPT_DIR}/.env"
+  set -a
+  . "${SCRIPT_DIR}/.env"
+  set +a
+fi
 
 IMAGE_NAME="${IMAGE_NAME:-leccionario-backend:latest}"
 CONTAINER_NAME="${CONTAINER_NAME:-leccionario-backend}"
@@ -13,12 +22,16 @@ DB_NAME="${DB_NAME:-leccionario}"
 DB_USER="${DB_USER:-postgres}"
 
 if [ -z "${DB_PASS:-}" ]; then
-  echo "ERROR: DB_PASS no esta definido. Exporta la variable de entorno antes de ejecutar."
+  echo "ERROR: DB_PASS no esta definido."
+  echo "  Opcione A: Exporta la variable: export DB_PASS=tu_password"
+  echo "  Opcione B: Crea el archivo scripts/.env con DB_PASS=tu_password"
   exit 1
 fi
 
 if [ -z "${JWT_SECRET:-}" ]; then
-  echo "ERROR: JWT_SECRET no esta definido. Exporta la variable de entorno antes de ejecutar."
+  echo "ERROR: JWT_SECRET no esta definido."
+  echo "  Opcione A: Exporta la variable: export JWT_SECRET=tu_secreto"
+  echo "  Opcione B: Crea el archivo scripts/.env con JWT_SECRET=tu_secreto"
   exit 1
 fi
 
