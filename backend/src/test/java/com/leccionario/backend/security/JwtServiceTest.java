@@ -4,8 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import java.lang.reflect.Field;
 import java.util.Collections;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,12 +15,18 @@ class JwtServiceTest {
     private UserDetails userDetails;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         jwtService = new JwtService();
-        jwtService.secret = "test-secret-key-for-unit-tests-32chars!!";
-        jwtService.accessExpiration = 1800000;
-        jwtService.refreshExpiration = 604800000;
+        setField("secret", "test-secret-key-for-unit-tests-32chars!!");
+        setField("accessExpiration", 1800000L);
+        setField("refreshExpiration", 604800000L);
         userDetails = new User("testuser", "password", Collections.emptyList());
+    }
+
+    private void setField(String name, Object value) throws Exception {
+        Field field = JwtService.class.getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(jwtService, value);
     }
 
     @Test
@@ -83,8 +89,8 @@ class JwtServiceTest {
     }
 
     @Test
-    void isTokenExpired_withExpiredToken_returnsTrue() {
-        jwtService.accessExpiration = -1000;
+    void isTokenExpired_withExpiredToken_returnsTrue() throws Exception {
+        setField("accessExpiration", -1000L);
         String token = jwtService.generateAccessToken(userDetails);
         assertTrue(jwtService.isTokenExpired(token));
     }
