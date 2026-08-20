@@ -974,8 +974,10 @@ CREATE TABLE tuition_payments (
 
 CREATE TABLE book_categories (
     id              BIGSERIAL PRIMARY KEY,
+    institution_id  BIGINT NOT NULL REFERENCES institutions(id),
     name            VARCHAR(100) NOT NULL,
     description     VARCHAR(300),
+    parent_id       BIGINT,
     active          BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
