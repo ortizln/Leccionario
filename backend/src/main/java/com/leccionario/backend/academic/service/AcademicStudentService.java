@@ -12,6 +12,7 @@ import com.leccionario.backend.academic.repository.WeekStudentAssignmentReposito
 import com.leccionario.backend.common.exception.BusinessException;
 import com.leccionario.backend.common.excel.ExcelSupport;
 import com.leccionario.backend.common.excel.ImportSummaryResponse;
+import com.leccionario.backend.institution.repository.InstitutionRepository;
 import com.leccionario.backend.user.domain.User;
 import com.leccionario.backend.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,6 +35,7 @@ public class AcademicStudentService {
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
     private final WeekStudentAssignmentRepository weekStudentAssignmentRepository;
+    private final InstitutionRepository institutionRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
@@ -61,7 +63,7 @@ public class AcademicStudentService {
         validateStudentUniqueness(request, null);
 
         User user = new User();
-        user.setInstitution(course.getAcademicYear() != null ? null : null);
+        user.setInstitution(institutionRepository.findAll().stream().findFirst().orElse(null));
         String temporaryPassword = java.util.UUID.randomUUID().toString().substring(0, 12) + "A1!";
         user.setPassword(passwordEncoder.encode(temporaryPassword));
         applyStudentUser(user, request);

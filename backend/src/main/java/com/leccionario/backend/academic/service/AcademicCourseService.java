@@ -8,12 +8,12 @@ import com.leccionario.backend.academic.domain.CourseSection;
 import com.leccionario.backend.academic.domain.CourseSubLevel;
 import com.leccionario.backend.academic.domain.SchoolDay;
 import com.leccionario.backend.academic.domain.SchoolModality;
-import com.leccionario.backend.academic.domain.Student;
+import com.leccionario.backend.user.domain.Student;
 import com.leccionario.backend.academic.repository.AcademicYearRepository;
 import com.leccionario.backend.academic.repository.CourseRepository;
 import com.leccionario.backend.academic.repository.SchoolDayRepository;
 import com.leccionario.backend.academic.repository.SchoolModalityRepository;
-import com.leccionario.backend.academic.repository.StudentRepository;
+import com.leccionario.backend.user.repository.StudentRepository;
 import com.leccionario.backend.common.exception.BusinessException;
 import com.leccionario.backend.common.excel.ExcelSupport;
 import com.leccionario.backend.common.excel.ImportSummaryResponse;
@@ -74,7 +74,7 @@ public class AcademicCourseService {
     public void deleteCourse(Long id, String username) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Curso no encontrado"));
-        boolean hasStudents = studentRepository.findByCourseIdOrderByEnrollmentNumberAsc(id).isPresent();
+        boolean hasStudents = !studentRepository.findByCourseIdOrderByEnrollmentNumberAsc(id).isEmpty();
         if (hasStudents) {
             throw new BusinessException("No se puede eliminar un curso que tiene estudiantes asignados.");
         }
@@ -251,24 +251,6 @@ public class AcademicCourseService {
             }
         }
         return student;
-    }
-
-    private Long resolveWeekStudentId(String courseName, String parallel, String enrollmentNumber) {
-        if (enrollmentNumber == null || enrollmentNumber.trim().isBlank()) {
-            return null;
-        }
-
-        Course course = courseRepository.findByNameIgnoreCaseAndParallelIgnoreCase(courseName, parallel)
-                .orElse(null);
-        if (course == null) {
-            return null;
-        }
-
-        return studentRepository.findByCourseIdOrderByEnrollmentNumberAsc(course.getId()).stream()
-                .filter(student -> student.getEnrollmentNumber().equalsIgnoreCase(enrollmentNumber.trim()))
-                .map(Student::getId)
-                .findFirst()
-                .orElseThrow(() -> new BusinessException("No existe el estudiante semanero en el curso indicado."));
     }
 
     private AcademicCourseResponse toCourseResponse(Course course) {
