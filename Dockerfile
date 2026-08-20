@@ -8,6 +8,7 @@ COPY backend/pom.xml ./pom.xml
 RUN mvn dependency:go-offline -q
 
 # Copy source and build
+ARG BUILD_DATE=unknown
 COPY backend/src src
 RUN mvn package -DskipTests -q
 
