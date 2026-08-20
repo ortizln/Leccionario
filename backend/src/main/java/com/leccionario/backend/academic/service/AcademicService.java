@@ -188,6 +188,11 @@ public class AcademicService {
         return teacherService.updateTeacher(id, request, username);
     }
 
+    @Transactional
+    public void deleteTeacher(Long id, String username) {
+        teacherService.deleteTeacher(id, username);
+    }
+
     @Transactional(readOnly = true)
     public List<AcademicSubjectResponse> listSubjects() {
         return subjectService.listSubjects();

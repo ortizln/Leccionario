@@ -59,6 +59,15 @@ public class AcademicTeacherService {
     }
 
     @Transactional
+    public void deleteTeacher(Long id, String username) {
+        Teacher teacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("El docente seleccionado no existe."));
+        User user = teacher.getUser();
+        teacherRepository.deleteById(id);
+        userRepository.deleteById(user.getId());
+    }
+
+    @Transactional
     public AcademicTeacherResponse createTeacher(AcademicTeacherRequest request, String username) {
         Teacher teacher = createTeacher(
                 request.username(),

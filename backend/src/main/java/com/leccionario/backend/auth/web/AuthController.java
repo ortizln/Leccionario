@@ -35,7 +35,7 @@ public class AuthController {
         response.addCookie(refreshCookie);
 
         return ResponseEntity.ok(new AuthResponse(
-                authResponse.accessToken(),
+                authResponse.token(),
                 null,
                 authResponse.username(),
                 authResponse.fullName(),
@@ -63,7 +63,7 @@ public class AuthController {
         response.addCookie(refreshCookie);
 
         return ResponseEntity.ok(new AuthResponse(
-                authResponse.accessToken(),
+                authResponse.token(),
                 null,
                 authResponse.username(),
                 authResponse.fullName(),
