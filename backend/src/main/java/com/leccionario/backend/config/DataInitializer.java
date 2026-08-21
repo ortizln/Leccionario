@@ -35,11 +35,13 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
@@ -87,18 +89,26 @@ public class DataInitializer implements CommandLineRunner {
             return institutionRepository.save(newInstitution);
         });
 
-        if (userRepository.findByUsername("admin").isEmpty()) {
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setEmail("admin@leccionario.local");
-            admin.setPassword(passwordEncoder.encode("Admin123*"));
-            admin.setIdentification("0102030405");
-            admin.setFirstName("Administrador");
-            admin.setLastName("Sistema");
-            admin.setInstitution(institution);
-            admin.setRoles(Set.of(roleRepository.findByName(RoleDefaults.ADMINISTRADOR).orElseThrow()));
-            userRepository.save(admin);
-        }
+        userRepository.findByUsername("admin").ifPresentOrElse(
+                admin -> {
+                    if (!passwordEncoder.matches("Admin123*", admin.getPassword())) {
+                        admin.setPassword(passwordEncoder.encode("Admin123*"));
+                        userRepository.save(admin);
+                        log.info("Admin password reset to default");
+                    }
+                },
+                () -> {
+                    User admin = new User();
+                    admin.setUsername("admin");
+                    admin.setEmail("admin@leccionario.local");
+                    admin.setPassword(passwordEncoder.encode("Admin123*"));
+                    admin.setIdentification("0102030405");
+                    admin.setFirstName("Administrador");
+                    admin.setLastName("Sistema");
+                    admin.setInstitution(institution);
+                    admin.setRoles(Set.of(roleRepository.findByName(RoleDefaults.ADMINISTRADOR).orElseThrow()));
+                    userRepository.save(admin);
+                });
 
         User teacherUser = userRepository.findByUsername("docente.demo").orElseGet(() -> {
             User teacher = new User();
