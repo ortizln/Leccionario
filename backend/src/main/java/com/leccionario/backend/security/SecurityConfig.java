@@ -25,7 +25,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Configuration
 @EnableMethodSecurity
@@ -38,11 +40,24 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
 
-    @Value("${cors.allowed-origins:*}")
+    @Value("${cors.allowed-origins:}")
     private String allowedOrigins;
 
     @PostConstruct
-    void logCors() {
+    void initCorsOrigins() {
+        Set<String> origins = new LinkedHashSet<>();
+        if (allowedOrigins != null && !allowedOrigins.isBlank()) {
+            Arrays.stream(allowedOrigins.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .forEach(origins::add);
+        }
+        origins.add("http://localhost:4200");
+        origins.add("https://alan-tek.com");
+        origins.add("http://alan-tek.com");
+        origins.add("http://192.168.1.43");
+        origins.add("http://192.168.1.27");
+        allowedOrigins = String.join(",", origins);
         log.info("CORS allowed-origins: [{}]", allowedOrigins);
     }
 
