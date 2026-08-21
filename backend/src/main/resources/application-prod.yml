@@ -42,7 +42,8 @@ logging:
   level:
     root: WARN
     "com.leccionario.backend": INFO
-    "org.springframework.security": WARN
+    "org.springframework.security": DEBUG
+    "org.springframework.security.web.authentication": DEBUG
 
 springdoc:
   api-docs:
