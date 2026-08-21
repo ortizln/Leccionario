@@ -106,7 +106,7 @@ HOST_PORT="${HOST_PORT:-1080}"
 CONTAINER_PORT="${CONTAINER_PORT:-1080}"
 DB_PORT="${DB_PORT:-5432}"
 SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE:-prod}"
-CORS_ALLOWED_ORIGINS="${CORS_ALLOWED_ORIGINS:-http://localhost:4200}"
+CORS_ALLOWED_ORIGINS="${CORS_ALLOWED_ORIGINS:-http://localhost:4200,https://alan-tek.com,http://alan-tek.com,http://${DB_HOST:-192.168.1.43}}"
 
 echo "[backend] Base de datos: ${DB_HOST}:${DB_PORT}/${DB_NAME}"
 echo "[backend] CORS: ${CORS_ALLOWED_ORIGINS}"
