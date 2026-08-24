@@ -1,6 +1,6 @@
 {
   "compileOnSave": false,
-  "exclude": ["./setup-jest.ts", "node_modules"],
+  "exclude": ["./setup-jest.ts", "node_modules", "e2e", "playwright.config.ts"],
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist/out-tsc",
