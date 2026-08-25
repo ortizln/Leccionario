@@ -140,7 +140,7 @@ export class InvoicesComponent implements OnInit {
 
   load() {
     this.http.get<any[]>(`${API_URL}/finance/invoices?institutionId=${this.instId}`).subscribe({
-      next: r => { this.invoices = r.content || r; this.applyFilter(); },
+      next: (r: any) => { this.invoices = r.content || r; this.applyFilter(); },
       error: () => {}
     });
   }
