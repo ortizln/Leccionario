@@ -140,12 +140,13 @@ export class InvoicesComponent implements OnInit {
 
   load() {
     this.http.get<any[]>(`${API_URL}/finance/invoices?institutionId=${this.instId}`).subscribe({
-      next: r => { this.invoices = r; this.applyFilter(); },
+      next: r => { this.invoices = r.content || r; this.applyFilter(); },
       error: () => {}
     });
   }
 
   applyFilter() {
+    if (!Array.isArray(this.invoices)) { this.invoices = []; }
     this.filteredInvoices = this.filterStatus ? this.invoices.filter(i => i.status === this.filterStatus) : [...this.invoices];
     this.totalInvoices = this.invoices.length;
     this.pendingCount = this.invoices.filter(i => i.status === 'PENDIENTE').length;
