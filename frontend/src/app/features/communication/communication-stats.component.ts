@@ -130,8 +130,8 @@ export class CommunicationStatsComponent implements OnInit {
 
   load() {
     this.http.get<any>(`${API_URL}/bi/communication-stats?institutionId=${this.instId}`).subscribe({ next: r => this.stats = r, error: () => {} });
-    this.http.get<any[]>(`${API_URL}/communication/notifications?userId=${this.uid}`).subscribe({ next: r => this.recentNotifications = r.slice(0, 5), error: () => {} });
-    this.http.get<any[]>(`${API_URL}/communication/messages/sent/${this.uid}`).subscribe({ next: r => this.recentMessages = r.slice(0, 5), error: () => {} });
+    this.http.get<any[]>(`${API_URL}/communication/notifications`).subscribe({ next: r => this.recentNotifications = r.slice(0, 5), error: () => {} });
+    this.http.get<any[]>(`${API_URL}/communication/messages/sent`).subscribe({ next: r => this.recentMessages = r.slice(0, 5), error: () => {} });
     this.http.get<any[]>(`${API_URL}/communication/groups?institutionId=${this.instId}`).subscribe({ next: r => this.groups = r.slice(0, 5), error: () => {} });
     this.http.get<any[]>(`${API_URL}/communication/parent-comm/student/${this.uid}`).subscribe({ next: r => this.parentComms = r.slice(0, 5), error: () => {} });
   }

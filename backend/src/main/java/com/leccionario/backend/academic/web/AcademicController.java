@@ -83,6 +83,12 @@ public class AcademicController {
                 .body(new ByteArrayResource(file));
     }
 
+    @GetMapping("/courses")
+    @PreAuthorize("hasAuthority('ACADEMIC_VIEW')")
+    public ResponseEntity<List<AcademicCourseResponse>> listCourses() {
+        return ResponseEntity.ok(academicService.listCourses());
+    }
+
     @PostMapping("/courses")
     @PreAuthorize("hasAuthority('ACADEMIC_MANAGE')")
     public ResponseEntity<AcademicCourseResponse> createCourse(

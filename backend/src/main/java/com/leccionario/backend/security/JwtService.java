@@ -21,7 +21,7 @@ public class JwtService {
     @Value("${security.jwt.expiration}")
     private long accessExpiration;
 
-    @Value("${security.jwt.refresh-expiration}")
+    @Value("${security.jwt.refresh-expiration:604800000}")
     private long refreshExpiration;
 
     public String generateAccessToken(UserDetails userDetails) {

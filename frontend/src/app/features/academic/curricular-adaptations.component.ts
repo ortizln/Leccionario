@@ -91,7 +91,7 @@ export class CurricularAdaptationsComponent implements OnInit {
   ngOnInit() { this.load(); }
 
   load() {
-    this.http.get<any[]>(`${API_URL}/api/adaptations`).subscribe({
+    this.http.get<any[]>(`${API_URL}/adaptations`).subscribe({
       next: d => this.adaptations = d,
       error: () => this.adaptations = []
     });
@@ -102,14 +102,14 @@ export class CurricularAdaptationsComponent implements OnInit {
   save() {
     const payload = { ...this.form, institutionId: this.auth.institutionId() || 1 };
     const req = this.editItem
-      ? this.http.put(`${API_URL}/api/adaptations/${this.editItem.id}`, payload)
-      : this.http.post(`${API_URL}/api/adaptations`, payload);
+      ? this.http.put(`${API_URL}/adaptations/${this.editItem.id}`, payload)
+      : this.http.post(`${API_URL}/adaptations`, payload);
     req.subscribe(() => { this.showForm = false; this.load(); });
   }
 
   edit(a: any) { this.editItem = a; this.form = { ...a }; this.showForm = true; }
 
   deleteItem(id: number) {
-    if (confirm('Eliminar adaptacion?')) this.http.delete(`${API_URL}/api/adaptations/${id}`).subscribe(() => this.load());
+    if (confirm('Eliminar adaptacion?')) this.http.delete(`${API_URL}/adaptations/${id}`).subscribe(() => this.load());
   }
 }

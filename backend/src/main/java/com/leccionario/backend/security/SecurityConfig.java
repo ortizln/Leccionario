@@ -82,7 +82,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/actuator/health", "/api/daily-logs/mobile/**", "/api/public/**", "/ws/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/actuator/health", "/api/daily-logs/mobile/**", "/api/public/**", "/ws/**", "/error").permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -84,7 +84,7 @@ export class AccountStatementsComponent implements OnInit {
 
   loadStatement() {
     if (!this.studentId) return;
-    this.http.get<any[]>(`${API_URL}/api/finance/accounts-receivable/student/${this.studentId}`).subscribe({
+    this.http.get<any[]>(`${API_URL}/finance/accounts-receivable/student/${this.studentId}`).subscribe({
       next: (items: any[]) => {
         const totalDebt = items.reduce((s: number, i: any) => s + (i.originalAmount - (i.paidAmount || 0)), 0);
         const totalPaid = items.reduce((s: number, i: any) => s + (i.paidAmount || 0), 0);

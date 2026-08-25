@@ -103,17 +103,17 @@ export class AgendaComponent implements OnInit {
   constructor(private http: HttpClient, private auth: AuthService) {}
 
   ngOnInit() {
-    this.http.get<any[]>(`${API_URL}/api/communication/events?institutionId=${this.instId}`).subscribe(d => this.events = d);
-    this.http.get<any[]>(`${API_URL}/api/communication/events/upcoming?institutionId=${this.instId}`).subscribe(d => this.upcoming = d);
-    this.http.get<any[]>(`${API_URL}/api/institution/calendar/institution/${this.instId}`).subscribe({
+    this.http.get<any[]>(`${API_URL}/communication/events?institutionId=${this.instId}`).subscribe(d => this.events = d);
+    this.http.get<any[]>(`${API_URL}/communication/events/upcoming?institutionId=${this.instId}`).subscribe(d => this.upcoming = d);
+    this.http.get<any[]>(`${API_URL}/institution/calendar/institution/${this.instId}`).subscribe({
       next: d => this.calendarEvents = d,
       error: () => this.calendarEvents = []
     });
-    this.http.get<any[]>(`${API_URL}/api/communication/circulars?institutionId=${this.instId}`).subscribe({
+    this.http.get<any[]>(`${API_URL}/communication/circulars?institutionId=${this.instId}`).subscribe({
       next: d => this.circulars = d.slice(0, 5),
       error: () => this.circulars = []
     });
-    this.http.get<any[]>(`${API_URL}/api/institution/periods/active?institutionId=${this.instId}`).subscribe({
+    this.http.get<any[]>(`${API_URL}/institution/periods/active?institutionId=${this.instId}`).subscribe({
       next: (d: any[]) => this.activePeriod = d.length > 0 ? d[0] : null,
       error: () => this.activePeriod = null
     });

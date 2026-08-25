@@ -135,9 +135,8 @@ export class MessagesComponent implements OnInit {
   private get instId(): number { return this.auth.institutionId() || 1; }
 
   load() {
-    this.http.get<any[]>(`${API_URL}/communication/messages/inbox/${this.uid}`).subscribe({ next: r => this.inbox = r, error: () => {} });
-    this.http.get<any[]>(`${API_URL}/communication/messages/sent/${this.uid}`).subscribe({ next: r => this.sent = r, error: () => {} });
-    this.http.get<any>(`${API_URL}/communication/messages/unread/${this.uid}`).subscribe({ next: r => this.unreadCount = r, error: () => {} });
+    this.http.get<any[]>(`${API_URL}/communication/messages/inbox`).subscribe({ next: r => this.inbox = r, error: () => {} });
+    this.http.get<any[]>(`${API_URL}/communication/messages/sent`).subscribe({ next: r => this.sent = r, error: () => {} });
   }
 
   send() {
@@ -149,7 +148,7 @@ export class MessagesComponent implements OnInit {
   }
 
   markRead(m: any) {
-    this.http.post(`${API_URL}/communication/messages/${m.id}/read?userId=${this.uid}`, {}).subscribe({ next: () => this.load() });
+    this.http.post(`${API_URL}/communication/messages/${m.id}/read`, {}).subscribe({ next: () => this.load() });
   }
 
   markAllRead() {

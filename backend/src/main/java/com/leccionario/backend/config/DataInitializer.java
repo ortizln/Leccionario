@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Slf4j
@@ -63,6 +64,8 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        clearStalePermissions();
+
         for (String roleName : RoleDefaults.defaultRoles()) {
             roleRepository.findByName(roleName).orElseGet(() -> {
                 Role role = new Role();
@@ -222,6 +225,12 @@ public class DataInitializer implements CommandLineRunner {
         seedStudents(institution);
         seedScheduleData();
         seedDemerits();
+    }
+
+    @Transactional
+    public void clearStalePermissions() {
+        roleRepository.deleteAllPermissions();
+        log.info("Cleared role_permissions to avoid stale enum mapping errors");
     }
 
     private void seedStudents(Institution institution) {

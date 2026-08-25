@@ -124,8 +124,8 @@ export class AssetWarrantiesComponent implements OnInit {
   ngOnInit() { this.load(); }
 
   load() {
-    this.http.get<any[]>(`${API_URL}/api/inventory/warranties?institutionId=${this.instId}`).subscribe(d => this.warranties = d);
-    this.http.get<any[]>(`${API_URL}/api/inventory/warranties/expiring?institutionId=${this.instId}`).subscribe(d => this.expiring = d);
+    this.http.get<any[]>(`${API_URL}/inventory/warranties?institutionId=${this.instId}`).subscribe(d => this.warranties = d);
+    this.http.get<any[]>(`${API_URL}/inventory/warranties/expiring?institutionId=${this.instId}`).subscribe(d => this.expiring = d);
   }
 
   resetForm() { this.form = { assetId: null, provider: '', warrantyType: 'ESTANDAR', startDate: '', endDate: '', terms: '' }; }
@@ -133,14 +133,14 @@ export class AssetWarrantiesComponent implements OnInit {
   save() {
     const payload = { ...this.form, institutionId: this.instId, status: 'VIGENTE' };
     const req = this.editItem
-      ? this.http.put(`${API_URL}/api/inventory/warranties/${this.editItem.id}`, payload)
-      : this.http.post(`${API_URL}/api/inventory/warranties`, payload);
+      ? this.http.put(`${API_URL}/inventory/warranties/${this.editItem.id}`, payload)
+      : this.http.post(`${API_URL}/inventory/warranties`, payload);
     req.subscribe(() => { this.showForm = false; this.load(); });
   }
 
   edit(w: any) { this.editItem = w; this.form = { ...w }; this.showForm = true; }
 
   deleteItem(id: number) {
-    if (confirm('Eliminar garantia?')) this.http.delete(`${API_URL}/api/inventory/warranties/${id}`).subscribe(() => this.load());
+    if (confirm('Eliminar garantia?')) this.http.delete(`${API_URL}/inventory/warranties/${id}`).subscribe(() => this.load());
   }
 }

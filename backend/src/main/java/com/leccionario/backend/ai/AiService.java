@@ -243,9 +243,9 @@ public class AiService {
 
         List<Map<String, Object>> gradeDist = jdbc.queryForList(
             "SELECT CASE " +
-            "WHEN score >= 9 THEN '9-10' WHEN score >= 7 THEN '7-8' WHEN score >= 5 THEN '5-6' " +
-            "WHEN score >= 3 THEN '3-4' ELSE '0-2' END as range, " +
-            "COUNT(*) as count FROM period_grades GROUP BY range ORDER BY range"
+            "WHEN average_score >= 9 THEN '9-10' WHEN average_score >= 7 THEN '7-8' WHEN average_score >= 5 THEN '5-6' " +
+            "WHEN average_score >= 3 THEN '3-4' ELSE '0-2' END as grade_range, " +
+            "COUNT(*) as count FROM period_grades WHERE average_score IS NOT NULL GROUP BY grade_range ORDER BY grade_range"
         );
 
         List<Map<String, Object>> styleDist = jdbc.queryForList(

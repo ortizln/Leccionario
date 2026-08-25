@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { API_URL } from '../../core/api.config';
 import { AddUserComponent } from './add-user.component';
 import { InstitutionItem, RoleItem, UserItem, UserSavePayload } from './users.models';
@@ -518,7 +519,7 @@ export class UsersComponent {
 
   private loadData(): void {
     forkJoin({
-      users: this.http.get<UserItem[]>(`${API_URL}/users`),
+      users: this.http.get<{content: UserItem[]}>(`${API_URL}/users?size=999`).pipe(map(p => p.content)),
       roles: this.http.get<RoleItem[]>(`${API_URL}/roles`),
       institutions: this.http.get<InstitutionItem[]>(`${API_URL}/users/institutions`)
     }).subscribe({
@@ -538,7 +539,7 @@ export class UsersComponent {
   }
 
   private loadUsers(afterLoad?: () => void): void {
-    this.http.get<UserItem[]>(`${API_URL}/users`).subscribe({
+    this.http.get<{content: UserItem[]}>(`${API_URL}/users?size=999`).pipe(map(p => p.content)).subscribe({
       next: (users) => {
         this.users = users;
         this.refreshDisplayed();

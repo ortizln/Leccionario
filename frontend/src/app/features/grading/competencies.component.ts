@@ -102,8 +102,8 @@ export class CompetenciesComponent implements OnInit {
 
   load() {
     const url = this.filterType
-      ? `${API_URL}/api/grading/competencies/type?institutionId=${this.instId}&type=${this.filterType}`
-      : `${API_URL}/api/grading/competencies?institutionId=${this.instId}`;
+      ? `${API_URL}/grading/competencies/type?institutionId=${this.instId}&type=${this.filterType}`
+      : `${API_URL}/grading/competencies?institutionId=${this.instId}`;
     this.http.get<any[]>(url).subscribe(d => this.competencies = d);
   }
 
@@ -112,14 +112,14 @@ export class CompetenciesComponent implements OnInit {
   save() {
     const payload = { ...this.form, institutionId: this.instId, isActive: true };
     const req = this.editItem
-      ? this.http.put(`${API_URL}/api/grading/competencies/${this.editItem.id}`, payload)
-      : this.http.post(`${API_URL}/api/grading/competencies`, payload);
+      ? this.http.put(`${API_URL}/grading/competencies/${this.editItem.id}`, payload)
+      : this.http.post(`${API_URL}/grading/competencies`, payload);
     req.subscribe(() => { this.showForm = false; this.load(); });
   }
 
   edit(c: any) { this.editItem = c; this.form = { ...c }; this.showForm = true; }
 
   delete(id: number) {
-    if (confirm('Eliminar competencia?')) this.http.delete(`${API_URL}/api/grading/competencies/${id}`).subscribe(() => this.load());
+    if (confirm('Eliminar competencia?')) this.http.delete(`${API_URL}/grading/competencies/${id}`).subscribe(() => this.load());
   }
 }

@@ -109,27 +109,27 @@ export class RecoveryExamsComponent implements OnInit {
   ngOnInit() { this.load(); }
 
   load() {
-    this.http.get<any[]>(`${API_URL}/api/grading/recoveries?institutionId=${this.instId}`).subscribe(d => this.all = d);
-    this.http.get<any[]>(`${API_URL}/api/grading/recoveries/pending?institutionId=${this.instId}`).subscribe(d => this.pending = d);
+    this.http.get<any[]>(`${API_URL}/grading/recoveries?institutionId=${this.instId}`).subscribe(d => this.all = d);
+    this.http.get<any[]>(`${API_URL}/grading/recoveries/pending?institutionId=${this.instId}`).subscribe(d => this.pending = d);
   }
 
   resetForm() { this.form = { examType: 'SUPLETORIO', studentId: null, courseId: null, subjectId: null, scheduledDate: '', notes: '' }; }
 
   save() {
     const payload = { ...this.form, institutionId: this.instId, status: 'PENDIENTE' };
-    this.http.post(`${API_URL}/api/grading/recoveries`, payload).subscribe(() => { this.showForm = false; this.load(); });
+    this.http.post(`${API_URL}/grading/recoveries`, payload).subscribe(() => { this.showForm = false; this.load(); });
   }
 
   applyScore(e: any) {
     const score = prompt('Ingrese la nota:');
-    if (score) this.http.put(`${API_URL}/api/grading/recoveries/${e.id}/score`, { score: +score }).subscribe(() => this.load());
+    if (score) this.http.put(`${API_URL}/grading/recoveries/${e.id}/score`, { score: +score }).subscribe(() => this.load());
   }
 
   cancel(id: number) {
-    if (confirm('Cancelar examen?')) this.http.put(`${API_URL}/api/grading/recoveries/${id}/cancel`, {}).subscribe(() => this.load());
+    if (confirm('Cancelar examen?')) this.http.put(`${API_URL}/grading/recoveries/${id}/cancel`, {}).subscribe(() => this.load());
   }
 
   delete(id: number) {
-    if (confirm('Eliminar examen?')) this.http.delete(`${API_URL}/api/grading/recoveries/${id}`).subscribe(() => this.load());
+    if (confirm('Eliminar examen?')) this.http.delete(`${API_URL}/grading/recoveries/${id}`).subscribe(() => this.load());
   }
 }

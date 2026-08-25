@@ -39,8 +39,8 @@ describe('UsersComponent', () => {
   });
 
   it('should load users, roles, and institutions on init', () => {
-    const req1 = httpMock.expectOne(`${API_URL}/users`);
-    req1.flush(mockUsers);
+    const req1 = httpMock.expectOne(`${API_URL}/users?size=999`);
+    req1.flush({content: mockUsers});
 
     const req2 = httpMock.expectOne(`${API_URL}/roles`);
     req2.flush(mockRoles);
@@ -54,8 +54,8 @@ describe('UsersComponent', () => {
   });
 
   it('filteredUsers should filter by search term', () => {
-    const req1 = httpMock.expectOne(`${API_URL}/users`);
-    req1.flush(mockUsers);
+    const req1 = httpMock.expectOne(`${API_URL}/users?size=999`);
+    req1.flush({content: mockUsers});
     httpMock.expectOne(`${API_URL}/roles`).flush(mockRoles);
     httpMock.expectOne(`${API_URL}/users/institutions`).flush([]);
 
@@ -66,8 +66,8 @@ describe('UsersComponent', () => {
   });
 
   it('filteredUsers should filter by role', () => {
-    const req1 = httpMock.expectOne(`${API_URL}/users`);
-    req1.flush(mockUsers);
+    const req1 = httpMock.expectOne(`${API_URL}/users?size=999`);
+    req1.flush({content: mockUsers});
     httpMock.expectOne(`${API_URL}/roles`).flush(mockRoles);
     httpMock.expectOne(`${API_URL}/users/institutions`).flush([]);
 
@@ -78,8 +78,8 @@ describe('UsersComponent', () => {
   });
 
   it('filteredUsers should filter by status', () => {
-    const req1 = httpMock.expectOne(`${API_URL}/users`);
-    req1.flush(mockUsers);
+    const req1 = httpMock.expectOne(`${API_URL}/users?size=999`);
+    req1.flush({content: mockUsers});
     httpMock.expectOne(`${API_URL}/roles`).flush(mockRoles);
     httpMock.expectOne(`${API_URL}/users/institutions`).flush([]);
 
@@ -90,7 +90,7 @@ describe('UsersComponent', () => {
   });
 
   it('formatRole should strip ROLE_ prefix and capitalize', () => {
-    httpMock.expectOne(`${API_URL}/users`).flush([]);
+    httpMock.expectOne(`${API_URL}/users?size=999`).flush({content: []});
     httpMock.expectOne(`${API_URL}/roles`).flush([]);
     httpMock.expectOne(`${API_URL}/users/institutions`).flush([]);
 
@@ -99,7 +99,7 @@ describe('UsersComponent', () => {
   });
 
   it('permissionLabel should format permission strings', () => {
-    httpMock.expectOne(`${API_URL}/users`).flush([]);
+    httpMock.expectOne(`${API_URL}/users?size=999`).flush({content: []});
     httpMock.expectOne(`${API_URL}/roles`).flush([]);
     httpMock.expectOne(`${API_URL}/users/institutions`).flush([]);
 
@@ -108,7 +108,7 @@ describe('UsersComponent', () => {
   });
 
   it('should start in list view', () => {
-    httpMock.expectOne(`${API_URL}/users`).flush([]);
+    httpMock.expectOne(`${API_URL}/users?size=999`).flush({content: []});
     httpMock.expectOne(`${API_URL}/roles`).flush([]);
     httpMock.expectOne(`${API_URL}/users/institutions`).flush([]);
 
@@ -117,7 +117,7 @@ describe('UsersComponent', () => {
   });
 
   it('openCreateUser should switch to form view', () => {
-    httpMock.expectOne(`${API_URL}/users`).flush([]);
+    httpMock.expectOne(`${API_URL}/users?size=999`).flush({content: []});
     httpMock.expectOne(`${API_URL}/roles`).flush([]);
     httpMock.expectOne(`${API_URL}/users/institutions`).flush([]);
 
@@ -127,7 +127,7 @@ describe('UsersComponent', () => {
   });
 
   it('closeUserForm should switch back to list view', () => {
-    httpMock.expectOne(`${API_URL}/users`).flush([]);
+    httpMock.expectOne(`${API_URL}/users?size=999`).flush({content: []});
     httpMock.expectOne(`${API_URL}/roles`).flush([]);
     httpMock.expectOne(`${API_URL}/users/institutions`).flush([]);
 
@@ -137,8 +137,8 @@ describe('UsersComponent', () => {
   });
 
   it('subjectOptions should return unique specializations', () => {
-    const req1 = httpMock.expectOne(`${API_URL}/users`);
-    req1.flush(mockUsers);
+    const req1 = httpMock.expectOne(`${API_URL}/users?size=999`);
+    req1.flush({content: mockUsers});
     httpMock.expectOne(`${API_URL}/roles`).flush(mockRoles);
     httpMock.expectOne(`${API_URL}/users/institutions`).flush([]);
 

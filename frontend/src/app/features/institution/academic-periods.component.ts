@@ -90,7 +90,7 @@ export class AcademicPeriodsComponent implements OnInit {
   ngOnInit() { this.load(); }
 
   load() {
-    this.http.get<any[]>(`${API_URL}/api/institution/periods?institutionId=${this.instId}`).subscribe(d => this.periods = d);
+    this.http.get<any[]>(`${API_URL}/institution/periods?institutionId=${this.instId}`).subscribe(d => this.periods = d);
   }
 
   resetForm() { this.form = { name: '', code: '', periodType: 'BIMESTRE', startDate: '', endDate: '' }; }
@@ -98,8 +98,8 @@ export class AcademicPeriodsComponent implements OnInit {
   save() {
     const payload = { ...this.form, institutionId: this.instId, isActive: false };
     const req = this.editItem
-      ? this.http.put(`${API_URL}/api/institution/periods/${this.editItem.id}`, payload)
-      : this.http.post(`${API_URL}/api/institution/periods`, payload);
+      ? this.http.put(`${API_URL}/institution/periods/${this.editItem.id}`, payload)
+      : this.http.post(`${API_URL}/institution/periods`, payload);
     req.subscribe(() => { this.showForm = false; this.load(); });
   }
 
@@ -107,10 +107,10 @@ export class AcademicPeriodsComponent implements OnInit {
 
   toggleActive(p: any) {
     const url = p.isActive ? 'deactivate' : 'activate';
-    this.http.put(`${API_URL}/api/institution/periods/${p.id}/${url}`, {}).subscribe(() => this.load());
+    this.http.put(`${API_URL}/institution/periods/${p.id}/${url}`, {}).subscribe(() => this.load());
   }
 
   delete(id: number) {
-    if (confirm('Eliminar periodo?')) this.http.delete(`${API_URL}/api/institution/periods/${id}`).subscribe(() => this.load());
+    if (confirm('Eliminar periodo?')) this.http.delete(`${API_URL}/institution/periods/${id}`).subscribe(() => this.load());
   }
 }

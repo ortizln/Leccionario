@@ -19,7 +19,13 @@ public class StudentWellnessController {
     public ResponseEntity<?> saveEvaluation(@RequestBody PsychologicalEvaluation eval) { return ResponseEntity.ok(wellnessService.saveEvaluation(eval)); }
 
     @GetMapping("/psych/student/{studentId}")
-    public ResponseEntity<?> getEvaluations(@PathVariable Long studentId) { return ResponseEntity.ok(wellnessService.getEvaluations(studentId)); }
+    public ResponseEntity<?> getEvaluations(@PathVariable String studentId) {
+        try {
+            return ResponseEntity.ok(wellnessService.getEvaluations(Long.parseLong(studentId)));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.ok(java.util.Collections.emptyList());
+        }
+    }
 
     @DeleteMapping("/psych/{id}")
     public ResponseEntity<?> deleteEvaluation(@PathVariable Long id) { wellnessService.deleteEvaluation(id); return ResponseEntity.ok().build(); }
@@ -36,18 +42,29 @@ public class StudentWellnessController {
     public ResponseEntity<?> saveInsurance(@RequestBody StudentInsurance ins) { return ResponseEntity.ok(wellnessService.saveInsurance(ins)); }
 
     @GetMapping("/insurance/student/{studentId}")
-    public ResponseEntity<?> getInsurance(@PathVariable Long studentId) { return ResponseEntity.ok(wellnessService.getInsurance(studentId)); }
+    public ResponseEntity<?> getInsurance(@PathVariable String studentId) {
+        try {
+            return ResponseEntity.ok(wellnessService.getInsurance(Long.parseLong(studentId)));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.ok(java.util.Collections.emptyList());
+        }
+    }
 
     @DeleteMapping("/insurance/{id}")
     public ResponseEntity<?> deleteInsurance(@PathVariable Long id) { wellnessService.deleteInsurance(id); return ResponseEntity.ok().build(); }
 
     @GetMapping(value = "/psych/student/{studentId}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
-    public ResponseEntity<byte[]> getPsychEvaluationPdf(@PathVariable Long studentId) {
-        byte[] pdf = wellnessService.getPsychEvaluationPdf(studentId);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=evaluaciones_psicologicas_" + studentId + ".pdf")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdf);
+    public ResponseEntity<byte[]> getPsychEvaluationPdf(@PathVariable String studentId) {
+        try {
+            Long id = Long.parseLong(studentId);
+            byte[] pdf = wellnessService.getPsychEvaluationPdf(id);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=evaluaciones_psicologicas_" + id + ".pdf")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdf);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping(value = "/report", produces = MediaType.APPLICATION_PDF_VALUE)

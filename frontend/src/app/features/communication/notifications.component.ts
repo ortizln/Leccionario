@@ -152,7 +152,7 @@ export class NotificationsComponent implements OnInit {
   }
 
   load() {
-    this.http.get<any[]>(`${API_URL}/communication/notifications?userId=${this.userId}`).subscribe({
+    this.http.get<any[]>(`${API_URL}/communication/notifications`).subscribe({
       next: r => {
         this.notifications = r;
         this.unreadCount = r.filter(n => !n.readStatus).length;
@@ -161,11 +161,11 @@ export class NotificationsComponent implements OnInit {
       },
       error: () => {}
     });
-    this.http.get<any[]>(`${API_URL}/communication/messages/inbox?userId=${this.userId}`).subscribe({
+    this.http.get<any[]>(`${API_URL}/communication/messages/inbox`).subscribe({
       next: r => { this.inboxMessages = r; this.unreadMessages = r.length; },
       error: () => {}
     });
-    this.http.get<any[]>(`${API_URL}/communication/messages/sent?userId=${this.userId}`).subscribe({
+    this.http.get<any[]>(`${API_URL}/communication/messages/sent`).subscribe({
       next: r => this.sentMessages = r,
       error: () => {}
     });
