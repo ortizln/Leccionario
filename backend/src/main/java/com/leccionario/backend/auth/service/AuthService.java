@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +24,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final TeacherRepository teacherRepository;
 
+    @Transactional(readOnly = true)
     public AuthResponse login(AuthRequest request) {
         var auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password()));
@@ -60,6 +62,7 @@ public class AuthService {
                 permissions);
     }
 
+    @Transactional(readOnly = true)
     public AuthResponse refreshToken(String refreshToken) {
         if (!jwtService.isRefreshToken(refreshToken) || jwtService.isTokenExpired(refreshToken)) {
             throw new IllegalArgumentException("Refresh token invalido o expirado");
