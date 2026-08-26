@@ -34,7 +34,7 @@ server:
 
 security:
   jwt:
-    secret: ${JWT_SECRET:}
+    secret: ${JWT_SECRET:LeccionarioDevSecretKey2026SecureEnoughForJwtSigning}
     expiration: ${JWT_EXPIRATION:1800000}
     refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
