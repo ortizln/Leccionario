@@ -12,7 +12,8 @@ import { SortState, FilterState, applySort, applyFilters, getFilterOptions, togg
   selector: 'app-audit',
   standalone: true,
   imports: [DatePipe, FormsModule, SortableHeaderComponent, FilterDropdownComponent],
-  templateUrl: './audit.component.html'
+  templateUrl: './audit.component.html',
+  styleUrl: './audit.component.css'
 })
 export class AuditComponent {
   private http = inject(HttpClient);

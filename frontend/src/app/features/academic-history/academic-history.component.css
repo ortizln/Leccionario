@@ -1,0 +1,5 @@
+
+    .timeline { position: relative; padding-left: 20px; }
+    .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: #dee2e6; }
+    .timeline-item { position: relative; }
+    .timeline-item::before { content: ''; position: absolute; left: -16px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: #606C56; border: 2px solid #fff; box-shadow: 0 0 0 2px #dee2e6; }

@@ -1,0 +1,11 @@
+
+    .cell-truncate {
+      max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      position: relative; cursor: default;
+    }
+    .cell-truncate:hover {
+      overflow: visible; white-space: normal; position: absolute; z-index: 10;
+      background: var(--app-surface); border: 1px solid var(--app-border);
+      border-radius: var(--radius-md); padding: 0.5rem 0.75rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 220px; max-width: 420px;
+    }

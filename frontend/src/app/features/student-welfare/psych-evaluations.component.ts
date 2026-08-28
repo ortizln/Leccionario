@@ -6,93 +6,11 @@ import { API_URL } from '../../core/api.config';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
-  selector: 'app-psych-evaluations',
+  templateUrl: './psych-evaluations.component.html',
+  styleUrl: './psych-evaluations.component.css',
+    selector: 'app-psych-evaluations',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0"><i class="bi bi-clipboard2-pulse me-2"></i>Evaluaciones Psicologicas</h5>
-      <div>
-        <button class="btn btn-sm btn-outline-primary me-1" (click)="downloadPdf()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button>
-        <button class="btn btn-sm btn-primary" (click)="showCreateModal=true"><i class="bi bi-plus-circle me-1"></i>Nueva Evaluacion</button>
-      </div>
-    </div>
-
-    <div class="row g-3 mb-4">
-      <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-primary text-white text-center">
-          <div class="card-body py-3"><div class="fs-3 fw-bold">{{ total }}</div><div class="small">Total</div></div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-success text-white text-center">
-          <div class="card-body py-3"><div class="fs-3 fw-bold">{{ completed }}</div><div class="small">Completadas</div></div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-warning text-dark text-center">
-          <div class="card-body py-3"><div class="fs-3 fw-bold">{{ pending }}</div><div class="small">Pendientes</div></div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-info text-white text-center">
-          <div class="card-body py-3"><div class="fs-3 fw-bold">{{ flagged }}</div><div class="small">Con Seguimiento</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card border-0 shadow-sm">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-sm mb-0">
-            <thead class="table-light">
-              <tr><th>Estudiante</th><th>Tipo</th><th>Psicologo</th><th>Fecha</th><th>Resultado</th><th>Seguimiento</th><th>Estado</th></tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let e of evaluations">
-                <td>{{ e.studentId }}</td>
-                <td><span class="badge bg-info">{{ e.evaluationType }}</span></td>
-                <td>{{ e.psychologistName }}</td>
-                <td>{{ e.evaluationDate | date:'dd/MM/yyyy' }}</td>
-                <td>{{ (e.resultSummary || '') | slice:0:50 }}</td>
-                <td><span class="badge" [class.bg-warning]="e.followUpRequired" [class.bg-secondary]="!e.followUpRequired">{{ e.followUpRequired ? 'Si' : 'No' }}</span></td>
-                <td><span class="badge" [class.bg-success]="e.status==='COMPLETADA'" [class.bg-warning]="e.status==='PENDIENTE'">{{ e.status }}</span></td>
-              </tr>
-              <tr *ngIf="evaluations.length===0"><td colspan="7" class="text-center text-muted py-3">Sin evaluaciones</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal d-block" *ngIf="showCreateModal" tabindex="-1" style="background:rgba(0,0,0,0.5)">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header"><h6 class="modal-title">Nueva Evaluacion</h6></div>
-          <div class="modal-body">
-            <div class="row g-3">
-              <div class="col-md-6"><label class="form-label small">Estudiante ID *</label><input type="number" class="form-control form-control-sm" [(ngModel)]="newEval.studentId"></div>
-              <div class="col-md-6"><label class="form-label small">Tipo *</label>
-                <select class="form-select form-select-sm" [(ngModel)]="newEval.evaluationType">
-                  <option value="INICIAL">Inicial</option><option value="SEGUIMIENTO">Seguimiento</option><option value="DIAGNOSTICO">Diagnostico</option><option value="ORIENTACION">Orientacion</option>
-                </select>
-              </div>
-              <div class="col-md-6"><label class="form-label small">Psicologo *</label><input class="form-control form-control-sm" [(ngModel)]="newEval.psychologistName"></div>
-              <div class="col-md-6"><label class="form-label small">Fecha</label><input type="date" class="form-control form-control-sm" [(ngModel)]="newEval.evaluationDate"></div>
-              <div class="col-12"><label class="form-label small">Resultado</label><textarea class="form-control form-control-sm" [(ngModel)]="newEval.resultSummary" rows="3"></textarea></div>
-              <div class="col-md-6"><label class="form-label small">Seguimiento</label>
-                <select class="form-select form-select-sm" [(ngModel)]="newEval.followUpRequired"><option [ngValue]="true">Si</option><option [ngValue]="false">No</option></select>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-sm btn-secondary" (click)="showCreateModal=false">Cancelar</button>
-            <button class="btn btn-sm btn-primary" (click)="create()">Crear</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
 })
 export class PsychEvaluationsComponent implements OnInit {
   evaluations: any[] = [];

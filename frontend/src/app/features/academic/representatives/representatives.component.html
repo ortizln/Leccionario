@@ -1,0 +1,204 @@
+
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body p-4 d-grid gap-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+          <div>
+            <h2 class="h4 mb-1">Representantes de estudiantes</h2>
+            <p class="text-muted mb-0">Registra los datos de contacto de padres, madres o tutores responsables de cada estudiante.</p>
+          </div>
+          @if (canManageAcademic) {
+            <button class="btn btn-sm btn-primary" type="button" (click)="startCreate()">
+              <i class="bi bi-person-plus me-2"></i>Nuevo representante
+            </button>
+          }
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label fw-semibold">Filtrar por curso</label>
+            <select class="form-select form-select-sm" [value]="selectedCourseFilter" (change)="selectedCourseFilter = $any($event.target).value">
+              <option value="all">Todos los cursos</option>
+              @for (course of courses; track course.id) {
+                <option [value]="course.id">{{ course.name }} {{ course.parallel }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label fw-semibold">Buscar</label>
+            <input class="form-control form-control-sm" type="text" [value]="search" (input)="search = $any($event.target).value" placeholder="Representante o estudiante">
+            @if (errorMessage()) {
+              <div class="alert alert-danger alert-sm mt-2 mb-0 py-2 small">{{ errorMessage() }}</div>
+            }
+          </div>
+        </div>
+
+        @if (editorOpen) {
+          <div class="modal-shell" (click)="cancelEdit()">
+            <div class="modal-card" style="max-width:680px" (click)="$event.stopPropagation()">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="h6 mb-0"><i class="bi bi-people me-2"></i>{{ editingId ? 'Editar representante' : 'Nuevo representante' }}</h3>
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEdit()"><i class="bi bi-x-lg"></i></button>
+              </div>
+              <form [formGroup]="form" class="row g-3">
+                <div class="col-12">
+                  <label class="form-label fw-semibold small">Estudiante</label>
+                  <select class="form-select form-select-sm" formControlName="studentId">
+                    @for (student of filteredStudents; track student.id) {
+                      <option [value]="student.id">{{ student.enrollmentNumber }} · {{ student.fullName }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold small">Nombre completo</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="fullName" placeholder="Nombres y apellidos">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Parentesco</label>
+                  <select class="form-select form-select-sm" formControlName="relationship">
+                    <option value="PADRE">Padre</option>
+                    <option value="MADRE">Madre</option>
+                    <option value="TUTOR">Tutor legal</option>
+                    <option value="ABUELO">Abuelo(a)</option>
+                    <option value="HERMANO">Hermano(a)</option>
+                    <option value="OTRO">Otro familiar</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Telefono</label>
+                  <input class="form-control form-control-sm" type="tel" formControlName="phone" placeholder="0999999999">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold small">Correo</label>
+                  <input class="form-control form-control-sm" type="email" formControlName="email" placeholder="correo@ejemplo.com">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold small">Direccion</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="address" placeholder="Direccion completa">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold small">Contacto emergencia</label>
+                  <input class="form-control form-control-sm" type="text" formControlName="emergencyContact" placeholder="Nombre">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold small">Telefono emergencia</label>
+                  <input class="form-control form-control-sm" type="tel" formControlName="emergencyPhone" placeholder="Telefono">
+                </div>
+                <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                  <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelEdit()">Cancelar</button>
+                  <button class="btn btn-sm btn-primary" type="button" (click)="save()"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        }
+
+        <div class="table-responsive">
+          <table class="table table-xs table-striped align-middle mb-0">
+            <thead>
+              <tr>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Estudiante" [dir]="sortColumn('studentName')" (toggle)="onSort('studentName')"></span>
+                    <span appFilterDropdown label="Estudiante" [options]="filterOpts('studentName')" [selected]="getFilter('studentName')"
+                          [activeCount]="getFilter('studentName').size" (toggle)="onFilter('studentName', $event)" (clear)="onClearFilter('studentName')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Representante" [dir]="sortColumn('fullName')" (toggle)="onSort('fullName')"></span>
+                    <span appFilterDropdown label="Representante" [options]="filterOpts('fullName')" [selected]="getFilter('fullName')"
+                          [activeCount]="getFilter('fullName').size" (toggle)="onFilter('fullName', $event)" (clear)="onClearFilter('fullName')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Parentesco" [dir]="sortColumn('relationship')" (toggle)="onSort('relationship')"></span>
+                    <span appFilterDropdown label="Parentesco" [options]="filterOpts('relationship')" [selected]="getFilter('relationship')"
+                          [activeCount]="getFilter('relationship').size" (toggle)="onFilter('relationship', $event)" (clear)="onClearFilter('relationship')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Telefono" [dir]="sortColumn('phone')" (toggle)="onSort('phone')"></span>
+                    <span appFilterDropdown label="Telefono" [options]="filterOpts('phone')" [selected]="getFilter('phone')"
+                          [activeCount]="getFilter('phone').size" (toggle)="onFilter('phone', $event)" (clear)="onClearFilter('phone')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Email" [dir]="sortColumn('email')" (toggle)="onSort('email')"></span>
+                    <span appFilterDropdown label="Email" [options]="filterOpts('email')" [selected]="getFilter('email')"
+                          [activeCount]="getFilter('email').size" (toggle)="onFilter('email', $event)" (clear)="onClearFilter('email')"></span>
+                  </div>
+                </th>
+                <th>
+                  <div class="d-flex align-items-center gap-1">
+                    <span appSortableHeader label="Emergencia" [dir]="sortColumn('emergencyContact')" (toggle)="onSort('emergencyContact')"></span>
+                    <span appFilterDropdown label="Emergencia" [options]="filterOpts('emergencyContact')" [selected]="getFilter('emergencyContact')"
+                          [activeCount]="getFilter('emergencyContact').size" (toggle)="onFilter('emergencyContact', $event)" (clear)="onClearFilter('emergencyContact')"></span>
+                  </div>
+                </th>
+                <th class="text-end"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (rep of displayedRepresentatives; track rep.id) {
+                <tr>
+                  <td>
+                    <div class="fw-semibold small">{{ rep.enrollmentNumber }}</div>
+                    <div class="small text-muted">{{ rep.studentName }}</div>
+                  </td>
+                  <td class="fw-semibold">{{ rep.fullName }}</td>
+                  <td>{{ relationshipLabel(rep.relationship) }}</td>
+                  <td>{{ rep.phone }}</td>
+                  <td class="small">{{ rep.email }}</td>
+                  <td class="small">
+                    @if (rep.emergencyContact) {
+                      <div>{{ rep.emergencyContact }}</div>
+                      <div class="text-muted">{{ rep.emergencyPhone }}</div>
+                    } @else {
+                      <span class="text-muted">-</span>
+                    }
+                  </td>
+                  <td class="text-end">
+                    @if (canManageAcademic) {
+                      <div class="d-flex gap-2 justify-content-end">
+                        <button class="btn btn-sm btn-outline-primary" type="button" (click)="edit(rep)">Editar</button>
+                        <button class="btn btn-sm btn-outline-danger" type="button" (click)="confirmDeleteRep = rep"><i class="bi bi-trash"></i></button>
+                      </div>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7" class="text-center text-muted py-4">No hay representantes registrados.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    @if (confirmDeleteRep) {
+      <div class="modal-shell" style="z-index:1060" (click)="confirmDeleteRep = null; deleteRepError = ''">
+        <div class="modal-card" style="max-width:420px" (click)="$event.stopPropagation()">
+          <div class="text-center mb-3">
+            <i class="bi bi-person-dash text-danger" style="font-size:2.5rem"></i>
+          </div>
+          <h5 class="text-center mb-2">Eliminar representante</h5>
+          <p class="text-muted small text-center mb-3">
+            Se eliminara el registro de <strong>{{ confirmDeleteRep.fullName }}</strong>. Esta accion no se puede deshacer.
+          </p>
+          @if (deleteRepError) {
+            <div class="alert alert-danger py-2 small">{{ deleteRepError }}</div>
+          }
+          <div class="d-flex justify-content-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="confirmDeleteRep = null; deleteRepError = ''">Cancelar</button>
+            <button class="btn btn-sm btn-danger" type="button" (click)="deleteRepresentative()" [disabled]="deletingRep">
+              @if (deletingRep) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              }
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    }

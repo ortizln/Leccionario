@@ -6,82 +6,11 @@ import { API_URL } from '../../core/api.config';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
-  selector: 'app-school-calendar',
+  templateUrl: './school-calendar.component.html',
+  styleUrl: './school-calendar.component.css',
+    selector: 'app-school-calendar',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="mb-0 fw-bold">Calendario Escolar</h4>
-    </div>
-
-    <div class="row g-2 mb-3">
-      <div class="col-md-3">
-        <label class="form-label form-label-sm">Mes</label>
-        <select class="form-select form-select-sm" [(ngModel)]="filterMonth" (change)="load()">
-          <option value="">Todos</option>
-          <option *ngFor="let m of months" [value]="m.value">{{m.label}}</option>
-        </select>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label form-label-sm">Tipo</label>
-        <select class="form-select form-select-sm" [(ngModel)]="filterType" (change)="load()">
-          <option value="">Todos</option>
-          <option value="INSTITUCIONAL">Institucional</option>
-          <option value="ACADEMICO">Academico</option>
-          <option value="FERIADO">Feriado</option>
-          <option value="VACACIONES">Vacaciones</option>
-          <option value="EVALUACION">Evaluacion</option>
-          <option value="CAPACITACION">Capacitacion</option>
-          <option value="OTRO">Otro</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="d-flex justify-content-end mb-2">
-      <button class="btn btn-sm btn-primary" (click)="showForm=!showForm; resetForm()">+ Nuevo Evento</button>
-    </div>
-
-    <div *ngIf="showForm" class="card mb-3">
-      <div class="card-body">
-        <div class="row g-2">
-          <div class="col-md-4"><label class="form-label form-label-sm">Nombre</label><input class="form-control form-control-sm" [(ngModel)]="formName"></div>
-          <div class="col-md-2"><label class="form-label form-label-sm">Tipo</label>
-            <select class="form-select form-select-sm" [(ngModel)]="formType">
-              <option value="INSTITUCIONAL">Institucional</option><option value="ACADEMICO">Academico</option><option value="FERIADO">Feriado</option><option value="VACACIONES">Vacaciones</option><option value="EVALUACION">Evaluacion</option><option value="EXCURSION">Excursion</option><option value="CAPACITACION">Capacitacion</option><option value="OTRO">Otro</option>
-            </select>
-          </div>
-          <div class="col-md-2"><label class="form-label form-label-sm">Inicio</label><input type="date" class="form-control form-control-sm" [(ngModel)]="formStart"></div>
-          <div class="col-md-2"><label class="form-label form-label-sm">Fin</label><input type="date" class="form-control form-control-sm" [(ngModel)]="formEnd"></div>
-          <div class="col-md-2"><label class="form-label form-label-sm">Color</label><input type="color" class="form-control form-control-sm form-control-color" [(ngModel)]="formColor"></div>
-        </div>
-        <div class="row g-2 mt-1">
-          <div class="col-md-6"><label class="form-label form-label-sm">Descripcion</label><textarea class="form-control form-control-sm" rows="2" [(ngModel)]="formDescription"></textarea></div>
-          <div class="col-md-2 d-flex align-items-end"><button class="btn btn-sm btn-primary" (click)="save()">Guardar</button></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="table-responsive">
-      <table class="table table-xs table-hover">
-        <thead><tr><th style="width:40px"></th><th>Evento</th><th>Tipo</th><th>Inicio</th><th>Fin</th><th>Descripcion</th><th></th></tr></thead>
-        <tbody>
-          <tr *ngFor="let e of events">
-            <td><div [style.background]="e.color || '#3B4436'" style="width:12px;height:12px;border-radius:3px"></div></td>
-            <td class="fw-semibold">{{e.eventName}}</td>
-            <td><span class="badge text-bg-secondary">{{typeLabel(e.eventType)}}</span></td>
-            <td>{{e.startDate}}</td><td>{{e.endDate}}</td>
-            <td class="cell-truncate small">{{e.description || '-'}}</td>
-            <td><button class="btn btn-sm btn-outline-primary" (click)="edit(e)">Editar</button> <button class="btn btn-sm btn-outline-danger" (click)="delete(e.id)">X</button></td>
-          </tr>
-          <tr *ngIf="events.length===0"><td colspan="7" class="text-muted text-center">No hay eventos</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div *ngIf="message" class="position-fixed bottom-0 end-0 p-3" style="z-index:1050">
-      <div class="toast show" [class.bg-success]="!isError" [class.bg-danger]="isError"><div class="toast-body text-white">{{message}}</div></div>
-    </div>
-  `
 })
 export class SchoolCalendarComponent implements OnInit {
   events: any[] = [];

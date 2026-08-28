@@ -1,0 +1,217 @@
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0 fw-bold">Certificados</h4>
+    </div>
+
+    <ul class="nav nav-tabs nav-tabs-sm mb-3">
+      <li><a class="nav-link" [class.active]="tab==='list'" (click)="tab='list'; loadCertificates()">Lista</a></li>
+      <li><a class="nav-link" [class.active]="tab==='generate'" (click)="tab='generate'">Generar</a></li>
+    </ul>
+
+    <!-- Lista -->
+    <div *ngIf="tab==='list'">
+      <div class="row g-2 mb-3">
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Periodo</label>
+          <select class="form-select form-select-sm" [(ngModel)]="filterPeriodId" (change)="loadCertificates()">
+            <option [ngValue]="null">Todos</option>
+            <option *ngFor="let p of periods" [ngValue]="p.id">{{p.name}}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Buscar por numero</label>
+          <input class="form-control form-control-sm" [(ngModel)]="searchNumber" placeholder="CERT-..." (keyup.enter)="searchByNumber()">
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="row g-2 mb-3" *ngIf="stats">
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+            <div class="small text-muted">Total</div><div class="fs-5 fw-bold" style="color:#3B4436">{{stats.total}}</div>
+          </div></div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+            <div class="small text-muted">Emitidos</div><div class="fs-5 fw-bold text-success">{{stats.issued}}</div>
+          </div></div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm"><div class="card-body text-center py-2">
+            <div class="small text-muted">Borradores</div><div class="fs-5 fw-bold text-warning">{{stats.draft}}</div>
+          </div></div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-xs table-hover">
+          <thead>
+            <tr><th>#</th><th>Estudiante</th><th>Curso</th><th>Periodo</th><th>Tipo</th><th>Estado</th><th>Fecha</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of certificates" (click)="viewCertificate(c)" style="cursor:pointer">
+              <td><code class="small">{{c.certificateNumber}}</code></td>
+              <td>{{c.studentName}}</td>
+              <td>{{c.courseName || '-'}}</td>
+              <td>{{c.academicPeriodName || '-'}}</td>
+              <td><span class="badge text-bg-secondary">{{c.templateName}}</span></td>
+              <td>
+                <span class="badge" [class.text-bg-secondary]="c.status==='DRAFT'" [class.text-bg-success]="c.status==='ISSUED'" [class.text-bg-danger]="c.status==='REVOKED'">
+                  {{statusLabel(c.status)}}
+                </span>
+              </td>
+              <td class="small text-muted">{{(c.issuedAt || c.createdAt) | date:'dd/MM/yyyy'}}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary" (click)="viewCertificate(c); $event.stopPropagation()">Ver</button>
+              </td>
+            </tr>
+            <tr *ngIf="certificates.length===0"><td colspan="8" class="text-muted text-center">No hay certificados</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Generar -->
+    <div *ngIf="tab==='generate'">
+      <div class="row g-2 mb-3">
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Tipo de Certificado</label>
+          <select class="form-select form-select-sm" [(ngModel)]="genTemplateId">
+            <option [ngValue]="null">Seleccionar...</option>
+            <option *ngFor="let t of templates" [ngValue]="t.id">{{t.name}}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Curso</label>
+          <select class="form-select form-select-sm" [(ngModel)]="genCourseId" (change)="loadStudents()">
+            <option [ngValue]="null">Seleccionar curso...</option>
+            <option *ngFor="let c of courses" [ngValue]="c.id">{{c.name}}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Periodo</label>
+          <select class="form-select form-select-sm" [(ngModel)]="genPeriodId">
+            <option [ngValue]="null">Seleccionar periodo...</option>
+            <option *ngFor="let p of periods" [ngValue]="p.id">{{p.name}}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label form-label-sm">Estudiante</label>
+          <select class="form-select form-select-sm" [(ngModel)]="genStudentId">
+            <option [ngValue]="null">Seleccionar...</option>
+            <option *ngFor="let s of students" [ngValue]="s.id">{{s.firstName}} {{s.lastName}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label form-label-sm">Observaciones</label>
+          <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="genObservations"></textarea>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <button class="btn btn-sm btn-primary" (click)="generateCertificate()" [disabled]="!genTemplateId || !genStudentId">Generar Certificado</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalle / Preview -->
+    <div *ngIf="selectedCert" class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+        <h5 class="mb-0 fw-semibold small">Certificado: {{selectedCert.certificateNumber}}</h5>
+        <div class="d-flex gap-1">
+          <button *ngIf="selectedCert.status==='DRAFT'" class="btn btn-sm btn-success" (click)="issueCert()">Emitir</button>
+          <button *ngIf="selectedCert.status==='ISSUED'" class="btn btn-sm btn-danger" (click)="revokeCert()">Anular</button>
+          <button *ngIf="selectedCert.status==='ISSUED'" class="btn btn-sm btn-outline-danger" (click)="downloadPdf()"><i class="bi bi-file-pdf me-1"></i>PDF</button>
+          <button class="btn btn-sm btn-outline-secondary" (click)="selectedCert=null">Cerrar</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Preview -->
+        <div class="cert-preview p-4 mb-3" style="border:2px solid #3B4436; border-radius:8px; background:#fff">
+          <div class="text-center mb-3">
+            <div class="fw-bold fs-5" style="color:#3B4436">INSTITUCION EDUCATIVA</div>
+            <div class="small text-muted">Leccionario Estudiantil Digital</div>
+          </div>
+          <div class="text-center mb-3">
+            <div class="fw-bold fs-4" style="color:#3B4436">{{selectedCert.templateName}}</div>
+            <div class="small text-muted">No. {{selectedCert.certificateNumber}}</div>
+          </div>
+          <div class="mb-3" *ngIf="selectedCert.headerText">
+            <p class="small">{{selectedCert.headerText}}</p>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="small text-muted">Estudiante:</div>
+              <div class="fw-semibold">{{selectedCert.studentName}}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="small text-muted">Matricula:</div>
+              <div><code>{{selectedCert.enrollmentNumber}}</code></div>
+            </div>
+            <div class="col-md-3">
+              <div class="small text-muted">Curso:</div>
+              <div>{{selectedCert.courseName || '-'}}</div>
+            </div>
+          </div>
+          <div class="row mb-3" *ngIf="selectedCert.academicPeriodName">
+            <div class="col-md-6">
+              <div class="small text-muted">Periodo:</div>
+              <div>{{selectedCert.academicPeriodName}}</div>
+            </div>
+            <div class="col-md-6" *ngIf="selectedCert.validUntil">
+              <div class="small text-muted">Valido hasta:</div>
+              <div>{{selectedCert.validUntil | date:'dd/MM/yyyy'}}</div>
+            </div>
+          </div>
+
+          <div *ngIf="selectedCert.details.length > 0" class="mb-3">
+            <table class="table table-xs">
+              <thead><tr><th>Materia</th><th>Promedio</th><th>Estado</th><th>Observacion</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let d of selectedCert.details">
+                  <td>{{d.subjectName}}</td>
+                  <td><strong>{{d.score ?? '-'}}</strong></td>
+                  <td>
+                    <span class="badge" [class.text-bg-success]="d.status==='APPROVED'" [class.text-bg-danger]="d.status==='FAILED'">
+                      {{d.status === 'APPROVED' ? 'Aprobado' : 'Reprobado'}}
+                    </span>
+                  </td>
+                  <td class="small">{{d.observation || '-'}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div *ngIf="selectedCert.observations" class="mb-3">
+            <div class="small text-muted fw-semibold">Observaciones</div>
+            <div class="small">{{selectedCert.observations}}</div>
+          </div>
+
+          <div class="mt-4" *ngIf="selectedCert.footerText">
+            <p class="small text-muted text-center">{{selectedCert.footerText}}</p>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-md-6 text-center">
+              <div class="border-top border-dark mx-auto" style="width:200px"></div>
+              <div class="small mt-1">Director(a)</div>
+            </div>
+            <div class="col-md-6 text-center">
+              <div class="border-top border-dark mx-auto" style="width:200px"></div>
+              <div class="small mt-1">Secretario(a)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="small text-muted">
+          <span *ngIf="selectedCert.issuedAt">Emitido: {{selectedCert.issuedAt | date:'dd/MM/yyyy HH:mm'}} por {{selectedCert.issuedBy}}</span>
+          <span *ngIf="selectedCert.status==='REVOKED'" class="text-danger ms-2">ANULADO</span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="message" class="position-fixed bottom-0 end-0 p-3" style="z-index:1050">
+      <div class="toast show" [class.bg-success]="!messageIsError" [class.bg-danger]="messageIsError">
+        <div class="toast-body text-white">{{message}}</div>
+      </div>
+    </div>

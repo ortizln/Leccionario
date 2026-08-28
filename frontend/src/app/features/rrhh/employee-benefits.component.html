@@ -1,0 +1,43 @@
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0"><i class="bi bi-gift me-2"></i>Beneficios Empleados</h5>
+      <button class="btn btn-primary btn-sm" (click)="openForm()"><i class="bi bi-plus me-1"></i>Nuevo Beneficio</button>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light"><tr><th>Empleado ID</th><th>Tipo</th><th>Descripcion</th><th>Valor</th><th>Frecuencia</th><th>Activo</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let b of benefits">
+                <td>{{ b.employeeId }}</td>
+                <td><span class="badge bg-info">{{ b.benefitType }}</span></td>
+                <td>{{ b.description }}</td>
+                <td>${{ b.value | number:'1.2-2' }}</td>
+                <td>{{ b.frequency }}</td>
+                <td><span class="badge" [ngClass]="{'bg-success': b.isActive, 'bg-secondary': !b.isActive}">{{ b.isActive ? 'Si' : 'No' }}</span></td>
+                <td><button class="btn btn-outline-danger btn-sm" (click)="remove(b.id!)"><i class="bi bi-trash"></i></button></td>
+              </tr>
+              <tr *ngIf="!benefits.length"><td colspan="7" class="text-center text-muted">Sin beneficios registrados</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade show d-block" *ngIf="showForm" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+      <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h6 class="modal-title">Nuevo Beneficio</h6><button class="btn-close" (click)="showForm=false"></button></div>
+        <div class="modal-body">
+          <div class="mb-2"><label class="form-label small">Empleado ID</label><input type="number" class="form-control form-control-sm" [(ngModel)]="form.employeeId"></div>
+          <div class="mb-2"><label class="form-label small">Tipo</label><select class="form-select form-select-sm" [(ngModel)]="form.benefitType"><option>IESS</option><option>BONO</option><option>TRANSPORTE</option><option>ALIMENTACION</option><option>OTRO</option></select></div>
+          <div class="mb-2"><label class="form-label small">Descripcion</label><input class="form-control form-control-sm" [(ngModel)]="form.description"></div>
+          <div class="row mb-2">
+            <div class="col"><label class="form-label small">Valor</label><input type="number" step="0.01" class="form-control form-control-sm" [(ngModel)]="form.value"></div>
+            <div class="col"><label class="form-label small">Frecuencia</label><select class="form-select form-select-sm" [(ngModel)]="form.frequency"><option>MONTHLY</option><option>YEARLY</option><option>ONE_TIME</option></select></div>
+          </div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-secondary btn-sm" (click)="showForm=false">Cancelar</button><button class="btn btn-primary btn-sm" (click)="save()">Guardar</button></div>
+      </div></div>
+    </div>

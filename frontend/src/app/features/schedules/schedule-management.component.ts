@@ -12,7 +12,8 @@ import { SortState, FilterState, applySort, applyFilters, getFilterOptions, togg
   selector: 'app-schedule-management',
   standalone: true,
   imports: [FormsModule, ReactiveFormsModule, SortableHeaderComponent, FilterDropdownComponent],
-  templateUrl: './schedule-management.component.html'
+  templateUrl: './schedule-management.component.html',
+  styleUrl: './schedule-management.component.css'
 })
 export class ScheduleManagementComponent {
   private http = inject(HttpClient);

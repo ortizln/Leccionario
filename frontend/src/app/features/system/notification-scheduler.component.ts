@@ -4,55 +4,11 @@ import { HttpClient } from '@angular/common/http';
 import { API_URL } from '../../core/api.config';
 
 @Component({
-  selector: 'app-notification-scheduler',
+  templateUrl: './notification-scheduler.component.html',
+  styleUrl: './notification-scheduler.component.css',
+    selector: 'app-notification-scheduler',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="container-fluid py-3">
-      <h5 class="mb-3"><i class="bi bi-clock-history me-2"></i>Programador de Notificaciones</h5>
-
-      <div class="row g-3 mb-4">
-        <div class="col-md-3" *ngFor="let task of tasks">
-          <div class="card h-100">
-            <div class="card-body text-center">
-              <h6 class="card-title">{{ task.label }}</h6>
-              <p class="card-text text-muted small mb-2">{{ task.schedule }}</p>
-              <p class="card-text text-muted small mb-2">{{ task.description }}</p>
-              <button class="btn btn-sm btn-outline-primary" (click)="triggerTask(task.endpoint)" [disabled]="loading">
-                <i class="bi bi-play-fill me-1"></i>Ejecutar
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <button class="btn btn-sm btn-primary me-2" (click)="triggerAll()" [disabled]="loading">
-          <i class="bi bi-play-circle me-1"></i>Ejecutar Todas
-        </button>
-        <button class="btn btn-sm btn-outline-secondary" (click)="loadStatus()" [disabled]="loading">
-          <i class="bi bi-arrow-clockwise me-1"></i>Actualizar Estado
-        </button>
-      </div>
-
-      <div *ngIf="status" class="card">
-        <div class="card-header"><i class="bi bi-info-circle me-1"></i>Estado del Programador</div>
-        <div class="card-body">
-          <p><strong>Estado:</strong> <span class="badge bg-success">{{ status.status }}</span></p>
-          <table class="table table-sm table-bordered mb-0">
-            <thead><tr><th>Tarea</th><th>Horario</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let entry of statusEntries"><td>{{ entry.name }}</td><td><code>{{ entry.schedule }}</code></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div *ngIf="message" class="alert" [class.alert-success]="messageType==='ok'" [class.alert-danger]="messageType==='error'" class="mt-3">
-        {{ message }}
-      </div>
-    </div>
-  `
 })
 export class NotificationSchedulerComponent implements OnInit {
   loading = false;

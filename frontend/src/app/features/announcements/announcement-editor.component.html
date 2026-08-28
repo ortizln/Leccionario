@@ -1,0 +1,156 @@
+
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h2 class="h4 mb-1">
+              <i class="bi bi-arrow-left me-2" style="cursor:pointer" (click)="goBack()"></i>
+              {{ editingId ? 'Editar anuncio' : 'Nuevo anuncio' }}
+            </h2>
+            <p class="text-muted mb-0 small">{{ editingId ? 'Modifica los datos del anuncio.' : 'Crea un anuncio para la comunidad educativa.' }}</p>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary" type="button" (click)="goBack()">
+            <i class="bi bi-x-lg"></i> Cerrar
+          </button>
+        </div>
+
+        <form (ngSubmit)="save()">
+          <div class="row g-4">
+            <div class="col-12 col-lg-7">
+              <div class="card border h-100">
+                <div class="card-body d-grid gap-3">
+                  <h6 class="card-title"><i class="bi bi-pencil-square me-2"></i>Datos del anuncio</h6>
+                  <div>
+                    <label class="form-label fw-semibold small">Titulo *</label>
+                    <input class="form-control form-control-sm" type="text" [(ngModel)]="form.title" name="title" required maxlength="200" placeholder="Titulo del anuncio">
+                  </div>
+                  <div>
+                    <label class="form-label fw-semibold small">Descripcion *</label>
+                    <textarea class="form-control form-control-sm" rows="4" [(ngModel)]="form.description" name="description" required placeholder="Descripcion detallada..."></textarea>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                      <label class="form-label fw-semibold small">Tipo *</label>
+                      <select class="form-select form-select-sm" [(ngModel)]="form.type" name="type" required>
+                        <option value="EVENT">Evento</option>
+                        <option value="TASK">Tarea</option>
+                        <option value="ALERT">Alerta</option>
+                      </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label class="form-label fw-semibold small">Prioridad</label>
+                      <select class="form-select form-select-sm" [(ngModel)]="form.priority" name="priority">
+                        <option value="LOW">Baja</option>
+                        <option value="NORMAL">Normal</option>
+                        <option value="HIGH">Alta</option>
+                        <option value="URGENT">Urgente</option>
+                      </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label class="form-label fw-semibold small">Curso</label>
+                      <select class="form-select form-select-sm" [(ngModel)]="form.courseId" name="courseId">
+                        <option [ngValue]="null">Todos (General)</option>
+                        @for (course of courses; track course.id) {
+                          <option [ngValue]="course.id">{{ course.name }} {{ course.parallel }}</option>
+                        }
+                      </select>
+                    </div>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-6">
+                      <label class="form-label fw-semibold small">Fecha inicio *</label>
+                      <input class="form-control form-control-sm" type="date" [(ngModel)]="form.eventDate" name="eventDate" (ngModelChange)="onDateChange()" required>
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label fw-semibold small">Fecha fin *</label>
+                      <input class="form-control form-control-sm" type="date" [(ngModel)]="form.eventEndDate" name="eventEndDate" (ngModelChange)="onDateChange()" required>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+              <div class="card border h-100 d-flex flex-column">
+                <div class="card-body d-grid gap-3 flex-grow-1 d-flex flex-column" style="min-height:0">
+                  <div>
+                    <h6 class="card-title mb-1"><i class="bi bi-clock-history me-2"></i>Horarios afectados</h6>
+                    <p class="text-muted small mb-0">
+                      Selecciona los bloques de horario que se veran afectados.
+                      <strong>{{ gridDays.length }}</strong> dia(s) en el rango.
+                    </p>
+                  </div>
+                  @if (scheduleBlocks.length === 0) {
+                    <div class="text-muted small text-center py-3">Cargando bloques...</div>
+                  } @else if (gridDays.length === 0) {
+                    <div class="text-muted small text-center py-3">Selecciona un rango de fechas valido.</div>
+                  } @else {
+                    <div class="schedule-grid-wrapper">
+                      <table class="table table-bordered table-sm mb-0 schedule-grid">
+                        <thead>
+                          <tr>
+                            <th class="schedule-day-header"></th>
+                            @for (block of scheduleBlocks; track block.id) {
+                              <th class="text-center schedule-block-header">
+                                <div class="schedule-block-label">{{ block.label }}</div>
+                              </th>
+                            }
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (day of gridDays; track day.dateStr) {
+                            <tr [class.schedule-row-selected]="hasAnySelected(day.dateStr)">
+                              <td class="schedule-day-cell">
+                                <div class="schedule-day-name">{{ day.dayName }}</div>
+                                <div class="schedule-day-date">{{ day.dateDisplay }}</div>
+                              </td>
+                              @for (block of scheduleBlocks; track block.id) {
+                                <td class="text-center schedule-cell">
+                                  <label class="schedule-checkbox-label">
+                                    <input
+                                      class="schedule-checkbox"
+                                      type="checkbox"
+                                      [checked]="isScheduleSelected(day.dateStr, block.id)"
+                                      (change)="toggleSchedule(day.dateStr, block.id)"
+                                    >
+                                    <span class="schedule-checkbox-box"></span>
+                                  </label>
+                                </td>
+                              }
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                  @if (form.schedules.length > 0) {
+                    <div class="d-flex flex-wrap gap-1 schedule-tags">
+                      @for (s of form.schedules; track $index) {
+                        <span class="badge text-bg-light border small d-inline-flex align-items-center gap-1">
+                          {{ getWeekdayLabel(s.scheduleDate) }} {{ s.scheduleDate }}: {{ getBlockLabel(s.scheduleBlockId) }}
+                          <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" (click)="removeSchedule($index)">
+                            <i class="bi bi-x"></i>
+                          </button>
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          @if (saveError) {
+            <div class="alert alert-danger py-2 small mt-3 mb-0">{{ saveError }}</div>
+          }
+
+          <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="goBack()">Cancelar</button>
+            <button class="btn btn-sm btn-primary" type="submit" [disabled]="saving">
+              @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              {{ editingId ? 'Actualizar anuncio' : 'Publicar anuncio' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>

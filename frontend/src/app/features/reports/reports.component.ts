@@ -7,7 +7,8 @@ import { AuthService } from '../../core/auth.service';
   selector: 'app-reports',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './reports.component.html'
+  templateUrl: './reports.component.html',
+  styleUrl: './reports.component.css'
 })
 export class ReportsComponent {
   private auth = inject(AuthService);

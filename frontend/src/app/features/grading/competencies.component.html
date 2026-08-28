@@ -1,0 +1,77 @@
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0"><i class="bi bi-puzzle me-2"></i>Competencias</h5>
+      <div class="d-flex gap-2">
+        <select class="form-select form-select-sm" style="width:180px" [(ngModel)]="filterType" (ngModelChange)="load()">
+          <option value="">Todas</option>
+          <option value="GENERALES">Generales</option>
+          <option value="ESPECIFICAS">Especificas</option>
+          <option value="TRANSVERSALES">Transversales</option>
+        </select>
+        <button class="btn btn-primary btn-sm" (click)="showForm=true; editItem=null; resetForm()"><i class="bi bi-plus me-1"></i>Nueva</button>
+      </div>
+    </div>
+
+    @if (showForm) {
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h6>{{ editItem ? 'Editar' : 'Nueva' }} Competencia</h6>
+          <div class="row g-2">
+            <div class="col-md-2">
+              <label class="form-label form-label-sm">Codigo</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.code" placeholder="GEN-001">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label form-label-sm">Nombre</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.name" placeholder="Pensamiento Critico">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label form-label-sm">Tipo</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.competencyType">
+                <option value="GENERALES">Generales</option>
+                <option value="ESPECIFICAS">Especificas</option>
+                <option value="TRANSVERSALES">Transversales</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label form-label-sm">Area</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.area" placeholder="Matematicas">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label form-label-sm">Nivel</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.gradeLevel" placeholder="1ro Bachillerato">
+            </div>
+            <div class="col-md-12">
+              <label class="form-label form-label-sm">Descripcion</label>
+              <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="form.description"></textarea>
+            </div>
+            <div class="col-md-12 d-flex gap-1">
+              <button class="btn btn-success btn-sm" (click)="save()"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+              <button class="btn btn-secondary btn-sm" (click)="showForm=false"><i class="bi bi-x-lg me-1"></i>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead class="table-light"><tr><th>Codigo</th><th>Nombre</th><th>Tipo</th><th>Area</th><th>Nivel</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let c of competencies">
+              <td><code>{{ c.code }}</code></td>
+              <td class="fw-semibold">{{ c.name }}</td>
+              <td><span class="badge" [class.bg-primary]="c.competencyType==='GENERALES'" [class.bg-success]="c.competencyType==='ESPECIFICAS'" [class.bg-warning]="c.competencyType==='TRANSVERSALES'">{{ c.competencyType }}</span></td>
+              <td>{{ c.area || '-' }}</td>
+              <td>{{ c.gradeLevel || '-' }}</td>
+              <td><span class="badge" [class.bg-success]="c.isActive" [class.bg-secondary]="!c.isActive">{{ c.isActive ? 'Activa' : 'Inactiva' }}</span></td>
+              <td>
+                <button class="btn btn-outline-primary btn-sm me-1" (click)="edit(c)"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-outline-danger btn-sm" (click)="delete(c.id)"><i class="bi bi-trash"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>

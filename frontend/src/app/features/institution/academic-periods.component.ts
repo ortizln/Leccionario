@@ -6,77 +6,11 @@ import { API_URL } from '../../core/api.config';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
-  selector: 'app-academic-periods',
+  templateUrl: './academic-periods.component.html',
+  styleUrl: './academic-periods.component.css',
+    selector: 'app-academic-periods',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0"><i class="bi bi-calendar3 me-2"></i>Periodos Academicos</h5>
-      <button class="btn btn-primary btn-sm" (click)="showForm=true; editItem=null; resetForm()"><i class="bi bi-plus me-1"></i>Nuevo Periodo</button>
-    </div>
-
-    @if (showForm) {
-      <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body">
-          <h6>{{ editItem ? 'Editar' : 'Nuevo' }} Periodo</h6>
-          <div class="row g-2">
-            <div class="col-md-3">
-              <label class="form-label form-label-sm">Nombre</label>
-              <input class="form-control form-control-sm" [(ngModel)]="form.name" placeholder="Primer Bimestre 2026">
-            </div>
-            <div class="col-md-2">
-              <label class="form-label form-label-sm">Codigo</label>
-              <input class="form-control form-control-sm" [(ngModel)]="form.code" placeholder="PB1-2026">
-            </div>
-            <div class="col-md-2">
-              <label class="form-label form-label-sm">Tipo</label>
-              <select class="form-select form-select-sm" [(ngModel)]="form.periodType">
-                <option value="BIMESTRE">Bimestre</option>
-                <option value="TRIMESTRE">Trimestre</option>
-                <option value="SEMESTRE">Semestre</option>
-                <option value="ANUAL">Anual</option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label form-label-sm">Inicio</label>
-              <input type="date" class="form-control form-control-sm" [(ngModel)]="form.startDate">
-            </div>
-            <div class="col-md-2">
-              <label class="form-label form-label-sm">Fin</label>
-              <input type="date" class="form-control form-control-sm" [(ngModel)]="form.endDate">
-            </div>
-            <div class="col-md-1 d-flex align-items-end gap-1">
-              <button class="btn btn-success btn-sm" (click)="save()"><i class="bi bi-check-lg"></i></button>
-              <button class="btn btn-secondary btn-sm" (click)="showForm=false"><i class="bi bi-x-lg"></i></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-
-    <div class="card border-0 shadow-sm">
-      <div class="table-responsive">
-        <table class="table table-sm mb-0">
-          <thead class="table-light"><tr><th>Codigo</th><th>Nombre</th><th>Tipo</th><th>Inicio</th><th>Fin</th><th>Estado</th><th></th></tr></thead>
-          <tbody>
-            <tr *ngFor="let p of periods">
-              <td>{{ p.code }}</td>
-              <td>{{ p.name }}</td>
-              <td><span class="badge bg-info">{{ p.periodType }}</span></td>
-              <td>{{ p.startDate | date:'dd/MM/yyyy' }}</td>
-              <td>{{ p.endDate | date:'dd/MM/yyyy' }}</td>
-              <td><span class="badge" [class.bg-success]="p.isActive" [class.bg-secondary]="!p.isActive">{{ p.isActive ? 'Activo' : 'Inactivo' }}</span></td>
-              <td>
-                <button class="btn btn-outline-primary btn-sm me-1" (click)="edit(p)"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-outline-warning btn-sm me-1" (click)="toggleActive(p)">{{ p.isActive ? 'Desactivar' : 'Activar' }}</button>
-                <button class="btn btn-outline-danger btn-sm" (click)="delete(p.id)"><i class="bi bi-trash"></i></button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `
 })
 export class AcademicPeriodsComponent implements OnInit {
   periods: any[] = [];

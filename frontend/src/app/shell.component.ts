@@ -10,7 +10,8 @@ import { CommonModule } from '@angular/common';
   selector: 'app-shell',
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, GlobalSearchComponent, CommonModule],
-  templateUrl: './shell.component.html'
+  templateUrl: './shell.component.html',
+  styleUrl: './shell.component.css'
 })
 export class ShellComponent implements OnInit, OnDestroy {
   protected auth = inject(AuthService);

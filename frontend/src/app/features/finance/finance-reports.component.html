@@ -1,0 +1,124 @@
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Reportes Financieros</h5>
+    </div>
+
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item"><a class="nav-link" [class.active]="tab==='summary'" (click)="tab='summary'" role="button">Resumen</a></li>
+      <li class="nav-item"><a class="nav-link" [class.active]="tab==='collection'" (click)="tab='collection'" role="button">Cobranza</a></li>
+      <li class="nav-item"><a class="nav-link" [class.active]="tab==='overdue'" (click)="tab='overdue'" role="button">Mora</a></li>
+      <li class="nav-item"><a class="nav-link" [class.active]="tab==='tuition'" (click)="tab='tuition'" role="button">Pensiones</a></li>
+    </ul>
+
+    @if (tab === 'summary') {
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm bg-primary text-white text-center">
+            <div class="card-body py-3">
+              <div class="fs-4 fw-bold">${{ summary.totalBilled | number:'1.2-2' }}</div>
+              <div class="small">Total Facturado</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm bg-success text-white text-center">
+            <div class="card-body py-3">
+              <div class="fs-4 fw-bold">${{ summary.totalCollected | number:'1.2-2' }}</div>
+              <div class="small">Total Cobrado</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm bg-danger text-white text-center">
+            <div class="card-body py-3">
+              <div class="fs-4 fw-bold">${{ summary.totalPending | number:'1.2-2' }}</div>
+              <div class="small">Pendiente Cobro</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm bg-warning text-dark text-center">
+            <div class="card-body py-3">
+              <div class="fs-4 fw-bold">${{ summary.totalOverdue | number:'1.2-2' }}</div>
+              <div class="small">En Mora</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (tab === 'collection') {
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white"><h6 class="mb-0">Cobranza por Metodo de Pago</h6></div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr><th>Metodo</th><th>Transacciones</th><th>Monto Total</th><th>% del Total</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let m of collectionMethods">
+                <td><span class="badge bg-secondary">{{ m.method }}</span></td>
+                <td>{{ m.count }}</td>
+                <td>${{ m.total | number:'1.2-2' }}</td>
+                <td>
+                  <div class="progress" style="height:6px">
+                    <div class="progress-bar bg-primary" [style.width.%]="getPercent(m.total)"></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    @if (tab === 'overdue') {
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white"><h6 class="mb-0">Cuentas en Mora</h6></div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr><th>Estudiante</th><th>Concepto</th><th>Vencimiento</th><th>Monto</th><th>Dias Mora</th><th>Riesgo</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let o of overdueAccounts">
+                <td>{{ o.studentName }}</td>
+                <td>{{ o.description }}</td>
+                <td>{{ o.dueDate | date:'dd/MM/yyyy' }}</td>
+                <td class="text-danger">${{ o.amount | number:'1.2-2' }}</td>
+                <td><span class="badge" [class.bg-danger]="o.daysOverdue>60" [class.bg-warning text-dark]="o.daysOverdue>30" [class.bg-info]="o.daysOverdue<=30">{{ o.daysOverdue }} dias</span></td>
+                <td>
+                  <span *ngIf="o.daysOverdue>60" class="badge bg-danger">ALTO</span>
+                  <span *ngIf="o.daysOverdue>30 && o.daysOverdue<=60" class="badge bg-warning text-dark">MEDIO</span>
+                  <span *ngIf="o.daysOverdue<=30" class="badge bg-info">BAJO</span>
+                </td>
+              </tr>
+              <tr *ngIf="overdueAccounts.length===0"><td colspan="6" class="text-center text-muted py-3">No hay cuentas en mora</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    @if (tab === 'tuition') {
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white"><h6 class="mb-0">Estado de Pensiones</h6></div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr><th>Plan</th><th>Asignadas</th><th>Pagadas</th><th>Parciales</th><th>Pendientes</th><th>% Cobertura</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of tuitionStats">
+                <td>{{ t.planName }}</td>
+                <td>{{ t.assigned }}</td>
+                <td class="text-success">{{ t.paid }}</td>
+                <td class="text-warning">{{ t.partial }}</td>
+                <td class="text-danger">{{ t.pending }}</td>
+                <td>{{ ((t.assigned ? (t.paid / t.assigned * 100) : 0)) | number:'1.1-1' }}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }

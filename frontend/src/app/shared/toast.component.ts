@@ -3,27 +3,11 @@ import { CommonModule } from '@angular/common';
 import { ToastService, Toast } from '../core/toast.service';
 
 @Component({
-  selector: 'app-toast',
+  templateUrl: './toast.component.html',
+  styleUrl: './toast.component.css',
+    selector: 'app-toast',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1090">
-      <div *ngFor="let t of (toastService.toasts$ | async)" class="toast show"
-           [ngClass]="{'bg-success text-white': t.type==='success', 'bg-danger text-white': t.type==='error', 'bg-warning text-dark': t.type==='warning', 'bg-info text-white': t.type==='info'}"
-           role="alert">
-        <div class="toast-body d-flex justify-content-between align-items-center">
-          <span>
-            <i *ngIf="t.type==='success'" class="bi bi-check-circle me-2"></i>
-            <i *ngIf="t.type==='error'" class="bi bi-exclamation-circle me-2"></i>
-            <i *ngIf="t.type==='warning'" class="bi bi-exclamation-triangle me-2"></i>
-            <i *ngIf="t.type==='info'" class="bi bi-info-circle me-2"></i>
-            {{ t.message }}
-          </span>
-          <button class="btn btn-sm btn-close btn-close-white ms-2" (click)="toastService.dismiss(t.id)"></button>
-        </div>
-      </div>
-    </div>
-  `
 })
 export class ToastComponent {
   constructor(public toastService: ToastService) {}

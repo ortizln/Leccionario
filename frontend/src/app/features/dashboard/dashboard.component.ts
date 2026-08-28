@@ -9,7 +9,8 @@ import { AuthService } from '../../core/auth.service';
   selector: 'app-dashboard',
   standalone: true,
   imports: [AsyncPipe],
-  templateUrl: './dashboard.component.html'
+  templateUrl: './dashboard.component.html',
+  styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent {
   private http = inject(HttpClient);
